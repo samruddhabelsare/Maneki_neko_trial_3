@@ -1,0 +1,90 @@
+:root {
+    /* Core Colors - Obsidian & Neon */
+    --bg-deep: #050505;
+    --bg-surface: #121212;
+    --bg-card: rgba(255, 255, 255, 0.03);
+    
+    --accent-teal: #00f2ea;
+    --accent-amber: #ffaa00;
+    --accent-purple: #9d00ff;
+    
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.6);
+    --text-muted: rgba(255, 255, 255, 0.3);
+    
+    --border: rgba(255, 255, 255, 0.1);
+    --border-glow: rgba(0, 242, 234, 0.3);
+    
+    /* Effects */
+    --glass: blur(12px);
+    --shadow-neon: 0 0 20px rgba(0, 242, 234, 0.15);
+    --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+    background-color: var(--bg-deep);
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* Glassmorphism Card Base */
+.glass-card {
+    background: var(--bg-card);
+    backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    transition: all 0.3s var(--transition-smooth);
+}
+
+.glass-card:hover {
+    border-color: var(--accent-teal);
+    box-shadow: var(--shadow-neon);
+}
+
+/* Typography Utility */
+h1, h2, h3 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, var(--accent-teal), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Interactive Elements */
+button {
+    cursor: pointer;
+    border: none;
+    outline: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent-teal), #00d4cc);
+    color: var(--bg-deep);
+    padding: 0.8rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: transform 0.2s ease;
+}
+
+.btn-primary:active {
+    transform: scale(0.95);
+}
+
+/* Shared Layout Spacing */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}

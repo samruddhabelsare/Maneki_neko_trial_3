@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maneki Neko | Kitchen Display</title>
+    <meta name="description" content="Maneki Neko Smart Restaurant — Kitchen Display System">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/theme.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="kds-body">
+
+    <!-- ── Top Navbar ──────────────────────────────────────────────────── -->
+    <nav class="kds-navbar">
+        <div class="navbar-left">
+            <span class="navbar-icon">🍳</span>
+            <span class="navbar-title">Kitchen Display</span>
+        </div>
+        <div class="navbar-center">
+            <span id="liveClock" class="live-clock">00:00:00</span>
+        </div>
+        <div class="navbar-right">
+            <span class="restaurant-name">Maneki Neko Tokyo</span>
+            <div class="online-dot"></div>
+        </div>
+    </nav>
+
+    <!-- ── Summary Bar ─────────────────────────────────────────────────── -->
+    <div class="summary-bar">
+        <div class="summary-badge badge-pending">
+            🟡 Pending: <strong id="countPending">0</strong>
+        </div>
+        <div class="summary-badge badge-preparing">
+            🔵 Preparing: <strong id="countPreparing">0</strong>
+        </div>
+        <div class="summary-badge badge-ready">
+            🟢 Ready: <strong id="countReady">0</strong>
+        </div>
+        <button id="refreshBtn" class="refresh-btn" title="Refresh Now">↻ Refresh</button>
+    </div>
+
+    <!-- ── Kanban Board ─────────────────────────────────────────────────── -->
+    <div class="kanban-board">
+
+        <div class="kanban-col" id="col-pending">
+            <div class="col-header pending">🟡 Pending</div>
+            <div class="col-body" id="cards-pending"></div>
+        </div>
+
+        <div class="kanban-col" id="col-preparing">
+            <div class="col-header preparing">🔵 Preparing</div>
+            <div class="col-body" id="cards-preparing"></div>
+        </div>
+
+        <div class="kanban-col" id="col-ready">
+            <div class="col-header ready">🟢 Ready</div>
+            <div class="col-body" id="cards-ready"></div>
+        </div>
+
+    </div>
+
+    <!-- ── Scripts (NO type="module") ──────────────────────────────────── -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../shared/supabase.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

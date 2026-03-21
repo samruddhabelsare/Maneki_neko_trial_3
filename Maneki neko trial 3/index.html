@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maneki Neko | Smart Restaurant AI System</title>
+    <meta name="description" content="Agentic AI-powered restaurant management with anime personality bots">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* CSS reset & base */
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --card: #1e1e1e;
+            --gold: #f5c518;
+            --red: #e63946;
+            --text-main: #ffffff;
+            --text-muted: #a0a0a0;
+            --font: 'Outfit', sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: var(--font);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            background: var(--bg);
+            padding: 2rem;
+            overflow: hidden;
+        }
+
+        /* Subtle gold radial glow behind the cat */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(245,197,24,0.06) 0%, rgba(10,10,10,0) 70%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cat {
+            display: inline-block;
+            animation: wave 1s ease-in-out infinite;
+            font-size: 5rem;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: rotate(-10deg); }
+            50% { transform: rotate(10deg); }
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 5rem);
+            font-weight: 800;
+            margin: 0 0 0.5rem 0;
+            background: linear-gradient(135deg, #ffd700, #f5c518, #d4a80a);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+        }
+
+        .hero h2 {
+            font-size: clamp(1.2rem, 3vw, 2rem);
+            font-weight: 600;
+            margin: 0 0 1.5rem 0;
+            color: var(--text-main);
+            letter-spacing: -0.01em;
+        }
+
+        .hero p {
+            font-size: clamp(1rem, 2vw, 1.1rem);
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 3rem auto;
+        }
+
+        .scroll-arrow {
+            position: absolute;
+            bottom: 3rem;
+            font-size: 2rem;
+            color: var(--gold);
+            animation: float 2s ease-in-out infinite;
+            z-index: 1;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(15px); }
+        }
+
+        /* Container */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        /* Cards Section */
+        .section-title {
+            text-align: center;
+            font-size: 2.2rem;
+            margin-bottom: 3rem;
+            letter-spacing: -0.02em;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .card {
+            background-color: var(--card);
+            border-radius: 20px;
+            padding: 2.5rem;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, border-color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 15px 35px rgba(245, 197, 24, 0.15), 0 0 30px rgba(245, 197, 24, 0.2);
+            border-color: rgba(245, 197, 24, 0.4);
+        }
+
+        .card-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            line-height: 1;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 0 0.8rem 0;
+        }
+
+        .card-desc {
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+            flex-grow: 1;
+            font-size: 1.05rem;
+        }
+
+        .btn-open {
+            display: block;
+            width: 100%;
+            background-color: var(--gold);
+            color: #000;
+            text-align: center;
+            padding: 1rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .btn-open:hover {
+            background-color: #d4a80a;
+        }
+        
+        .btn-open:active {
+            transform: scale(0.98);
+        }
+
+        .badge-soon {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background-color: var(--red);
+            color: #fff;
+            padding: 0.35rem 0.85rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: 0 4px 10px rgba(230, 57, 70, 0.3);
+        }
+
+        /* Tech Stack */
+        .tech-stack {
+            text-align: center;
+            padding: 4rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .tech-stack h2 {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            letter-spacing: -0.01em;
+        }
+
+        .tech-badges {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .tech-badge {
+            background-color: var(--surface);
+            border: 1px solid rgba(245, 197, 24, 0.3);
+            color: var(--text-main);
+            padding: 0.6rem 1.4rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+
+        .tech-badge:hover {
+            border-color: var(--gold);
+            background-color: rgba(245, 197, 24, 0.05);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            background-color: var(--surface);
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        footer p {
+            margin: 0.4rem 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 850px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ── Hero Section ─────────────────────────────────────────── -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="cat">🐱</div>
+            <h1>Maneki Neko</h1>
+            <h2>Smart Restaurant AI System</h2>
+            <p>Agentic AI-powered restaurant management with anime personality bots</p>
+        </div>
+        <a href="#modules" class="scroll-arrow" aria-label="Scroll down">↓</a>
+    </section>
+
+    <!-- ── Modules / Cards ──────────────────────────────────────── -->
+    <div class="container" id="modules">
+        <h2 class="section-title">System Modules</h2>
+        
+        <div class="cards-grid">
+            <!-- 1. Admin -->
+            <div class="card">
+                <div class="card-icon">📊</div>
+                <h3 class="card-title">Admin Dashboard</h3>
+                <p class="card-desc">Central control for menu, orders, customers, analytics and bot fleet management.</p>
+                <a href="./admin/index.html" class="btn-open">Open →</a>
+            </div>
+
+            <!-- 2. KDS -->
+            <div class="card">
+                <div class="card-icon">🍳</div>
+                <h3 class="card-title">Kitchen Display</h3>
+                <p class="card-desc">Real-time order queue for kitchen staff with Kanban-style status tracking.</p>
+                <a href="./kds/index.html" class="btn-open">Open →</a>
+            </div>
+
+            <!-- 3. Bot Management -->
+            <div class="card">
+                <div class="card-icon">🤖</div>
+                <h3 class="card-title">Bot Management</h3>
+                <p class="card-desc">Monitor and control all Maneki Neko bots, switch characters, view live logs.</p>
+                <a href="./bot-management/index.html" class="btn-open">Open →</a>
+            </div>
+
+            <!-- 4. Customer Ordering -->
+            <div class="card">
+                <span class="badge-soon">🔧 Coming Soon</span>
+                <div class="card-icon">🛒</div>
+                <h3 class="card-title">Customer Ordering</h3>
+                <p class="card-desc">AI-powered ordering experience with voice, face recognition and anime personalities.</p>
+                <a href="./customer/index.html" class="btn-open">Open →</a>
+            </div>
+        </div>
+
+        <!-- ── Tech Stack ─────────────────────────────────────────── -->
+        <div class="tech-stack">
+            <h2>Powered By</h2>
+            <div class="tech-badges">
+                <div class="tech-badge">🧠 Azure OpenAI</div>
+                <div class="tech-badge">🎙️ Azure Speech</div>
+                <div class="tech-badge">👁️ Azure Face API</div>
+                <div class="tech-badge">🗄️ Supabase</div>
+                <div class="tech-badge">⚡ Vanilla JS</div>
+                <div class="tech-badge">🎨 Pure CSS</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Footer ─────────────────────────────────────────────── -->
+    <footer>
+        <p>Maneki Neko Smart Restaurant System</p>
+        <p>Built with ❤️ using Agentic AI</p>
+    </footer>
+
+</body>
+</html>

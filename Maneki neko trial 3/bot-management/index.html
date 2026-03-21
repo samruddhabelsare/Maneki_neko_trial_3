@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maneki Neko | Bot Control Center</title>
+    <meta name="description" content="Maneki Neko Smart Restaurant — Bot Management Panel">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/theme.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bm-body">
+
+    <!-- ── Fixed Navbar ─────────────────────────────────────────────────── -->
+    <nav class="bm-navbar">
+        <div class="navbar-left">
+            <span class="navbar-icon">🐱</span>
+            <span class="navbar-title">Maneki Neko — Bot Control Center</span>
+        </div>
+        <div class="navbar-center">
+            <span id="liveClock" class="live-clock">00:00:00</span>
+        </div>
+        <div class="navbar-right">
+            <span id="botCountDisplay" class="bot-count">Loading...</span>
+            <span id="alertBell" class="alert-bell" title="Bot Alerts">🔔</span>
+        </div>
+    </nav>
+
+    <!-- ── Tab Bar ───────────────────────────────────────────────────────── -->
+    <div class="tab-bar">
+        <button class="tab-btn active" data-tab="overview">🤖 Overview</button>
+        <button class="tab-btn" data-tab="live-logs">📋 Live Logs</button>
+        <button class="tab-btn" data-tab="character-control">🎭 Character Control</button>
+        <button class="tab-btn" data-tab="health-monitor">❤️ Health Monitor</button>
+    </div>
+
+    <!-- ── Tab Content ───────────────────────────────────────────────────── -->
+    <main class="bm-main">
+
+        <!-- ══ Tab 1: Overview ══════════════════════════════════════════ -->
+        <div id="tab-overview" class="tab-content active-tab">
+            <div class="section-header">
+                <h1>🤖 Bot Overview</h1>
+                <p class="text-secondary">Live fleet status — all bots at a glance</p>
+            </div>
+            <div id="botCardsGrid" class="bot-cards-grid"></div>
+        </div>
+
+        <!-- ══ Tab 2: Live Logs ══════════════════════════════════════════ -->
+        <div id="tab-live-logs" class="tab-content">
+            <div class="section-header flex-header">
+                <div>
+                    <h1>📋 Live Conversation Logs</h1>
+                    <p class="text-secondary">Real-time bot–customer interactions</p>
+                </div>
+                <div class="log-controls">
+                    <select id="logBotSelect" class="log-bot-select">
+                        <option value="">-- Select a Bot --</option>
+                    </select>
+                    <button id="refreshLogs" class="btn-control">↻ Refresh</button>
+                    <button id="autoRefreshToggle" class="btn-control active-ctrl">⏱ Auto ON</button>
+                </div>
+            </div>
+            <div id="logFeed" class="log-feed">
+                <div class="log-placeholder">Select a bot to view logs 📋</div>
+            </div>
+        </div>
+
+        <!-- ══ Tab 3: Character Control ══════════════════════════════════ -->
+        <div id="tab-character-control" class="tab-content">
+            <div class="section-header">
+                <h1>🎭 Character Control</h1>
+                <p class="text-secondary">Switch bot personalities individually or globally</p>
+            </div>
+
+            <!-- Global Apply -->
+            <div class="glass-card global-apply-card">
+                <h3>⚡ Apply to All Bots</h3>
+                <div class="global-apply-row">
+                    <select id="globalCharacterSelect" class="char-select-global">
+                        <option value="Naruto">Naruto 🍥</option>
+                        <option value="Goku">Goku 🐉</option>
+                        <option value="Doraemon">Doraemon 🔔</option>
+                        <option value="Shinchan">Shinchan 😜</option>
+                        <option value="Luffy">Luffy ☠️</option>
+                    </select>
+                    <button id="applyAllBtn" class="btn-primary">🎭 Apply to All</button>
+                </div>
+                <div id="applyAllMsg" class="apply-msg" style="display:none;"></div>
+            </div>
+
+            <!-- Per-Bot Table -->
+            <div class="glass-card table-container" style="margin-top:1.5rem;">
+                <table id="characterTable">
+                    <thead>
+                        <tr>
+                            <th>Bot Name</th>
+                            <th>Table</th>
+                            <th>Current Mode</th>
+                            <th>Change To</th>
+                            <th>Apply</th>
+                        </tr>
+                    </thead>
+                    <tbody id="characterTableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Personality Cards -->
+            <div class="personality-grid">
+                <div class="personality-card naruto-card">
+                    <div class="personality-emoji">🍥</div>
+                    <div class="personality-name">Naruto</div>
+                    <div class="personality-desc">Energetic, loud, never gives up. Uses "Dattebayo!" catchphrase. Treats every order like a ninja mission.</div>
+                </div>
+                <div class="personality-card goku-card">
+                    <div class="personality-emoji">🐉</div>
+                    <div class="personality-name">Goku</div>
+                    <div class="personality-desc">Innocent, cheerful, always hungry. Loves food more than fighting. Will go Super Saiyan over ramen.</div>
+                </div>
+                <div class="personality-card doraemon-card">
+                    <div class="personality-emoji">🔔</div>
+                    <div class="personality-name">Doraemon</div>
+                    <div class="personality-desc">Friendly, helpful, polite. Has a gadget for every problem. Takes every request very seriously.</div>
+                </div>
+                <div class="personality-card shinchan-card">
+                    <div class="personality-emoji">😜</div>
+                    <div class="personality-name">Shinchan</div>
+                    <div class="personality-desc">Naughty, funny, unpredictable. Says the most unexpected things. Keeps customers entertained.</div>
+                </div>
+                <div class="personality-card luffy-card">
+                    <div class="personality-emoji">☠️</div>
+                    <div class="personality-name">Luffy</div>
+                    <div class="personality-desc">Loud, adventurous, pirate-style. Everything is an adventure. Will become King of the Pirates — right after your order.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ Tab 4: Health Monitor ══════════════════════════════════════ -->
+        <div id="tab-health-monitor" class="tab-content">
+            <div class="section-header flex-header">
+                <div>
+                    <h1>❤️ Health Monitor</h1>
+                    <p class="text-secondary">Auto-refresh every 15 seconds</p>
+                </div>
+                <div class="health-summary-row">
+                    <div class="health-pill total-pill">Total: <strong id="hTotal">0</strong></div>
+                    <div class="health-pill online-pill">Online: <strong id="hOnline">0</strong></div>
+                    <div class="health-pill offline-pill">Offline: <strong id="hOffline">0</strong></div>
+                    <div class="health-pill critical-pill">Critical: <strong id="hCritical">0</strong></div>
+                </div>
+            </div>
+            <div class="glass-card table-container">
+                <table id="healthTable">
+                    <thead>
+                        <tr>
+                            <th>Bot Name</th>
+                            <th>Table</th>
+                            <th>Status</th>
+                            <th>Battery</th>
+                            <th>Temperature</th>
+                            <th>Last Seen</th>
+                            <th>Condition</th>
+                        </tr>
+                    </thead>
+                    <tbody id="healthTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ── Scripts (NO type="module") ──────────────────────────────────── -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../shared/supabase.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

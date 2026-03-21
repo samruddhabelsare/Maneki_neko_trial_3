@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maneki Neko | Smart Dining</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Supabase SDK via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- CSS -->
+    <link rel="stylesheet" href="../shared/theme.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="customer-body">
+    <!-- 1. Welcome Screen (Full Screen Overlay) -->
+    <section id="welcomeScreen" class="welcome-screen">
+        <div class="welcome-content">
+            <div class="waving-cat">🐱</div>
+            <h1 class="text-gradient">Irasshaimase!</h1>
+            <p id="welcomeTagline" class="text-secondary">Your AI Dining Assistant is ready.</p>
+            <button id="startBtn" class="btn-primary start-btn">Tap to Start</button>
+        </div>
+    </section>
+
+    <!-- 2. Main Header -->
+    <header class="main-header glass-card hidden">
+        <div class="container header-flex">
+            <div class="brand">
+                <span class="logo">🐱</span>
+                <span class="name text-gradient">Maneki Neko</span>
+            </div>
+            <div class="info-badges">
+                <span class="badge table-badge" id="tableDisplay">Table --</span>
+                <span class="badge mode-badge" id="modeBadge">Normal Mode</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 3. Menu Section -->
+    <main id="menuSection" class="container hidden">
+        <div class="category-tabs">
+            <button class="tab-btn active" data-cat="all">All</button>
+            <button class="tab-btn" data-cat="Veg">Veg</button>
+            <button class="tab-btn" data-cat="Non-Veg">Non-Veg</button>
+            <button class="tab-btn" data-cat="Spicy">Spicy</button>
+        </div>
+
+        <div class="menu-grid" id="menuGrid">
+            <!-- Menu cards injected here -->
+        </div>
+
+        <!-- Floating Cart Trigger -->
+        <button id="cartTrigger" class="cart-trigger glass-card">
+            <span>🛒</span>
+            <span id="cartCountTag">0</span>
+        </button>
+    </main>
+
+    <!-- 4. Cart Sidebar (Slide-in) -->
+    <aside id="cartSidebar" class="cart-sidebar glass-card">
+        <div class="cart-header">
+            <h2>Your Cart</h2>
+            <button id="closeCart" class="close-btn">&times;</button>
+        </div>
+        <div id="cartItems" class="cart-items">
+            <!-- Items injected here -->
+        </div>
+        <div class="cart-footer">
+            <div class="total-row">
+                <span>Total</span>
+                <span id="cartTotal">$0.00</span>
+            </div>
+            <button id="placeOrderBtn" class="btn-primary place-order-btn">Place Order</button>
+        </div>
+    </aside>
+
+    <!-- 5. Order Status Overly -->
+    <div id="statusOverlay" class="status-overlay hidden">
+        <div class="glass-card status-card">
+            <h2>Order Tracking</h2>
+            <div class="progress-stepper">
+                <div class="step" data-status="pending">
+                    <div class="dot"></div>
+                    <span>Placed</span>
+                </div>
+                <div class="step" data-status="preparing">
+                    <div class="dot"></div>
+                    <span>Preparing</span>
+                </div>
+                <div class="step" data-status="ready">
+                    <div class="dot"></div>
+                    <span>Ready</span>
+                </div>
+                <div class="step" data-status="delivered">
+                    <div class="dot"></div>
+                    <span>Delivered</span>
+                </div>
+            </div>
+            <p id="statusMsg" class="text-secondary">The kitchen has received your order.</p>
+        </div>
+    </div>
+
+    <!-- 6. Feedback Modal -->
+    <div id="feedbackModal" class="feedback-backdrop hidden">
+        <div class="glass-card feedback-card">
+            <h3>How was your meal?</h3>
+            <div class="stars" id="starContainer">
+                <span data-val="1">⭐</span>
+                <span data-val="2">⭐</span>
+                <span data-val="3">⭐</span>
+                <span data-val="4">⭐</span>
+                <span data-val="5">⭐</span>
+            </div>
+            <textarea id="feedbackComment" placeholder="Any suggestions for our bots?"></textarea>
+            <button id="submitFeedback" class="btn-primary">Submit Feedback</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../shared/supabase.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
