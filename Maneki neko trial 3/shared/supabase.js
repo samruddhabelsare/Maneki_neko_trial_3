@@ -40,3 +40,13 @@ window.getFeedback = async () =>
 
 window.submitFeedback = async (data) =>
     await window.supabaseClient.from('feedback').insert([data]);
+
+window.getRestaurantInfo = async function () {
+    const { data, error } = await window.supabaseClient
+        .from('restaurant_info')
+        .select('value')
+        .eq('key', 'restaurant_info')
+        .single();
+    if (error) return null;
+    return data?.value || null;
+}
