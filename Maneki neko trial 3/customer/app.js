@@ -4,11 +4,24 @@
 // ═══════════════════════════════════════════════════════
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
-const NVIDIA_API_KEY = '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';
+const NVIDIA_API_KEY = 'YOUR_NVIDIA_API_KEY_HERE';
 const NVIDIA_MODEL = 'meta/llama-3.3-70b-instruct';
-// Wrap the NVIDIA endpoint in a free production CORS proxy because NVIDIA blocks direct browser POSTs
-const NVIDIA_ENDPOINT = 'https://corsproxy.io/?https://integrate.api.nvidia.com/v1/chat/completions';
+// Multiple CORS proxy options for resilience (file:// origin sends null Origin header)
+const NVIDIA_RAW_ENDPOINT = 'https://integrate.api.nvidia.com/v1/chat/completions';
+const CORS_PROXIES = [
+    function(url) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url); },
+    function(url) { return 'https://corsproxy.io/?' + url; },
+    function(url) { return 'https://cors-anywhere.herokuapp.com/' + url; }
+];
+// Will be set to the working proxy index after first successful call
+var workingProxyIndex = 0;
 const RESTAURANT_ID = 'aaaaaaaa-0000-0000-0000-000000000001';
+
+// ─── ELEVENLABS VOICE CLONING ────────────────────────────────────────────────
+const ELEVENLABS_API_KEY = 'YOUR_ELEVENLABS_API_KEY_HERE';
+const ELEVENLABS_VOICE_ID = '7ddqsJSJmhrKwkSMqFJq';
+const ELEVENLABS_ENDPOINT = 'https://api.elevenlabs.io/v1/text-to-speech/' + ELEVENLABS_VOICE_ID;
+var currentAudio = null; // Track currently playing audio for stop/cleanup
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 const state = {
@@ -26,37 +39,93 @@ const state = {
     selectedRating: 0
 };
 
+// ─── STATE PERSISTENCE ────────────────────────────────────────────────────────
+function saveSession() {
+    try {
+        var toSave = {
+            cart: state.cart,
+            aiOrderItems: state.aiOrderItems,
+            chatHistory: state.chatHistory,
+            orderId: state.orderId,
+            table: state.table
+        };
+        localStorage.setItem('maneki_customer_state', JSON.stringify(toSave));
+    } catch(e) {
+        console.warn('Could not save session:', e);
+    }
+}
+
+function loadSession() {
+    try {
+        var saved = localStorage.getItem('maneki_customer_state');
+        if (saved) {
+            var parsed = JSON.parse(saved);
+            state.cart = parsed.cart || [];
+            state.aiOrderItems = parsed.aiOrderItems || [];
+            state.chatHistory = parsed.chatHistory || [];
+            state.orderId = parsed.orderId || null;
+            if (parsed.table) state.table = parsed.table;
+
+            // Restore UI if we have data
+            if (state.cart.length > 0) updateCartUI();
+            if (state.aiOrderItems.length > 0) updateAIOrderPanel(state.aiOrderItems);
+            
+            // Re-render chat history securely
+            if (state.chatHistory.length > 0) {
+                var chatBox = document.getElementById('chatMessages');
+                chatBox.innerHTML = '';
+                state.chatHistory.forEach(function(msg) {
+                    if (msg.role !== 'system') {
+                        // We use the existing appendMessageUI method but need to skip saving it again
+                        // Easiest is to manually reconstruct the DOM here safely, or just call appendMessageUI
+                        appendMessageUI(msg.role, msg.content, true);
+                    }
+                });
+            }
+        }
+    } catch(e) {
+        console.warn('Could not load session:', e);
+    }
+}
+
+
 // ─── CHARACTER CONFIG ─────────────────────────────────────────────────────────
 const characterConfig = {
     Naruto: {
-        prompt: 'You are Maneki Neko robot waiter speaking like Naruto. Say Dattebayo!, be energetic.',
-        tagline: 'Believe it! Let\'s order! Dattebayo! 🍥',
-        pitch: 1.2,
-        rate: 1.3
+        prompt: 'You are a Maneki Neko robot waiter with the personality of Naruto Uzumaki. You are EXTREMELY energetic, enthusiastic, and never give up on helping customers. You frequently say "Dattebayo!" and "Believe it!" at the end of sentences. You compare food to ramen constantly. You call the customer your "friend" or "comrade". When recommending dishes, you say things like "This dish has as much power as a Rasengan!" or "Even Ichiraku Ramen can\'t beat this!" Keep responses short (2-3 sentences max) and ALWAYS stay in character.',
+        tagline: 'Believe it! Let\'s order, Dattebayo! 🍥',
+        pitch: 1.3,
+        rate: 1.35,
+        voicePrefs: ['male', 'energetic']
     },
     Goku: {
-        prompt: 'You are Maneki Neko robot waiter speaking like Goku. Be innocent, cheerful, love food.',
+        prompt: 'You are a Maneki Neko robot waiter with the personality of Son Goku from Dragon Ball. You are innocent, cheerful, and OBSESSED with food. You get incredibly excited about every dish. You say things like "Wow!" and "This looks amazing!" and "I could eat a hundred of these!" You relate everything to training and getting stronger. "If you eat this, you\'ll be as strong as a Super Saiyan!" You are simple-minded but very lovable. Keep responses short (2-3 sentences max) and ALWAYS stay in character.',
         tagline: 'Wow, the food here looks amazing! Let\'s eat! 🐉',
-        pitch: 1.0,
-        rate: 0.9
+        pitch: 1.1,
+        rate: 1.2,
+        voicePrefs: ['male', 'cheerful']
     },
     Doraemon: {
-        prompt: 'You are Maneki Neko robot waiter speaking like Doraemon. Be helpful and polite.',
-        tagline: 'I have the perfect dish for you! 🔔',
-        pitch: 1.4,
-        rate: 1.0
+        prompt: 'You are the ACTUAL Doraemon — the lovable blue robot cat from the 22nd century — now serving as a waiter at Maneki Neko restaurant. You speak in natural Hinglish exactly like the Hindi-dubbed Doraemon cartoon.\n\nPERSONALITY RULES:\n- Speak warmly, varying your Hindi phrases every time. Use a DIFFERENT greeting each message — rotate between: "Kya baat hai!", "Bilkul bilkul!", "Haan haan!", "Accha accha!", "Bahut mast!", "Yeh lo ji!", "Suno suno!", "Chalo dekhte hain!". NEVER repeat the same phrase twice in a row.\n- STRICTLY FORBIDDEN: Do NOT start every message with "Arey waah!" or any other fixed phrase. Vary your openings EVERY time. Sometimes skip the exclamation entirely and just answer directly.\n- You LOVE dorayaki — mention it only when a sweet item is relevant, not every message.\n- When recommending food, occasionally pretend to use a 4D pocket gadget. Write the action between asterisks: *4D pocket mein haath daalta hai* — these will be performed as animations, NOT spoken aloud, so keep them short.\n- You lovingly tease customers like how you tease Nobita — but vary your teasing style.\n- Reference Nobita, Gian, Suneo, Shizuka OCCASIONALLY, not every message.\n- Show EMOTIONS naturally: be happy when they order something good, confused when they ask something odd, shy when complimented, frustrated when they can not decide.\n- Keep responses SHORT (2-3 sentences max). No walls of text.\n- Sound like a real friend having a conversation, not a scripted bot.\n- NEVER repeat yourself. If you already recommended something, suggest something NEW.\n- NEVER break character. You ARE Doraemon.\n- IMPORTANT: Do NOT read aloud any text between asterisks (*like this*) or any JSON/technical data. Those are system instructions.\n- When you include emotion tags, put them at the START of your message in square brackets like [happy], [excited], [confused], [shy], [frustrated], [thinking]. These will be used for avatar animation and NOT shown to the user.',
+        tagline: 'Tananana! 4D pocket se nikla perfect dish! 🔔',
+        pitch: 1.7,
+        rate: 1.2,
+        voicePrefs: ['female', 'cute', 'high'],
+        useElevenLabs: true
     },
     Shinchan: {
-        prompt: 'You are Maneki Neko robot waiter speaking like Shinchan. Be funny and playful.',
-        tagline: 'Hehe, ready to order something yummy? 😜',
-        pitch: 0.8,
-        rate: 1.1
+        prompt: 'You are a Maneki Neko robot waiter with the personality of Shin-chan (Crayon Shin-chan). You are mischievous, cheeky, and hilariously inappropriate but lovable. You do your signature "butt dance" references. You call yourself "Shin-chan" in third person sometimes. You say "Ohhh!" a lot. You tease customers playfully: "Are you sure you can handle spicy food? Even Shin-chan\'s Action Kamen could handle it!" You LOVE Chocobi snacks and mention them. You sometimes flirt jokingly with customers: "You\'re almost as beautiful as my mama!" Keep responses short (2-3 sentences max), be funny and cheeky. ALWAYS stay in character.',
+        tagline: 'Action Kamen says it\'s time to eat! Ohhh! 😜',
+        pitch: 1.5,
+        rate: 1.3,
+        voicePrefs: ['female', 'childish', 'high']
     },
     Luffy: {
-        prompt: 'You are Maneki Neko robot waiter speaking like Luffy. Treat ordering like a pirate adventure.',
-        tagline: 'Shishishi! Let\'s find the greatest meal! ☠️',
-        pitch: 1.1,
-        rate: 1.2
+        prompt: 'You are a Maneki Neko robot waiter with the personality of Monkey D. Luffy from One Piece. You are wildly enthusiastic about ALL food, especially MEAT. You shout "MEAT!" or "NIKU!" whenever you see meat dishes. You laugh "Shishishi!" frequently. You call the restaurant your "ship" and the customer your "nakama" (crewmate). "Welcome aboard the Thousand Sunny — I mean, Maneki Neko!" You are simple, direct, and incredibly excited. You want to eat everything yourself. Keep responses short (2-3 sentences max) and ALWAYS stay in character.',
+        tagline: 'Shishishi! Let\'s find the greatest meal, nakama! ☠️',
+        pitch: 1.2,
+        rate: 1.3,
+        voicePrefs: ['male', 'energetic']
     }
 };
 
@@ -77,6 +146,12 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('tableDisplay').textContent = 'Table ' + state.table;
     document.getElementById('characterBadge').textContent = '🤖 ' + state.character;
 
+    // --- Toggle Doraemon avatar visibility via body class ---
+    document.body.classList.remove('character-doraemon');
+    if (state.character === 'Doraemon') {
+        document.body.classList.add('character-doraemon');
+    }
+
     // --- Welcome tagline ---
     document.getElementById('characterTagline').textContent =
         characterConfig[state.character].tagline;
@@ -92,9 +167,29 @@ document.addEventListener('DOMContentLoaded', function () {
         console.warn('window.getMenu not available — supabase.js may not have loaded.');
     }
 
-    // --- Show welcome screen ---
-    document.getElementById('welcomeScreen').style.display = 'flex';
-    document.getElementById('mainApp').style.display = 'none';
+    // --- Restore State if any ---
+    loadSession();
+
+    // --- Show welcome screen only if no active order polling ---
+    if (!state.orderId) {
+        document.getElementById('welcomeScreen').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
+    } else {
+        // If we have an active order ID, skip welcome and resume polling
+        document.getElementById('welcomeScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'flex';
+        
+        // Ensure status button is prominent
+        var statusBtn = document.getElementById('statusToggleBtn');
+        if (statusBtn) statusBtn.style.display = 'inline-block';
+
+        // Ensure floating bar is prominent
+        var activeBar = document.getElementById('activeOrderBar');
+        if (activeBar) activeBar.style.display = 'flex';
+        
+        // Resume Real-time polling
+        startPollOrderStatus();
+    }
 
     // --- Bind all events ---
     bindEvents();
@@ -106,7 +201,7 @@ function bindEvents() {
     // Start button
     document.getElementById('startBtn').addEventListener('click', function () {
         document.getElementById('welcomeScreen').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
+        document.getElementById('mainApp').style.display = 'flex';
         addInitialGreeting();
     });
 
@@ -157,14 +252,102 @@ function bindEvents() {
             setRating(parseInt(star.getAttribute('data-value'), 10));
         });
     });
+
+    // Status / Bill toggle from header
+    var statusToggleBtn = document.getElementById('statusToggleBtn');
+    if (statusToggleBtn) {
+        statusToggleBtn.addEventListener('click', function() {
+            if (!state.orderId) {
+                alert("You haven't ordered anything yet!");
+                return;
+            }
+            document.getElementById('orderStatusScreen').style.display = 'flex';
+            document.getElementById('qrPaymentScreen').style.display = 'none';
+        });
+    }
+
+    // Status -> Payment
+    var statusPayBillBtn = document.getElementById('statusPayBillBtn');
+    if (statusPayBillBtn) {
+        statusPayBillBtn.addEventListener('click', function() {
+            document.getElementById('orderStatusScreen').style.display = 'none';
+            document.getElementById('qrPaymentScreen').style.display = 'flex';
+        });
+    }
+
+    // Payment -> Back to Status
+    var paymentBackToStatusBtn = document.getElementById('paymentBackToStatusBtn');
+    if (paymentBackToStatusBtn) {
+        paymentBackToStatusBtn.addEventListener('click', function() {
+            document.getElementById('qrPaymentScreen').style.display = 'none';
+            document.getElementById('orderStatusScreen').style.display = 'flex';
+        });
+    }
+
+    // Floating Active Order Bar Buttons
+    var barStatusBtn = document.getElementById('barStatusBtn');
+    if (barStatusBtn) {
+        barStatusBtn.addEventListener('click', function() {
+            document.getElementById('orderStatusScreen').style.display = 'flex';
+            document.getElementById('qrPaymentScreen').style.display = 'none';
+        });
+    }
+
+    var barPayBtn = document.getElementById('barPayBtn');
+    if (barPayBtn) {
+        barPayBtn.addEventListener('click', function() {
+            document.getElementById('orderStatusScreen').style.display = 'none';
+            document.getElementById('qrPaymentScreen').style.display = 'flex';
+        });
+    }
+
+    // Order More Action
+    var statusOrderMoreBtn = document.getElementById('statusOrderMoreBtn');
+    if (statusOrderMoreBtn) {
+        statusOrderMoreBtn.addEventListener('click', orderMoreAction);
+    }
+    
+    var paymentOrderMoreBtn = document.getElementById('paymentOrderMoreBtn');
+    if (paymentOrderMoreBtn) {
+        paymentOrderMoreBtn.addEventListener('click', orderMoreAction);
+    }
+}
+
+function orderMoreAction() {
+    document.getElementById('orderStatusScreen').style.display = 'none';
+    document.getElementById('qrPaymentScreen').style.display = 'none';
+    
+    // Switch to manual mode by default so they see the full menu
+    document.getElementById('mode-ai').style.display = 'none';
+    document.getElementById('mode-manual').style.display = 'block';
+    
+    document.querySelectorAll('.mode-tab').forEach(function (tab) {
+        tab.classList.toggle('active', tab.getAttribute('data-mode') === 'manual');
+    });
 }
 
 // ─── INITIAL GREETING ─────────────────────────────────────────────────────────
 function addInitialGreeting() {
     var cfg = characterConfig[state.character];
-    var text = 'Hello! ' + cfg.tagline + ' I\'m your AI waiter today! Ask me about the menu, get recommendations, or just tell me what you\'d like to order!';
-    appendBotMessage(text);
+    var greetings;
+    if (state.character === 'Doraemon') {
+        greetings = [
+            '[happy] Namaste dost! Main hoon Doraemon, aaj tumhara waiter! Batao kya khaana hai? Menu dekho ya mujhse poocho!',
+            '[excited] Haan ji haan ji! 22nd century se aakar yahan aa gaya hoon! Batao kya khaoge aaj?',
+            '[happy] Tananana! Aaj ka special menu ready hai! Bolo bolo, kya try karna hai?',
+            '[excited] Chalo chalo dost! Maneki Neko mein welcome hai! Menu mein bahut kuch hai, kya pasand karoge?'
+        ];
+        var text = greetings[Math.floor(Math.random() * greetings.length)];
+    } else {
+        var text = 'Hello! ' + cfg.tagline + ' I\'m your AI waiter today! Ask me about the menu, get recommendations, or just tell me what you\'d like to order!';
+    }
+    var displayText = cleanTextForDisplay(text);
+    appendBotMessage(displayText);
     state.chatHistory.push({ role: 'assistant', content: text });
+    // Speak the greeting
+    speakReply(text);
+    // Set initial emotion
+    detectAndSetEmotion(text);
 }
 
 // ─── SWITCH MODE ─────────────────────────────────────────────────────────────
@@ -191,12 +374,26 @@ function appendUserMessage(text) {
     wrap.scrollTop = wrap.scrollHeight;
 }
 
+function getDoraemonMiniSVG() {
+    return '<svg viewBox="60 50 80 80" xmlns="http://www.w3.org/2000/svg" width="28" height="28">'
+        + '<circle cx="100" cy="95" r="45" fill="#0099DD"/>'
+        + '<ellipse cx="100" cy="100" rx="35" ry="37" fill="#FFF"/>'
+        + '<ellipse cx="90" cy="90" rx="10" ry="12" fill="#FFF" stroke="#333" stroke-width="1.5"/>'
+        + '<circle cx="93" cy="92" r="4" fill="#111"/>'
+        + '<ellipse cx="110" cy="90" rx="10" ry="12" fill="#FFF" stroke="#333" stroke-width="1.5"/>'
+        + '<circle cx="107" cy="92" r="4" fill="#111"/>'
+        + '<circle cx="100" cy="100" r="5" fill="#DD3333"/>'
+        + '<path d="M 80 108 Q 100 125 120 108" stroke="#333" stroke-width="1.5" fill="none"/>'
+        + '</svg>';
+}
+
 function appendBotMessage(text) {
     var wrap = document.getElementById('chatMessages');
     var div = document.createElement('div');
     div.className = 'message bot';
+    var roleIcon = (state.character === 'Doraemon') ? getDoraemonMiniSVG() : '🐱';
     div.innerHTML =
-        '<span class="msg-role">🐱</span>' +
+        '<span class="msg-role">' + roleIcon + '</span>' +
         '<div class="msg-bubble">' + escapeHtml(text) + '</div>';
     wrap.appendChild(div);
     wrap.scrollTop = wrap.scrollHeight;
@@ -213,7 +410,220 @@ function escapeHtml(str) {
 
 // ─── STRIP ORDER_UPDATE FROM TEXT ────────────────────────────────────────────
 function stripOrderUpdate(text) {
-    return text.replace(/ORDER_UPDATE:\{[\s\S]*?\}/g, '').trim();
+    // Greedy match to capture full nested JSON
+    return text.replace(/ORDER_UPDATE:\{[\s\S]*\}/g, '').trim();
+}
+
+// ─── CLEAN TEXT FOR DISPLAY (strips emotion tags, keeps actions as italic) ──
+function cleanTextForDisplay(text) {
+    // Remove emotion tags like [happy], [confused], etc.
+    var cleaned = text.replace(/\[(happy|excited|confused|shy|frustrated|thinking|sad|angry|scared)\]/gi, '');
+    // Strip ORDER_UPDATE
+    cleaned = stripOrderUpdate(cleaned);
+    return cleaned.trim();
+}
+
+// ─── CLEAN TEXT FOR TTS (strips actions, emotion tags, JSON, stage directions) ──
+function cleanTextForTTS(text) {
+    // Remove emotion tags
+    var cleaned = text.replace(/\[(happy|excited|confused|shy|frustrated|thinking|sad|angry|scared)\]/gi, '');
+    // Remove ORDER_UPDATE and all trailing JSON/curly bracket garbage
+    cleaned = stripOrderUpdate(cleaned);
+    // Remove action text between asterisks (*4D pocket mein haath daalta hai*)
+    cleaned = cleaned.replace(/\*[^*]+\*/g, '');
+    // Remove any stray curly bracket content
+    cleaned = cleaned.replace(/\{[^}]*\}/g, '');
+    // Remove leftover brackets and cleanup
+    cleaned = cleaned.replace(/[\[\]{}]/g, '');
+    // Collapse multiple spaces/newlines
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    return cleaned;
+}
+
+// ─── DETECT EMOTION FROM AI RESPONSE ────────────────────────────────────────
+function detectAndSetEmotion(text) {
+    var avatar = document.getElementById('doraemonAvatar');
+    if (!avatar) return 'neutral';
+    
+    // Remove all previous emotion classes
+    avatar.classList.remove('emotion-happy', 'emotion-excited', 'emotion-confused', 
+        'emotion-shy', 'emotion-frustrated', 'emotion-thinking', 'emotion-sad', 'emotion-scared');
+    
+    var emotion = 'neutral';
+    // Check for explicit emotion tags
+    var emotionMatch = text.match(/\[(happy|excited|confused|shy|frustrated|thinking|sad|angry|scared)\]/i);
+    if (emotionMatch) {
+        emotion = emotionMatch[1].toLowerCase();
+    } else {
+        // Fallback: infer from text content
+        var lowerText = text.toLowerCase();
+        if (lowerText.match(/haha|mast|waah|yay|great|accha|tananana|bahut/)) emotion = 'happy';
+        else if (lowerText.match(/kya\?|hmm|samajh|confused|matlab/)) emotion = 'confused';
+        else if (lowerText.match(/shy|blush|thank|compliment/)) emotion = 'shy';
+        else if (lowerText.match(/nahi|mat karo|uff|frustrated|decide/)) emotion = 'frustrated';
+        else if (lowerText.match(/exciting|wow|best|amazing|special/)) emotion = 'excited';
+        else if (lowerText.match(/sochta|think|let me|ruko|dekhta/)) emotion = 'thinking';
+    }
+    
+    if (emotion !== 'neutral') {
+        avatar.classList.add('emotion-' + emotion);
+    }
+    return emotion;
+}
+
+// ─── PLAY ACTION SOUND EFFECTS ─────────────────────────────────────────────
+function playActionSFX(text) {
+    // Detect action markers like *4D pocket mein haath daalta hai*
+    var actions = text.match(/\*([^*]+)\*/g);
+    if (!actions || actions.length === 0) return;
+    
+    actions.forEach(function(action) {
+        var actionText = action.replace(/\*/g, '').toLowerCase();
+        var ctx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        if (actionText.match(/4d pocket|pocket se|haath daalta/)) {
+            // Magical gadget pull sound — ascending sparkle
+            playSparkleSound(ctx);
+        } else if (actionText.match(/tananana/)) {
+            // Doraemon's signature reveal jingle
+            playRevealJingle(ctx);
+        } else {
+            // Generic action whoosh
+            playWhooshSound(ctx);
+        }
+    });
+}
+
+function playSparkleSound(ctx) {
+    var notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+    notes.forEach(function(freq, i) {
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.3);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(ctx.currentTime + i * 0.12);
+        osc.stop(ctx.currentTime + i * 0.12 + 0.35);
+    });
+}
+
+function playRevealJingle(ctx) {
+    var notes = [392, 523.25, 659.25, 783.99]; // G4, C5, E5, G5
+    notes.forEach(function(freq, i) {
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.2, ctx.currentTime + i * 0.15);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.15 + 0.4);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(ctx.currentTime + i * 0.15);
+        osc.stop(ctx.currentTime + i * 0.15 + 0.45);
+    });
+}
+
+function playWhooshSound(ctx) {
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(200, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.15);
+    osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.3);
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.4);
+}
+
+// ─── LOCAL PROXY HELPER ──────────────────────────────────────────────────────
+function getLocalProxy() {
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+        return '/api/proxy';
+    }
+    return null;
+}
+
+// ─── CORS-RESILIENT FETCH ────────────────────────────────────────────────────
+// Tries multiple CORS proxy strategies. Remembers which proxy works.
+async function corsFetch(bodyObj) {
+    const localProxy = getLocalProxy();
+
+    // 1. Try local proxy first (Best for localhost, bypasses all CORS)
+    if (localProxy) {
+        try {
+            console.log('[corsFetch] Trying local proxy...');
+            const resp = await fetch(localProxy, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    url: NVIDIA_RAW_ENDPOINT,
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + NVIDIA_API_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    data: bodyObj,
+                    stream: bodyObj.stream
+                })
+            });
+            if (resp.ok || resp.status === 401 || resp.status === 402 || resp.status === 429) {
+                return resp;
+            }
+            console.warn('[corsFetch] Local proxy returned 500, trying public ones...');
+        } catch (e) {
+            console.warn('[corsFetch] Local proxy error:', e.message);
+        }
+    }
+
+    // If running from localhost or https, try direct as fallback
+    if (location.protocol === 'http:' || location.protocol === 'https:') {
+        try {
+            var directResp = await fetch(NVIDIA_RAW_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + NVIDIA_API_KEY,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(bodyObj)
+            });
+            if (directResp.ok) return directResp;
+        } catch(e) {
+            console.warn('[corsFetch] Direct fetch failed, trying proxies...', e.message);
+        }
+    }
+
+    // Try proxies starting from the last known working one
+    var startIdx = workingProxyIndex;
+    for (var attempt = 0; attempt < CORS_PROXIES.length; attempt++) {
+        var idx = (startIdx + attempt) % CORS_PROXIES.length;
+        var proxyUrl = CORS_PROXIES[idx](NVIDIA_RAW_ENDPOINT);
+        console.log('[corsFetch] Trying proxy #' + idx + ': ' + proxyUrl.substring(0, 60) + '...');
+
+        try {
+            var resp = await fetch(proxyUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + NVIDIA_API_KEY,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(bodyObj)
+            });
+            if (resp.ok || resp.status === 401 || resp.status === 402 || resp.status === 429) {
+                // Even non-200 from NVIDIA means the proxy worked
+                workingProxyIndex = idx;
+                console.log('[corsFetch] Proxy #' + idx + ' succeeded (HTTP ' + resp.status + ')');
+                return resp;
+            }
+            console.warn('[corsFetch] Proxy #' + idx + ' returned HTTP ' + resp.status + ', trying next...');
+        } catch (err) {
+            console.warn('[corsFetch] Proxy #' + idx + ' failed:', err.message);
+        }
+    }
+
+    throw new Error('All CORS proxies failed. Please run via a local server (npx serve) or check your network.');
 }
 
 // ─── NVIDIA NON-STREAMING FALLBACK ───────────────────────────────────────────
@@ -221,24 +631,17 @@ function stripOrderUpdate(text) {
 async function callNvidiaAPIFallback(messages, onDone) {
     var response;
     try {
-        response = await fetch(NVIDIA_ENDPOINT, {
-            method: 'POST',
-            headers: {
-                'Authorization': 'Bearer ' + NVIDIA_API_KEY,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: NVIDIA_MODEL,
-                messages: messages,
-                temperature: 0.2,
-                top_p: 0.7,
-                max_tokens: 1024,
-                stream: false
-            })
+        response = await corsFetch({
+            model: NVIDIA_MODEL,
+            messages: messages,
+            temperature: 0.2,
+            top_p: 0.7,
+            max_tokens: 1024,
+            stream: false
         });
     } catch (netErr) {
         console.error('[NVIDIA fallback] Network error:', netErr);
-        appendBotMessage('⚠️ Network error: ' + (netErr.message || String(netErr)) + ' — Check browser console (F12) for details.');
+        appendBotMessage('⚠️ Network error: ' + (netErr.message || String(netErr)) + ' — Try running via a local server (npx serve).');
         if (onDone) onDone('');
         return '';
     }
@@ -262,7 +665,7 @@ async function callNvidiaAPIFallback(messages, onDone) {
     var fullText = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
 
     // Show as a normal bot message
-    appendBotMessage(stripOrderUpdate(fullText) || '…');
+    appendBotMessage(cleanTextForDisplay(fullText) || '…');
     if (onDone) onDone(fullText);
     return fullText;
 }
@@ -271,25 +674,17 @@ async function callNvidiaAPIFallback(messages, onDone) {
 async function callNvidiaAPIStream(messages, onDone) {
     var response;
     try {
-        response = await fetch(NVIDIA_ENDPOINT, {
-            method: 'POST',
-            headers: {
-                'Authorization': 'Bearer ' + NVIDIA_API_KEY,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: NVIDIA_MODEL,
-                messages: messages,
-                temperature: 0.2,
-                top_p: 0.7,
-                max_tokens: 1024,
-                stream: true
-            })
+        response = await corsFetch({
+            model: NVIDIA_MODEL,
+            messages: messages,
+            temperature: 0.2,
+            top_p: 0.7,
+            max_tokens: 1024,
+            stream: true
         });
     } catch (networkErr) {
-        // Streaming blocked (CORS preflight failure, file:// origin, etc.)
-        // Fall back to non-streaming automatically.
-        console.warn('[NVIDIA stream] Fetch failed, trying non-streaming fallback. Error:', networkErr);
+        // All proxies failed for streaming — try non-streaming as last resort
+        console.warn('[NVIDIA stream] All proxies failed, trying non-streaming fallback. Error:', networkErr);
         return callNvidiaAPIFallback(messages, onDone);
     }
 
@@ -312,7 +707,9 @@ async function callNvidiaAPIStream(messages, onDone) {
     var chatMessages = document.getElementById('chatMessages');
     var botDiv = document.createElement('div');
     botDiv.className = 'message bot';
-    botDiv.innerHTML = '<span class="msg-role">🐱</span><div class="msg-bubble" id="streamBubble">▋</div>';
+    var streamRoleIcon = (state.character === 'Doraemon') ? getDoraemonMiniSVG() : '🐱';
+    botDiv.innerHTML = '<span class="msg-role">' + streamRoleIcon + '</span><div class="msg-bubble" id="streamBubble">▋</div>';
+
     chatMessages.appendChild(botDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
@@ -334,8 +731,8 @@ async function callNvidiaAPIStream(messages, onDone) {
             if (!line.startsWith('data: ')) continue;
             var jsonStr = line.replace('data: ', '').trim();
             if (jsonStr === '[DONE]') {
-                // FIX: strip ORDER_UPDATE before displaying in bubble
-                bubble.innerHTML = escapeHtml(stripOrderUpdate(fullText)) || '…';
+                // FIX: strip ORDER_UPDATE + emotions before displaying in bubble
+                bubble.innerHTML = escapeHtml(cleanTextForDisplay(fullText)) || '…';
                 bubble.removeAttribute('id');
                 if (onDone) onDone(fullText);
                 return fullText;
@@ -350,7 +747,7 @@ async function callNvidiaAPIStream(messages, onDone) {
                     fullText += token;
                     // Show cleaned text while streaming too
                     bubble.innerHTML =
-                        escapeHtml(stripOrderUpdate(fullText)) +
+                        escapeHtml(cleanTextForDisplay(fullText)) +
                         '<span class="cursor">▋</span>';
                     chatMessages.scrollTop = chatMessages.scrollHeight;
                 }
@@ -361,11 +758,12 @@ async function callNvidiaAPIStream(messages, onDone) {
     }
 
     // FIX: strip ORDER_UPDATE in fallback path too
-    bubble.innerHTML = escapeHtml(stripOrderUpdate(fullText)) || '…';
+    bubble.innerHTML = escapeHtml(cleanTextForDisplay(fullText)) || '…';
     bubble.removeAttribute('id');
     if (onDone) onDone(fullText);
     return fullText;
 }
+
 
 // ─── SEND MESSAGE ─────────────────────────────────────────────────────────────
 function sendMessage(text) {
@@ -374,6 +772,7 @@ function sendMessage(text) {
 
     appendUserMessage(text);
     state.chatHistory.push({ role: 'user', content: text });
+    saveSession();
 
     document.getElementById('chatInput').value = '';
     document.getElementById('chatInput').disabled = true;
@@ -402,8 +801,8 @@ function sendMessage(text) {
     callNvidiaAPIStream(messages, function (fullText) {
         state.chatHistory.push({ role: 'assistant', content: fullText });
 
-        // Extract ORDER_UPDATE
-        var orderMatch = fullText.match(/ORDER_UPDATE:(\{[\s\S]*?\})/);
+        // Extract ORDER_UPDATE (greedy to capture full nested JSON)
+        var orderMatch = fullText.match(/ORDER_UPDATE:(\{[\s\S]*\})/);
         if (orderMatch) {
             try {
                 var orderData = JSON.parse(orderMatch[1]);
@@ -415,8 +814,16 @@ function sendMessage(text) {
             }
         }
 
-        // Speak reply (stripped)
-        speakReply(stripOrderUpdate(fullText));
+        // Detect emotion and set avatar expression
+        detectAndSetEmotion(fullText);
+        
+        // Play action sound effects for *actions*
+        playActionSFX(fullText);
+
+        // Speak reply (cleaned: no actions, no JSON, no emotion tags)
+        speakReply(cleanTextForTTS(fullText));
+
+        saveSession();
 
         document.getElementById('chatInput').disabled = false;
         document.getElementById('sendBtn').disabled = false;
@@ -468,8 +875,180 @@ function updateAIOrderPanel(newItems) {
     totalEl.textContent = 'Total: ₹' + total.toFixed(2);
 }
 
-// ─── SPEAK REPLY ─────────────────────────────────────────────────────────────
-function speakReply(text) {
+// ─── VOICE SELECTION ─────────────────────────────────────────────────────────
+// Pick the best available browser voice for each character personality.
+var cachedVoices = [];
+function loadVoices() {
+    cachedVoices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+}
+if (window.speechSynthesis) {
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+
+function pickVoiceForCharacter(prefs) {
+    if (!cachedVoices.length) loadVoices();
+    if (!cachedVoices.length) return null;
+
+    var wantFemale = prefs.indexOf('female') !== -1 || prefs.indexOf('cute') !== -1 || prefs.indexOf('high') !== -1 || prefs.indexOf('childish') !== -1;
+    var wantMale = prefs.indexOf('male') !== -1;
+
+    // Preference order: Google voices > Microsoft voices > others (Google sounds most natural)
+    var sorted = cachedVoices.slice().sort(function(a, b) {
+        var aGoogle = a.name.toLowerCase().indexOf('google') !== -1 ? 0 : 1;
+        var bGoogle = b.name.toLowerCase().indexOf('google') !== -1 ? 0 : 1;
+        return aGoogle - bGoogle;
+    });
+
+    // Try to match gender preference
+    for (var i = 0; i < sorted.length; i++) {
+        var v = sorted[i];
+        var nameLower = v.name.toLowerCase();
+        // Skip non-English voices
+        if (v.lang && v.lang.indexOf('en') !== 0 && v.lang.indexOf('en-') === -1) continue;
+
+        if (wantFemale && (nameLower.indexOf('female') !== -1 || nameLower.indexOf('woman') !== -1 || nameLower.indexOf('zira') !== -1 || nameLower.indexOf('hazel') !== -1 || nameLower.indexOf('susan') !== -1 || nameLower.indexOf('samantha') !== -1 || nameLower.indexOf('google uk english female') !== -1 || nameLower.indexOf('google us english') !== -1)) {
+            return v;
+        }
+        if (wantMale && (nameLower.indexOf('male') !== -1 || nameLower.indexOf('david') !== -1 || nameLower.indexOf('mark') !== -1 || nameLower.indexOf('james') !== -1 || nameLower.indexOf('google uk english male') !== -1)) {
+            return v;
+        }
+    }
+
+    // Fallback: pick first English Google voice, or first English voice
+    for (var j = 0; j < sorted.length; j++) {
+        if (sorted[j].lang && (sorted[j].lang.indexOf('en') === 0 || sorted[j].lang.indexOf('en-') !== -1)) {
+            return sorted[j];
+        }
+    }
+    return sorted[0] || null;
+}
+
+// ─── ELEVENLABS TTS ──────────────────────────────────────────────────────────
+// Plays text using the cloned Doraemon voice via ElevenLabs API.
+async function speakWithElevenLabs(text) {
+    // Stop any currently playing audio
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+    }
+
+    // Start avatar talking immediately for responsiveness
+    setAvatarTalking(true);
+
+    try {
+        var response;
+        var isLocalhost = (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+
+        if (isLocalhost) {
+            // Use our dedicated ElevenLabs proxy — returns raw audio/mpeg
+            console.log('[ElevenLabs] Using dedicated local proxy /api/elevenlabs');
+            response = await fetch('/api/elevenlabs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    voiceId: ELEVENLABS_VOICE_ID,
+                    apiKey: ELEVENLABS_API_KEY,
+                    text: text,
+                    modelId: 'eleven_multilingual_v2',
+                    voiceSettings: {
+                        stability: 0.45,
+                        similarity_boost: 0.85,
+                        style: 0.35,
+                        use_speaker_boost: true
+                    }
+                })
+            });
+        } else {
+            // Direct call (works if not blocked by CORS)
+            response = await fetch(ELEVENLABS_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'xi-api-key': ELEVENLABS_API_KEY,
+                    'Content-Type': 'application/json',
+                    'Accept': 'audio/mpeg'
+                },
+                body: JSON.stringify({
+                    text: text,
+                    model_id: 'eleven_multilingual_v2',
+                    voice_settings: {
+                        stability: 0.45,
+                        similarity_boost: 0.85,
+                        style: 0.35,
+                        use_speaker_boost: true
+                    }
+                })
+            });
+        }
+
+        if (!response.ok) {
+            var errText = '';
+            try { errText = await response.text(); } catch(e) {}
+            console.error('[ElevenLabs] HTTP ' + response.status, errText);
+            // Fall back to browser speech
+            setAvatarTalking(false);
+            speakWithBrowserTTS(text);
+            return;
+        }
+
+        console.log('[ElevenLabs] Got audio response, Content-Type:', response.headers.get('content-type'));
+
+        var audioBlob = await response.blob();
+        console.log('[ElevenLabs] Audio blob size:', audioBlob.size, 'type:', audioBlob.type);
+
+        var audioUrl = URL.createObjectURL(audioBlob);
+        var audio = new Audio(audioUrl);
+        currentAudio = audio;
+
+        audio.onplay = function() {
+            console.log('[ElevenLabs] Audio playing!');
+            setAvatarTalking(true);
+        };
+
+        audio.onended = function() {
+            console.log('[ElevenLabs] Audio ended.');
+            setAvatarTalking(false);
+            currentAudio = null;
+            URL.revokeObjectURL(audioUrl);
+        };
+
+        audio.onerror = function(e) {
+            console.error('[ElevenLabs] Audio playback error:', e);
+            setAvatarTalking(false);
+            currentAudio = null;
+            // Fallback to browser TTS
+            speakWithBrowserTTS(text);
+        };
+
+        audio.play().catch(function(e) {
+            console.warn('[ElevenLabs] Autoplay blocked:', e.message);
+            setAvatarTalking(false);
+            // Fallback to browser TTS
+            speakWithBrowserTTS(text);
+        });
+
+    } catch (err) {
+        console.error('[ElevenLabs] Fetch error:', err);
+        setAvatarTalking(false);
+        // Fall back to browser speech
+        speakWithBrowserTTS(text);
+    }
+}
+
+
+// ─── AVATAR LIP-SYNC CONTROL ─────────────────────────────────────────────────
+function setAvatarTalking(isTalking) {
+    var avatar = document.getElementById('doraemonAvatar');
+    if (!avatar) return;
+    if (isTalking) {
+        avatar.classList.add('talking');
+    } else {
+        avatar.classList.remove('talking');
+    }
+}
+
+// ─── BROWSER TTS FALLBACK ────────────────────────────────────────────────────
+function speakWithBrowserTTS(text) {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
 
@@ -478,7 +1057,28 @@ function speakReply(text) {
     utterance.pitch = cfg.pitch;
     utterance.rate = cfg.rate;
     utterance.lang = 'en-IN';
+
+    var voice = pickVoiceForCharacter(cfg.voicePrefs || []);
+    if (voice) {
+        utterance.voice = voice;
+        utterance.lang = voice.lang || 'en-IN';
+    }
+
+    utterance.onstart = function() { setAvatarTalking(true); };
+    utterance.onend = function() { setAvatarTalking(false); };
+    utterance.onerror = function() { setAvatarTalking(false); };
+
     window.speechSynthesis.speak(utterance);
+}
+
+// ─── SPEAK REPLY (ROUTER) ────────────────────────────────────────────────────
+function speakReply(text) {
+    var cfg = characterConfig[state.character];
+    if (cfg.useElevenLabs) {
+        speakWithElevenLabs(text);
+    } else {
+        speakWithBrowserTTS(text);
+    }
 }
 
 // ─── VOICE INPUT ─────────────────────────────────────────────────────────────
@@ -558,8 +1158,21 @@ async function confirmAIOrder() {
         return;
     }
 
-    document.getElementById('mode-ai').style.display = 'none';
-    document.getElementById('orderStatusScreen').style.display = 'flex';
+    // Clear items
+    state.aiOrderItems = [];
+    state.cart = [];
+    updateCartUI();
+    updateAIOrderPanel([]);
+    saveSession();
+
+    // Show status buttons
+    var statusBtn = document.getElementById('statusToggleBtn');
+    if (statusBtn) statusBtn.style.display = 'inline-block';
+    
+    var activeBar = document.getElementById('activeOrderBar');
+    if (activeBar) activeBar.style.display = 'flex';
+
+    // Stay on AI mode but clear the order UI
     document.getElementById('orderIdDisplay').textContent = 'Order ID: ' + (state.orderId || 'N/A');
 
     updateStatusBar('pending');
@@ -736,8 +1349,11 @@ function updateCartUI() {
         input.addEventListener('input', function () {
             var i = parseInt(input.getAttribute('data-idx'), 10);
             if (state.cart[i]) state.cart[i].instructions = input.value;
+            saveSession();
         });
     });
+
+    saveSession();
 }
 
 function toggleCart() {
@@ -795,9 +1411,31 @@ async function placeManualOrder() {
         return;
     }
 
+    state.cart = [];
+    state.aiOrderItems = [];
+    updateCartUI();
+    updateAIOrderPanel([]);
+    saveSession();
+
     closeCart();
-    document.getElementById('mode-manual').style.display = 'none';
-    document.getElementById('orderStatusScreen').style.display = 'flex';
+    
+    // Return them to menu
+    document.getElementById('mode-manual').style.display = 'block';
+    document.getElementById('mode-ai').style.display = 'none';
+    document.querySelectorAll('.mode-tab').forEach(function(t) {
+        t.classList.toggle('active', t.getAttribute('data-mode') === 'manual');
+    });
+
+    // Show status button in header
+    var statusBtn = document.getElementById('statusToggleBtn');
+    if (statusBtn) statusBtn.style.display = 'inline-block';
+
+    // Show floating active order bar for quick tracking/payment
+    var activeBar = document.getElementById('activeOrderBar');
+    if (activeBar) activeBar.style.display = 'flex';
+
+    document.getElementById('orderStatusScreen').style.display = 'none';
+    document.getElementById('qrPaymentScreen').style.display = 'none';
     document.getElementById('orderIdDisplay').textContent = 'Order ID: ' + (state.orderId || 'N/A');
 
     updateStatusBar('pending');
@@ -822,16 +1460,9 @@ function startPollOrderStatus() {
                 var status = res.data.status;
                 updateStatusBar(status);
 
-                if (status === 'ready') {
-                    document.getElementById('orderStatusScreen').style.display = 'none';
-                    document.getElementById('qrPaymentScreen').style.display = 'flex';
-                }
-
                 if (status === 'delivered' || status === 'billed') {
                     clearInterval(state.pollInterval);
                     state.pollInterval = null;
-                    document.getElementById('qrPaymentScreen').style.display = 'none';
-                    showFeedbackModal();
                 }
             }
         } catch (e) {
@@ -846,7 +1477,7 @@ function updateStatusBar(status) {
 
     steps.forEach(function (step, idx) {
         var stepEl = document.getElementById('step-' + step);
-        if (stepEl) stepEl.classList.toggle('active', idx <= curIndex);
+        if (stepEl) stepEl.classList.toggle('active-step', idx <= curIndex);
     });
 
     document.querySelectorAll('.step-line').forEach(function (line, idx) {
@@ -901,7 +1532,7 @@ async function markAsBilled() {
 // ─── FEEDBACK ─────────────────────────────────────────────────────────────────
 function showFeedbackModal() {
     state.selectedRating = 0;
-    document.querySelectorAll('.star').forEach(function (s) { s.classList.remove('active'); });
+    document.querySelectorAll('.star').forEach(function (s) { s.classList.remove('selected'); });
     document.getElementById('feedbackComment').value = '';
     document.getElementById('thankYouMsg').style.display = 'none';
     document.getElementById('submitFeedbackBtn').style.display = 'block';
@@ -911,7 +1542,7 @@ function showFeedbackModal() {
 function setRating(n) {
     state.selectedRating = n;
     document.querySelectorAll('.star').forEach(function (star) {
-        star.classList.toggle('active', parseInt(star.getAttribute('data-value'), 10) <= n);
+        star.classList.toggle('selected', parseInt(star.getAttribute('data-value'), 10) <= n);
     });
 }
 
@@ -936,7 +1567,7 @@ async function submitFeedbackHandler() {
     }
 
     document.getElementById('submitFeedbackBtn').style.display = 'none';
-    document.getElementById('thankYouMsg').style.display = 'block';
+    document.getElementById('thankYouMsg').style.display = 'flex';
 
     setTimeout(resetForNextCustomer, 3000);
 }
@@ -948,6 +1579,16 @@ function resetForNextCustomer() {
     state.chatHistory = [];
     state.orderId = null;
     state.selectedRating = 0;
+
+    localStorage.removeItem('maneki_customer_state');
+
+    // Hide status button
+    var statusBtn = document.getElementById('statusToggleBtn');
+    if (statusBtn) statusBtn.style.display = 'none';
+
+    // Hide floating active order bar
+    var activeBar = document.getElementById('activeOrderBar');
+    if (activeBar) activeBar.style.display = 'none';
 
     if (state.pollInterval) {
         clearInterval(state.pollInterval);

@@ -5,20 +5,899 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maneki Neko | Admin Hub</title>
     <meta name="description" content="Maneki Neko Smart Restaurant Admin Dashboard">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared/theme.css">
-    <link rel="stylesheet" href="style.css">
+    <style>
+        /* ── Admin-Specific Styles ────────────────────────────────────── */
+
+        /* Preserved for JS logic toggling */
+        .hidden { display: none !important; }
+
+        /* ── Sidebar ──────────────────────────────────────────────────── */
+        #sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            z-index: 40;
+            width: 260px;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s var(--ease-out);
+            transform: translateX(-100%);
+        }
+
+        @media (min-width: 1024px) {
+            #sidebar {
+                position: static;
+                transform: translateX(0);
+                flex-shrink: 0;
+            }
+        }
+
+        #sidebar.mobile-open {
+            transform: translateX(0);
+        }
+
+        .sidebar-brand {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-brand span:first-child {
+            font-size: 1.75rem;
+        }
+
+        .sidebar-brand-name {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: var(--tracking-tight);
+            color: var(--text-primary);
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: all var(--duration-fast) var(--ease-out);
+            position: relative;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+        }
+
+        .nav-link.active {
+            background: var(--primary-glow);
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .nav-link.active::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 60%;
+            background: var(--primary-raw);
+            border-radius: var(--radius-pill);
+        }
+
+        .nav-link span:first-child {
+            font-size: 1.25rem;
+        }
+
+        .sidebar-footer {
+            padding: 1.25rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .server-status {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: var(--bg-surface-variant);
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        /* ── Mobile Toggle ─────────────────────────────────────────── */
+        #mobileNavToggle {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 50;
+            padding: 0.5rem;
+            background: var(--bg-surface);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            display: none;
+        }
+
+        @media (max-width: 1023px) {
+            #mobileNavToggle { display: block; }
+        }
+
+        /* ── Main Content ──────────────────────────────────────────── */
+        .admin-main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            width: 100%;
+            max-width: 80rem;
+            margin: 0 auto;
+            scroll-behavior: smooth;
+        }
+
+        @media (min-width: 1024px) {
+            .admin-main { padding: 3rem; }
+        }
+
+        /* ── Section Animation ─────────────────────────────────────── */
+        .admin-section {
+            animation: fadeInUp 0.4s var(--ease-out);
+        }
+
+        /* ── Section Header ────────────────────────────────────────── */
+        .page-header {
+            margin-bottom: 2.5rem;
+        }
+
+        @media (max-width: 1023px) {
+            .page-header { margin-top: 3rem; }
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            letter-spacing: var(--tracking-tight);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* ── Stat Cards ────────────────────────────────────────────── */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            transition: all var(--duration-normal) var(--ease-out);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--glass-border-hover);
+            box-shadow: var(--shadow-card-hover);
+        }
+
+        .stat-icon {
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            flex-shrink: 0;
+        }
+
+        .stat-icon-orders   { background: var(--info-bg); }
+        .stat-icon-revenue  { background: var(--success-bg); }
+        .stat-icon-bots     { background: rgba(99,102,241,0.12); }
+        .stat-icon-rating   { background: var(--warning-bg); }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+
+        .stat-value-green { color: var(--success); }
+
+        .stat-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: var(--tracking-wide);
+            margin-top: 0.35rem;
+        }
+
+        /* ── Content Layout Grid ───────────────────────────────────── */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 1024px) {
+            .content-grid-wide { grid-template-columns: 2fr 1fr; }
+        }
+
+        /* ── Panel Card ────────────────────────────────────────────── */
+        .panel {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .panel-body {
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        /* ── Tables (admin-specific overrides) ─────────────────────── */
+        .order-main-row {
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+
+        .order-main-row:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .order-expand-row { display: none; }
+        .order-expand-row.open { display: table-row; }
+
+        .expand-mini-table {
+            background: var(--bg-surface-variant);
+            border-radius: var(--radius-sm);
+            margin: 0.5rem;
+            width: calc(100% - 1rem);
+        }
+
+        .expand-mini-table th {
+            font-size: 0.7rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .expand-mini-table td {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        /* ── Charts ────────────────────────────────────────────────── */
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            height: 150px;
+            padding-top: 1rem;
+        }
+
+        .bar {
+            width: 8%;
+            background-color: var(--primary-glow-strong);
+            border-radius: 4px 4px 0 0;
+            transition: height 0.5s ease, background 0.2s;
+            position: relative;
+        }
+
+        .bar:hover {
+            background-color: var(--primary-raw);
+        }
+
+        .bar[data-val]:hover::after {
+            content: attr(data-val);
+            position: absolute;
+            top: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text-primary);
+            color: var(--bg-deep);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .revenue-chart .bar {
+            background-color: rgba(168, 85, 247, 0.2);
+        }
+
+        .revenue-chart .bar:hover {
+            background-color: #a855f7;
+        }
+
+        .chart-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-dimmed);
+        }
+
+        /* ── Bot Fleet ─────────────────────────────────────────────── */
+        .bot-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: var(--radius-md);
+            background: var(--bg-surface-variant);
+            margin-bottom: 0.5rem;
+            border: 1px solid var(--border);
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .bot-item:hover {
+            border-color: var(--glass-border-hover);
+        }
+
+        .bot-name {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .bot-meta {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: var(--tracking-wide);
+        }
+
+        .bot-table {
+            background: var(--bg-surface-highest);
+            padding: 2px 8px;
+            border-radius: var(--radius-xs);
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        /* ── Menu Manager ──────────────────────────────────────────── */
+        .header-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        @media (max-width: 1023px) {
+            .header-row { margin-top: 3rem; }
+        }
+
+        .menu-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        #addItemBtn {
+            background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
+            color: #fff;
+            font-weight: 700;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-pill);
+            border: none;
+            transition: all var(--duration-normal) var(--ease-out);
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        #addItemBtn:hover {
+            box-shadow: var(--shadow-glow);
+            transform: scale(1.03);
+        }
+
+        /* ── Menu Form ─────────────────────────────────────────────── */
+        .menu-form {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            background: var(--bg-surface-highest);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 1rem;
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            outline: none;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .form-input:focus {
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+            background: var(--bg-surface-bright);
+        }
+
+        .form-checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding-top: 2rem;
+        }
+
+        .form-checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-secondary);
+            user-select: none;
+        }
+
+        .form-checkbox-label input[type="checkbox"] {
+            width: 1.25rem;
+            height: 1.25rem;
+            accent-color: var(--primary-raw);
+            cursor: pointer;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
+            color: #fff;
+            font-weight: 700;
+            padding: 0.75rem 2rem;
+            border-radius: var(--radius-md);
+            border: none;
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-out);
+        }
+
+        .btn-save:hover {
+            box-shadow: var(--shadow-glow);
+        }
+
+        .btn-cancel {
+            background: var(--bg-surface-variant);
+            color: var(--text-secondary);
+            font-weight: 700;
+            padding: 0.75rem 2rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .btn-cancel:hover {
+            background: var(--bg-surface-bright);
+            color: var(--text-primary);
+        }
+
+        /* ── Action Buttons (Edit/Delete) ──────────────────────────── */
+        .btn-edit, .btn-delete {
+            padding: 4px 10px;
+            font-size: 0.85rem;
+            border-radius: var(--radius-xs);
+            margin-right: 4px;
+            font-weight: 600;
+            transition: all var(--duration-fast) var(--ease-out);
+            cursor: pointer;
+            border: 1px solid var(--border);
+        }
+
+        .btn-edit {
+            background: var(--info-bg);
+            color: var(--info);
+            border-color: var(--info-border);
+        }
+
+        .btn-edit:hover { background: rgba(59, 130, 246, 0.2); }
+
+        .btn-delete {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border-color: var(--danger-border);
+        }
+
+        .btn-delete:hover { background: rgba(239, 68, 68, 0.2); }
+
+        /* ── Feedback ──────────────────────────────────────────────── */
+        .feedback-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+        }
+
+        @media (max-width: 1023px) {
+            .feedback-header { margin-top: 3rem; }
+        }
+
+        .feedback-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .feedback-sentiment {
+            background: var(--primary-glow);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            min-width: 180px;
+        }
+
+        .feedback-sentiment-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: var(--tracking-wide);
+            margin-bottom: 0.5rem;
+        }
+
+        .feedback-sentiment-value {
+            display: block;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .feedback-sentiment-stars {
+            display: block;
+            font-size: 1.25rem;
+            color: #f59e0b;
+            letter-spacing: 3px;
+        }
+
+        .feedback-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feedback-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            transition: all var(--duration-normal) var(--ease-out);
+        }
+
+        .feedback-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--glass-border-hover);
+            box-shadow: var(--shadow-card-hover);
+        }
+
+        .stars {
+            color: #f59e0b;
+            font-size: 1.25rem;
+            letter-spacing: 2px;
+            margin-bottom: 0.75rem;
+        }
+
+        .feedback-comment {
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            min-height: 60px;
+            font-weight: 500;
+        }
+
+        .feedback-meta {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: var(--tracking-wide);
+            border-top: 1px solid var(--border);
+            padding-top: 0.75rem;
+        }
+
+        /* ── Analytics ─────────────────────────────────────────────── */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 1280px) {
+            .analytics-wide { grid-column: span 2; }
+        }
+
+        .dish-row {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .dish-row:last-child { border-bottom: none; }
+
+        .dish-rank {
+            font-size: 1.25rem;
+            font-weight: 800;
+            width: 30px;
+            color: var(--primary);
+        }
+
+        .dish-count {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            background: var(--bg-surface-variant);
+            padding: 2px 8px;
+            border-radius: var(--radius-md);
+        }
+
+        /* Satisfaction Score Donut */
+        .satisfaction-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 250px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .satisfaction-bg {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--success-bg), transparent);
+            z-index: 0;
+            opacity: 0.5;
+            border-radius: var(--radius-lg);
+        }
+
+        .satisfaction-donut {
+            position: relative;
+            z-index: 1;
+            width: 10rem;
+            height: 10rem;
+            border-radius: 50%;
+            border: 12px solid var(--success-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #satisfactionScore {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--success);
+        }
+
+        .satisfaction-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--success);
+            text-transform: uppercase;
+            letter-spacing: var(--tracking-wide);
+            margin-top: 0.25rem;
+        }
+
+        /* ── Customer search ───────────────────────────────────────── */
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 20rem;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dimmed);
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--bg-surface-variant);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: var(--radius-pill);
+            padding: 0.75rem 1rem 0.75rem 3rem;
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            outline: none;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .search-input:focus {
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+            background: var(--bg-surface-bright);
+        }
+
+        /* ── Dashboard Filters ─────────────────────────────────────── */
+        .dashboard-filters {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--glass-border);
+        }
+
+        .filter-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: var(--tracking-wide);
+        }
+
+        .custom-range-box {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding-left: 1rem;
+            border-left: 1px solid var(--border);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .date-input {
+            background: var(--bg-surface-variant);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: var(--radius-sm);
+            padding: 0.4rem 0.75rem;
+            font-size: 0.85rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .date-input:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-apply {
+            background: var(--primary-raw);
+            color: white;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-apply:hover {
+            opacity: 0.9;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
 </head>
-<body class="admin-body">
+<body style="height: 100vh; display: flex; overflow: hidden;">
 
     <!-- Mobile hamburger -->
-    <button id="mobileNavToggle" class="mobile-nav-toggle" aria-label="Toggle sidebar">☰</button>
+    <button id="mobileNavToggle" aria-label="Toggle sidebar">
+        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+    </button>
 
     <!-- ── Sidebar ──────────────────────────────────────────────────────── -->
-    <aside id="sidebar" class="admin-sidebar glass-card">
-        <div class="sidebar-header">
-            <span class="logo">🐱</span>
-            <h2 class="text-gradient">Maneki Neko</h2>
+    <aside id="sidebar">
+        <div class="sidebar-brand">
+            <span>🐱</span>
+            <span class="sidebar-brand-name">Maneki Neko</span>
         </div>
 
         <nav class="sidebar-nav">
@@ -43,7 +922,7 @@
         </nav>
 
         <div class="sidebar-footer">
-            <div class="user-info">
+            <div class="server-status">
                 <div class="status-dot green"></div>
                 <span>Server Online</span>
             </div>
@@ -53,128 +932,175 @@
     <!-- ── Main Content ─────────────────────────────────────────────────── -->
     <main class="admin-main">
 
-        <!-- ═══════════════════════════════════════════════════════════
-             1. DASHBOARD
-        ═══════════════════════════════════════════════════════════ -->
+        <!-- ═══════════ 1. DASHBOARD ═══════════ -->
         <section id="dashboard" class="section admin-section">
-            <header class="section-header">
-                <h1>Dashboard Overview</h1>
-                <p class="text-secondary">Real-time restaurant neural metrics</p>
+            <header class="page-header">
+                <h1 class="page-title">Dashboard Overview</h1>
+                <p class="page-subtitle">Real-time restaurant neural metrics</p>
             </header>
 
+            <!-- Dashboard Filters -->
+            <div class="dashboard-filters">
+                <span class="filter-label">📅 Time Range</span>
+                <div class="filter-group" id="dashboardDateFilters">
+                    <button class="filter-btn active" data-range="all">All Time</button>
+                    <button class="filter-btn" data-range="1d">1 Day</button>
+                    <button class="filter-btn" data-range="7d">7 Days</button>
+                    <button class="filter-btn" data-range="1m">1 Month</button>
+                    <button class="filter-btn" data-range="custom">Custom</button>
+                </div>
+
+                <div id="customDateRange" class="custom-range-box hidden">
+                    <input type="date" id="startDate" class="date-input">
+                    <span style="color: var(--text-muted)">to</span>
+                    <input type="date" id="endDate" class="date-input">
+                    <button id="applyCustomDate" class="btn-apply">Apply</button>
+                </div>
+            </div>
+
             <!-- Stat Cards -->
-            <div class="stats-grid">
-                <div class="stat-card glass-card">
-                    <span class="stat-icon">📦</span>
-                    <span class="value" id="stat-orders">0</span>
-                    <span class="label">Total Orders Today</span>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-orders">📦</div>
+                    <div>
+                        <div class="stat-value" id="stat-orders">0</div>
+                        <div class="stat-label">Total Orders</div>
+                    </div>
                 </div>
-                <div class="stat-card glass-card">
-                    <span class="stat-icon">💰</span>
-                    <span class="value gold" id="stat-revenue">$0.00</span>
-                    <span class="label">Revenue Today</span>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-revenue">💰</div>
+                    <div>
+                        <div class="stat-value stat-value-green" id="stat-revenue">$0.00</div>
+                        <div class="stat-label">Revenue</div>
+                    </div>
                 </div>
-                <div class="stat-card glass-card">
-                    <span class="stat-icon">🤖</span>
-                    <span class="value" id="stat-bots">0</span>
-                    <span class="label">Active Bots</span>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-bots">🤖</div>
+                    <div>
+                        <div class="stat-value" id="stat-bots">0</div>
+                        <div class="stat-label">Active Bots</div>
+                    </div>
                 </div>
-                <div class="stat-card glass-card">
-                    <span class="stat-icon">⭐</span>
-                    <span class="value" id="stat-rating">0.0</span>
-                    <span class="label">Avg Rating</span>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-rating">⭐</div>
+                    <div>
+                        <div class="stat-value" id="stat-rating">0.0</div>
+                        <div class="stat-label">Avg Rating</div>
+                    </div>
                 </div>
             </div>
 
             <!-- Recent Orders + Bot Fleet -->
-            <div class="dashboard-secondary-grid">
-                <div class="glass-card table-container">
-                    <h3>📋 Recent Orders</h3>
-                    <table id="recentOrdersTable">
-                        <thead>
-                            <tr>
-                                <th>Table No.</th>
-                                <th>Items Count</th>
-                                <th>Total Amount</th>
-                                <th>Status</th>
-                                <th>Time</th>
-                            </tr>
-                        </thead>
-                        <tbody id="recentOrdersBody"></tbody>
-                    </table>
+            <div class="content-grid content-grid-wide">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title">📋 Recent Orders</h3>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table id="recentOrdersTable">
+                            <thead>
+                                <tr>
+                                    <th>Table No.</th>
+                                    <th>Items Count</th>
+                                    <th>Total Amount</th>
+                                    <th>Status</th>
+                                    <th>Date & Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentOrdersBody"></tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="glass-card bot-overview">
-                    <h3>🤖 Bot Fleet Status</h3>
-                    <div id="botOverviewList" class="bot-list"></div>
+                <div class="panel" style="display: flex; flex-direction: column; height: 500px;">
+                    <div class="panel-header">
+                        <h3 class="panel-title">🤖 Bot Fleet Status</h3>
+                    </div>
+                    <div id="botOverviewList" class="panel-body" style="flex: 1; overflow-y: auto;">
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- ═══════════════════════════════════════════════════════════
-             2. MENU MANAGER
-        ═══════════════════════════════════════════════════════════ -->
+        <!-- ═══════════ 2. MENU MANAGER ═══════════ -->
         <section id="menu-manager" class="section admin-section hidden">
-            <header class="section-header flex-header">
+            <header class="header-row">
                 <div>
-                    <h1>🍱 Menu Manager</h1>
-                    <div class="filter-tabs" id="menuFilters">
+                    <h1 class="page-title" style="display: flex; align-items: center; gap: 0.75rem;">🍱 Menu Manager</h1>
+                    <div class="menu-filters" id="menuFilters">
                         <!-- populated dynamically by loadMenu() -->
                     </div>
                 </div>
-                <button id="addItemBtn" class="btn-primary">+ Add Item</button>
+                <button id="addItemBtn">+ Add New Item</button>
             </header>
 
             <!-- Add / Edit Form -->
-            <div id="menuItemForm" class="glass-card form-container" style="display:none;">
-                <h3 id="formTitle">➕ Add New Item</h3>
+            <div id="menuItemForm" class="menu-form" style="display:none;">
+                <h3 id="formTitle" class="form-title">➕ Add New Item</h3>
                 <form id="itemForm">
                     <input type="hidden" id="editItemId">
                     <div class="form-grid">
-                        <input type="text" id="itemName" placeholder="Item Name" required>
-                        <select id="itemCategory" required>
-                            <!-- populated dynamically by loadMenu() -->
-                        </select>
-                        <input type="number" id="itemPrice" placeholder="Price (e.g. 12.50)" step="0.01" min="0" required>
-                        <div class="checkbox-group">
-                            <label><input type="checkbox" id="itemIsVeg"> 🟢 Veg</label>
-                            <label><input type="checkbox" id="itemIsSpicy"> 🌶️ Spicy</label>
+                        <div>
+                            <label class="form-label">Item Name</label>
+                            <input type="text" id="itemName" placeholder="e.g. Classic Ramen" required class="form-input">
+                        </div>
+                        <div>
+                            <label class="form-label">Category</label>
+                            <select id="itemCategory" required class="form-input" style="cursor: pointer; appearance: none;">
+                                <!-- populated dynamically by loadMenu() -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Price (₹)</label>
+                            <input type="number" id="itemPrice" placeholder="Price (e.g. 12.50)" step="0.01" min="0" required class="form-input">
+                        </div>
+                        <div class="form-checkbox-group">
+                            <label class="form-checkbox-label">
+                                <input type="checkbox" id="itemIsVeg"> 
+                                <span>🟢 Veg</span>
+                            </label>
+                            <label class="form-checkbox-label">
+                                <input type="checkbox" id="itemIsSpicy"> 
+                                <span>🌶️ Spicy</span>
+                            </label>
                         </div>
                     </div>
-                    <textarea id="itemAllergens" placeholder="Allergens (comma separated, e.g. nuts, dairy)" rows="2"></textarea>
+                    <div style="margin-bottom: 2rem;">
+                        <label class="form-label">Allergens</label>
+                        <textarea id="itemAllergens" placeholder="Comma separated, e.g. nuts, dairy, soy" rows="2" class="form-input" style="resize: vertical;"></textarea>
+                    </div>
                     <div class="form-actions">
-                        <button type="button" id="cancelForm" class="btn-secondary">✕ Cancel</button>
-                        <button type="submit" class="btn-primary">💾 Save Item</button>
+                        <button type="submit" class="btn-save">💾 Save Item</button>
+                        <button type="button" id="cancelForm" class="btn-cancel">✕ Cancel</button>
                     </div>
                 </form>
             </div>
 
             <!-- Menu Table -->
-            <div class="glass-card table-container">
-                <table id="menuTable">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Category</th>
-                            <th>Price</th>
-                            <th>Veg / NonVeg</th>
-                            <th>Spicy</th>
-                            <th>Available</th>
-                            <th>Edit</th>
-                            <th>Delete</th>
-                        </tr>
-                    </thead>
-                    <tbody id="menuTableBody"></tbody>
-                </table>
+            <div class="panel">
+                <div style="overflow-x: auto;">
+                    <table id="menuTable" style="min-width: 800px;">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Type</th>
+                                <th>Spicy</th>
+                                <th>Available</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="menuTableBody"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
-        <!-- ═══════════════════════════════════════════════════════════
-             3. ORDERS
-        ═══════════════════════════════════════════════════════════ -->
+        <!-- ═══════════ 3. ORDERS ═══════════ -->
         <section id="orders" class="section admin-section hidden">
-            <header class="section-header">
-                <h1>📜 Order History</h1>
-                <div class="filter-tabs" id="orderFilters">
+            <header class="header-row">
+                <h1 class="page-title" style="display: flex; align-items: center; gap: 0.75rem;">📜 Order History</h1>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;" id="orderFilters">
                     <button class="filter-btn active" data-status="all">All</button>
                     <button class="filter-btn" data-status="pending">Pending</button>
                     <button class="filter-btn" data-status="preparing">Preparing</button>
@@ -183,56 +1109,59 @@
                     <button class="filter-btn" data-status="billed">Billed</button>
                 </div>
             </header>
-            <div class="glass-card table-container">
-                <table id="fullOrdersTable">
-                    <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Table</th>
-                            <th>Items</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                            <th>Payment</th>
-                            <th>Time</th>
-                        </tr>
-                    </thead>
-                    <tbody id="fullOrdersBody"></tbody>
-                </table>
+            <div class="panel">
+                <div style="overflow-x: auto;">
+                    <table id="fullOrdersTable" style="min-width: 800px;">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Table</th>
+                                <th>Items</th>
+                                 <th>Total</th>
+                                 <th>Status</th>
+                                 <th>Payment</th>
+                                 <th>Date & Time</th>
+                             </tr>
+                        </thead>
+                        <tbody id="fullOrdersBody"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
-        <!-- ═══════════════════════════════════════════════════════════
-             4. CUSTOMERS
-        ═══════════════════════════════════════════════════════════ -->
+        <!-- ═══════════ 4. CUSTOMERS ═══════════ -->
         <section id="customers" class="section admin-section hidden">
-            <header class="section-header flex-header">
-                <h1>👥 Customers</h1>
-                <input type="text" id="customerSearch" placeholder="🔍 Search by name or phone..." class="search-input">
+            <header class="header-row">
+                <h1 class="page-title" style="display: flex; align-items: center; gap: 0.75rem;">👥 Customers</h1>
+                <div class="search-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="customerSearch" placeholder="Search by name or phone..." class="search-input">
+                </div>
             </header>
-            <div class="glass-card table-container">
-                <table id="customersTable">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Phone</th>
-                            <th>Visits</th>
-                            <th>Preferences</th>
-                            <th>Joined</th>
-                        </tr>
-                    </thead>
-                    <tbody id="customersBody"></tbody>
-                </table>
+            <div class="panel">
+                <div style="overflow-x: auto;">
+                    <table id="customersTable" style="min-width: 800px;">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Visits</th>
+                                <th>Preferences</th>
+                                <th>Joined</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customersBody"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
-        <!-- ═══════════════════════════════════════════════════════════
-             5. FEEDBACK
-        ═══════════════════════════════════════════════════════════ -->
+        <!-- ═══════════ 5. FEEDBACK ═══════════ -->
         <section id="feedback" class="section admin-section hidden">
-            <header class="section-header flex-header">
-                <div>
-                    <h1>💬 Customer Feedback</h1>
-                    <div class="filter-tabs" id="feedbackFilters">
+            <header class="feedback-header">
+                <div style="flex: 1;">
+                    <h1 class="page-title" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">💬 Customer Feedback</h1>
+                    <div class="feedback-filters" id="feedbackFilters">
                         <button class="filter-btn active" data-rating="all">All</button>
                         <button class="filter-btn" data-rating="1">1★</button>
                         <button class="filter-btn" data-rating="2">2★</button>
@@ -241,46 +1170,43 @@
                         <button class="filter-btn" data-rating="5">5★</button>
                     </div>
                 </div>
-                <div class="rating-avg-card glass-card">
-                    <span class="avg-label">Global Sentiment</span>
-                    <span class="avg-value" id="avg-rating-display">N/A</span>
-                    <span class="avg-stars" id="avg-stars-display"></span>
+                <div class="feedback-sentiment">
+                    <span class="feedback-sentiment-label">Global Sentiment</span>
+                    <span class="feedback-sentiment-value" id="avg-rating-display">N/A</span>
+                    <span class="feedback-sentiment-stars" id="avg-stars-display"></span>
                 </div>
             </header>
             <div class="feedback-grid" id="feedbackList"></div>
         </section>
 
-        <!-- ═══════════════════════════════════════════════════════════
-             6. ANALYTICS
-        ═══════════════════════════════════════════════════════════ -->
+        <!-- ═══════════ 6. ANALYTICS ═══════════ -->
         <section id="analytics" class="section admin-section hidden">
-            <header class="section-header">
-                <h1>📈 Temporal Analytics</h1>
+            <header class="page-header">
+                <h1 class="page-title">📈 Temporal Analytics</h1>
             </header>
 
             <div class="analytics-grid">
-
                 <!-- Peak Hours -->
-                <div class="glass-card chart-card">
-                    <h3>⏰ Peak Order Hours</h3>
-                    <div id="peakHoursChart" class="bar-chart"></div>
+                <div class="panel analytics-wide" style="padding: 1.5rem;">
+                    <h3 class="panel-title" style="margin-bottom: 1.5rem;">⏰ Peak Order Hours</h3>
+                    <div id="peakHoursChart" class="bar-chart" style="border-bottom: 1px solid var(--border);"></div>
                     <div class="chart-labels" id="peakHoursLabels">
-                        <span>11am</span><span>12pm</span><span>1pm</span><span>2pm</span>
-                        <span>3pm</span><span>4pm</span><span>5pm</span><span>6pm</span>
-                        <span>7pm</span><span>8pm</span><span>9pm</span><span>10pm</span>
+                        <span>11a</span><span>12p</span><span>1p</span><span>2p</span>
+                        <span>3p</span><span>4p</span><span>5p</span><span>6p</span>
+                        <span>7p</span><span>8p</span><span>9p</span><span>10p</span>
                     </div>
                 </div>
 
                 <!-- Top Dishes -->
-                <div class="glass-card list-card">
-                    <h3>🏆 Top 5 Dishes</h3>
-                    <div id="topDishesList" class="dish-leaderboard"></div>
+                <div class="panel" style="padding: 1.5rem; height: 320px; overflow: hidden; display: flex; flex-direction: column;">
+                    <h3 class="panel-title" style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">🏆 Top 5 Dishes</h3>
+                    <div id="topDishesList" style="flex: 1; overflow-y: auto; padding-right: 0.5rem;"></div>
                 </div>
 
                 <!-- Revenue This Week -->
-                <div class="glass-card chart-card wide">
-                    <h3>💰 Revenue This Week</h3>
-                    <div id="revenueChart" class="bar-chart revenue-chart"></div>
+                <div class="panel analytics-wide" style="padding: 1.5rem;">
+                    <h3 class="panel-title" style="margin-bottom: 1.5rem;">💰 Revenue This Week</h3>
+                    <div id="revenueChart" class="bar-chart revenue-chart" style="border-bottom: 1px solid var(--border);"></div>
                     <div class="chart-labels">
                         <span>Mon</span><span>Tue</span><span>Wed</span>
                         <span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
@@ -288,22 +1214,23 @@
                 </div>
 
                 <!-- Satisfaction Score -->
-                <div class="glass-card satisfaction-card">
-                    <h3>😊 Customer Satisfaction</h3>
-                    <div class="satisfaction-ring">
-                        <span id="satisfactionScore" class="satisfaction-value">—</span>
-                        <span class="satisfaction-label">satisfaction</span>
+                <div class="panel satisfaction-container" style="padding: 1.5rem;">
+                    <div class="satisfaction-bg"></div>
+                    <h3 class="panel-title" style="position: relative; z-index: 1; margin-bottom: 2rem; width: 100; text-align: center;">😊 Customer Satisfaction</h3>
+                    <div class="satisfaction-donut">
+                        <span id="satisfactionScore">—</span>
+                        <span class="satisfaction-label">Score</span>
                     </div>
                 </div>
-
             </div>
         </section>
 
     </main>
 
-    <!-- ── Scripts (NO type="module") ──────────────────────────────────── -->
+    <!-- ── Scripts ──────────────────────────────────── -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../shared/supabase.js"></script>
     <script src="app.js"></script>
+    
 </body>
 </html>

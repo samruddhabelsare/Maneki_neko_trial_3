@@ -12,7 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
         feedback: [],
         bots: [],
         currentMenuFilter: 'all',
-        currentFeedbackFilter: 'all'
+        currentFeedbackFilter: 'all',
+        dateRange: 'all', // all, 1d, 7d, 1m, custom
+        customRange: { start: null, end: null }
     };
 
     // ── loadCategories() — standalone helper ────────────────────────────────
@@ -26,7 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── App Object ─────────────────────────────────────────────────────────
     const app = {
-
 
         // ── Init ──────────────────────────────────────────────────────────
         async init() {
@@ -81,6 +82,61 @@ document.addEventListener('DOMContentLoaded', () => {
                     state.currentFeedbackFilter = e.target.dataset.rating;
                     this.renderFeedbackCards();
                 });
+
+            // Dashboard Date Filters
+            document.getElementById('dashboardDateFilters')
+                ?.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('filter-btn')) return;
+                    const range = e.target.dataset.range;
+                    this.setActiveFilter('dashboardDateFilters', e.target);
+                    this.handleDateFilterChange(range);
+                });
+
+            // Custom Date Apply
+            document.getElementById('applyCustomDate')
+                ?.addEventListener('click', () => {
+                    const start = document.getElementById('startDate').value;
+                    const end = document.getElementById('endDate').value;
+                    if (!start || !end) return alert('Please select both start and end dates.');
+                    state.customRange = { start, end };
+                    this.loadDashboard();
+                });
+        },
+
+        handleDateFilterChange(range) {
+            state.dateRange = range;
+            const customBox = document.getElementById('customDateRange');
+            if (range === 'custom') {
+                customBox?.classList.remove('hidden');
+            } else {
+                customBox?.classList.add('hidden');
+                this.loadDashboard();
+            }
+        },
+
+        // Helper to get Supabase filter parameters
+        _getDateQuery(query, table = 'orders') {
+            const now = new Date();
+            let start = null;
+
+            if (state.dateRange === '1d') {
+                start = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+            } else if (state.dateRange === '7d') {
+                start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+            } else if (state.dateRange === '1m') {
+                start = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()).toISOString();
+            } else if (state.dateRange === 'custom' && state.customRange.start && state.customRange.end) {
+                const s = new Date(state.customRange.start);
+                s.setHours(0, 0, 0, 0);
+                const e = new Date(state.customRange.end);
+                e.setHours(23, 59, 59, 999);
+                return query.gte('created_at', s.toISOString()).lte('created_at', e.toISOString());
+            }
+
+            if (start) {
+                return query.gte('created_at', start);
+            }
+            return query;
         },
 
         // ── Navigation ────────────────────────────────────────────────────
@@ -131,9 +187,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         async loadDashboard() {
             const [ordersRes, botsRes, feedbackRes] = await Promise.all([
-                window.getOrders(),
+                this._getDateQuery(window.supabaseClient.from('orders').select('*')).order('created_at', { ascending: false }),
                 window.getBots(),
-                window.getFeedback()
+                this._getDateQuery(window.supabaseClient.from('feedback').select('*')).order('created_at', { ascending: false })
             ]);
 
             const orders   = ordersRes?.data   || [];
@@ -426,7 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // ORDERS
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         async loadOrdersPage() {
-            const { data } = await window.getOrders();
+            const { data } = await this._getDateQuery(window.supabaseClient.from('orders').select('*')).order('created_at', { ascending: false });
             state.orders = data || [];
             this.renderOrders('all');
         },
@@ -526,7 +582,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // FEEDBACK
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         async loadFeedbackPage() {
-            const { data } = await window.getFeedback();
+            const { data } = await this._getDateQuery(window.supabaseClient.from('feedback').select('*')).order('created_at', { ascending: false });
             state.feedback = data || [];
             state.currentFeedbackFilter = 'all';
             this.setActiveFilter('feedbackFilters',
@@ -581,8 +637,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         async loadAnalyticsPage() {
             const [ordersRes, feedbackRes] = await Promise.all([
-                window.getOrders(),
-                window.getFeedback()
+                this._getDateQuery(window.supabaseClient.from('orders').select('*')).order('created_at', { ascending: false }),
+                this._getDateQuery(window.supabaseClient.from('feedback').select('*')).order('created_at', { ascending: false })
             ]);
             const orders   = ordersRes?.data   || [];
             const feedback = feedbackRes?.data || [];
@@ -667,7 +723,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             // Reorder: Mon=1 ... Sun=0
             const monToSun = [1, 2, 3, 4, 5, 6, 0].map(d => dayRevenue[d]);
-            const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
             const maxVal = Math.max(...monToSun, 1);
 
             chart.innerHTML = monToSun.map((rev, i) => `
@@ -694,7 +749,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         _formatTime(iso) {
             if (!iso) return '—';
-            return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const date = new Date(iso);
+            const d = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            const t = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return d + ', ' + t;
         },
 
         _formatDate(iso) {

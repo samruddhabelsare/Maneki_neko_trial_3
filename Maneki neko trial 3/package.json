@@ -1,0 +1,16 @@
+{
+  "name": "maneki-neko-smart-restaurant",
+  "version": "1.0.0",
+  "description": "Smart Restaurant AI System with anime personality bots",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.14.0",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1"
+  }
+}

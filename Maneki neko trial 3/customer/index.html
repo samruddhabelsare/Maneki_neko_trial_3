@@ -1,205 +1,1456 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Maneki Neko — Customer Ordering</title>
-  <meta name="description" content="Order food at Maneki Neko smart restaurant with AI assistant or manual menu browsing." />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../shared/theme.css" />
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Maneki Neko | Customer</title>
+    <meta name="description" content="Order food at Maneki Neko smart restaurant with AI assistant or manual menu browsing." />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../shared/theme.css" />
+    <style>
+        /* ── Customer-Specific Styles ────────────────────────────────── */
+        body {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Utility overrides to preserve JS hooks */
+        .hidden-screen { display: none !important; }
+
+        /* ── Header ──────────────────────────────────────────────────── */
+        .customer-header {
+            flex-shrink: 0;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 30;
+            position: sticky;
+            top: 0;
+        }
+
+        @media (min-width: 768px) {
+            .customer-header { padding: 1rem 2rem; }
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-brand {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: var(--tracking-tight);
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .header-brand { display: inline-block; }
+        }
+
+        #characterBadge {
+            background: var(--primary-glow);
+            color: var(--primary);
+            font-weight: 700;
+            padding: 0.375rem 1rem;
+            border-radius: var(--radius-pill);
+            font-size: 0.85rem;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .header-table {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 700;
+            color: var(--text-secondary);
+            background: var(--bg-surface-variant);
+            padding: 0.375rem 1rem;
+            border-radius: var(--radius-pill);
+            font-size: 0.85rem;
+            border: 1px solid var(--border);
+        }
+
+        #cartToggleBtn {
+            background: var(--bg-surface-variant);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-pill);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all var(--duration-fast) var(--ease-out);
+            cursor: pointer;
+        }
+
+        #cartToggleBtn:hover {
+            border-color: var(--glass-border-hover);
+            background: var(--bg-surface-bright);
+        }
+
+        #cartCount {
+            background: var(--primary-raw);
+            color: #fff;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 0.75rem;
+            font-weight: 700;
+            min-width: 24px;
+        }
+
+        /* Animation for cart badge */
+        @keyframes pop {
+            0%   { transform: scale(1); }
+            50%  { transform: scale(1.4); }
+            100% { transform: scale(1); }
+        }
+        .pop { animation: pop 0.3s ease-in-out; }
+
+        /* ── Welcome Screen ──────────────────────────────────────────── */
+        #welcomeScreen {
+            position: absolute;
+            inset: 0;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: var(--bg-deep);
+        }
+
+        .welcome-gradient {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 40%, var(--primary-glow-strong) 0%, transparent 60%);
+            opacity: 0.7;
+        }
+
+        .welcome-card {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 28rem;
+            background: var(--glass-bg-strong);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            padding: 3rem;
+            border-radius: var(--radius-2xl);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-ambient);
+            animation: fadeInUp 0.8s var(--ease-out);
+        }
+
+        .welcome-cat {
+            font-size: 4.5rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+            transition: transform 0.3s;
+            cursor: default;
+        }
+
+        .welcome-cat:hover { transform: scale(1.1); }
+
+        .welcome-title {
+            font-size: clamp(2rem, 5vw, 2.75rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-title-accent {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dim));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        #characterTagline {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-bottom: 2.5rem;
+        }
+
+        #startBtn {
+            background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.125rem;
+            padding: 1rem 2.5rem;
+            border-radius: var(--radius-pill);
+            border: none;
+            width: 100%;
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-out);
+            box-shadow: 0 8px 24px var(--primary-glow-strong);
+        }
+
+        #startBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow-strong), 0 12px 32px var(--primary-glow-strong);
+        }
+
+        #startBtn:active { transform: scale(0.97); }
+
+        /* ── Mode Tabs ───────────────────────────────────────────────── */
+        .mode-tabs {
+            display: flex;
+            justify-content: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: var(--glass-blur);
+            border-bottom: 1px solid var(--border);
+            z-index: 10;
+            flex-shrink: 0;
+        }
+
+        .mode-tabs-inner {
+            background: var(--bg-surface-variant);
+            padding: 0.375rem;
+            border-radius: var(--radius-pill);
+            display: flex;
+            gap: 0.25rem;
+            border: 1px solid var(--border);
+        }
+
+        .mode-tab {
+            padding: 0.625rem 1.5rem;
+            border-radius: var(--radius-pill);
+            font-size: 0.875rem;
+            font-weight: 700;
+            transition: all var(--duration-fast) var(--ease-out);
+            color: var(--text-secondary);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        .mode-tab:hover { color: var(--text-primary); }
+
+        .mode-tab.active {
+            background: var(--bg-surface-bright);
+            color: var(--primary);
+            box-shadow: var(--shadow-soft);
+        }
+
+        /* ── AI Chat ─────────────────────────────────────────────────── */
+        .ai-layout {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            gap: 1.5rem;
+            max-width: 80rem;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        @media (min-width: 1024px) {
+            .ai-layout {
+                flex-direction: row;
+                padding: 2rem;
+            }
+        }
+
+        .chat-panel {
+            flex: 1;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-2xl);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        .chat-fade-top {
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 40px;
+            background: linear-gradient(to bottom, var(--bg-surface), transparent);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #chatMessages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            scroll-behavior: smooth;
+            z-index: 0;
+        }
+
+        .chat-input-area {
+            padding: 1rem;
+            background: var(--bg-surface-low);
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .chat-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: var(--bg-surface-variant);
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border);
+            padding: 0.375rem;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .chat-input-wrapper:focus-within {
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        #chatInput {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 0.5rem 1rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 0.95rem;
+            outline: none;
+            font-family: var(--font-sans);
+        }
+
+        #chatInput::placeholder { color: var(--text-dimmed); }
+
+        .chat-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        #voiceBtn, #sendBtn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+            font-size: 1rem;
+        }
+
+        #voiceBtn {
+            background: var(--bg-surface-bright);
+            color: var(--text-secondary);
+        }
+
+        #voiceBtn:hover { background: var(--bg-surface-highest); color: var(--text-primary); }
+
+        #sendBtn {
+            background: var(--primary-raw);
+            color: #fff;
+        }
+
+        #sendBtn:hover { background: var(--primary-dim); box-shadow: var(--shadow-glow); }
+
+        /* Voice Recording Pulse */
+        @keyframes pulse-red {
+            0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70%  { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .recording {
+            background-color: var(--danger-bg) !important;
+            color: var(--danger) !important;
+            animation: pulse-red 1.5s infinite !important;
+        }
+
+        /* Chat Messages */
+        .message { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; animation: slideUp 0.3s ease-out; }
+        .message.user { justify-content: flex-end; }
+        .message.user .msg-bubble { background: var(--primary-raw); color: #fff; border-radius: 20px 20px 4px 20px; }
+        .message.bot .msg-bubble { background: var(--bg-surface-variant); color: var(--text-primary); border-radius: 20px 20px 20px 4px; border: 1px solid var(--border); }
+        .msg-role { font-size: 1.5rem; display: flex; align-items: flex-end; padding-bottom: 4px; }
+        .msg-bubble { padding: 0.75rem 1rem; font-size: 0.95rem; line-height: 1.5; max-width: 80%; word-break: break-word; font-weight: 500; }
+        .cursor { display: inline-block; width: 8px; height: 16px; background: var(--text-muted); animation: blink 1s step-end infinite; margin-left: 4px; vertical-align: middle; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* ── AI Order Summary ────────────────────────────────────────── */
+        .order-summary-panel {
+            width: 100%;
+            background: var(--glass-bg-strong);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-2xl);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 1;
+            box-shadow: var(--shadow-ambient);
+        }
+
+        @media (min-width: 1024px) {
+            .order-summary-panel {
+                width: 320px;
+                position: static;
+                max-height: none;
+            }
+        }
+
+        @media (max-width: 1023px) {
+            .order-summary-panel {
+                position: absolute;
+                inset: auto 1rem 1rem 1rem;
+                max-height: 40vh;
+            }
+        }
+
+        .order-summary-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: var(--tracking-tight);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #aiOrderItems {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: var(--radius-lg);
+            padding: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        #aiOrderTotal {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            padding-top: 1rem;
+        }
+
+        .order-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        #aiConfirmOrder {
+            background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
+            color: #fff;
+            font-weight: 800;
+            padding: 0.875rem 1.5rem;
+            border-radius: var(--radius-pill);
+            border: none;
+            width: 100%;
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-out);
+            box-shadow: 0 4px 16px var(--primary-glow);
+        }
+
+        #aiConfirmOrder:hover { transform: translateY(-1px); box-shadow: var(--shadow-glow-strong); }
+
+        #aiClearOrder {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-weight: 700;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-pill);
+            width: 100%;
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        #aiClearOrder:hover { border-color: var(--glass-border-hover); color: var(--text-primary); }
+
+        /* ── Manual Mode ─────────────────────────────────────────────── */
+        .cat-tab {
+            background: var(--bg-surface-variant);
+            color: var(--text-secondary);
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-pill);
+            transition: all var(--duration-fast) var(--ease-out);
+            border: 1px solid var(--border);
+            white-space: nowrap;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .cat-tab:hover { border-color: var(--glass-border-hover); color: var(--text-primary); }
+
+        .cat-tab.active {
+            background: var(--primary-raw);
+            color: #fff;
+            border-color: var(--primary-raw);
+            box-shadow: 0 0 16px var(--primary-glow);
+        }
+
+        .menu-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            transition: all var(--duration-normal) var(--ease-out);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--glass-border-hover);
+            box-shadow: var(--shadow-card-hover);
+        }
+
+        .menu-card-name { font-weight: 800; font-size: 1.125rem; color: var(--text-primary); }
+        .menu-card-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .badge-veg    { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
+        .badge-nonveg { background: var(--danger-bg);  color: var(--danger);  border: 1px solid var(--danger-border); }
+        .badge-spicy  { background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning-border); }
+
+        .menu-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--border);
+        }
+
+        .menu-card-price { font-weight: 800; color: var(--primary); font-size: 1.125rem; }
+
+        .btn-add {
+            background: var(--primary-raw);
+            color: #fff;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-pill);
+            font-size: 0.875rem;
+            border: none;
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .btn-add:hover { background: var(--primary-dim); box-shadow: var(--shadow-glow); }
+
+        /* ── Cart Sidebar ────────────────────────────────────────────── */
+        #cartBackdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 40;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        #cartBackdrop.visible { opacity: 1; pointer-events: auto; }
+
+        #cartSidebar {
+            position: fixed;
+            inset: 0 0 0 auto;
+            width: 100%;
+            max-width: 400px;
+            background: var(--bg-surface);
+            z-index: 50;
+            transform: translateX(100%);
+            transition: transform 0.3s var(--ease-out);
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid var(--border);
+        }
+
+        #cartSidebar.open {
+            transform: translateX(0);
+            box-shadow: -10px 0 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .cart-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-surface-low);
+        }
+
+        .cart-header h3 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #cartCloseBtn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--bg-surface-bright);
+            color: var(--text-secondary);
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        #cartCloseBtn:hover { background: var(--bg-surface-highest); color: var(--text-primary); }
+
+        #cartItemsList {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            background: var(--bg-surface-low);
+        }
+
+        /* Cart Items (injected dynamically) */
+        .cart-item { background: var(--bg-surface-variant); border-radius: var(--radius-lg); padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border); }
+        .cart-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .cart-item-name { font-weight: 700; color: var(--text-primary); font-size: 0.95rem; }
+        .cart-item-remove { color: var(--text-dimmed); background: transparent; transition: color var(--duration-fast); font-size: 1rem; padding: 2px 6px; border: none; cursor: pointer; }
+        .cart-item-remove:hover { color: var(--danger); }
+        .cart-item-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .qty-controls { display: flex; align-items: center; gap: 0.75rem; background: var(--bg-surface-bright); padding: 0.25rem; border-radius: var(--radius-pill); border: 1px solid var(--border); }
+        .qty-btn { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: var(--bg-surface-variant); border-radius: 50%; font-weight: 700; color: var(--text-secondary); transition: all var(--duration-fast); border: none; cursor: pointer; }
+        .qty-btn:hover { background: var(--bg-surface-highest); color: var(--text-primary); }
+        .qty-val { font-weight: 700; font-size: 0.875rem; width: 16px; text-align: center; }
+        .cart-item-price { font-weight: 800; color: var(--primary); }
+        .cart-item-note { width: 100%; background: var(--bg-surface-bright); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem 0.75rem; font-size: 0.8rem; color: var(--text-primary); outline: none; transition: border-color var(--duration-fast); font-family: var(--font-sans); }
+        .cart-item-note:focus { border-color: rgba(99, 102, 241, 0.4); }
+
+        .cart-footer {
+            padding: 1.5rem;
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border);
+            z-index: 1;
+            flex-shrink: 0;
+            margin-top: auto;
+        }
+
+        #cartTotal {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        #placeOrderBtn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
+            color: #fff;
+            font-weight: 800;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            border: none;
+            cursor: pointer;
+            font-size: 1.125rem;
+            transition: all var(--duration-normal) var(--ease-out);
+            box-shadow: 0 4px 16px var(--primary-glow);
+        }
+
+        #placeOrderBtn:hover { box-shadow: var(--shadow-glow-strong); transform: translateY(-1px); }
+
+        /* ── Order Items (in AI summary) ─────────────────────────────── */
+        .order-item-row { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        .order-item-row:last-child { border-bottom: none; }
+        .item-name { font-weight: 600; color: var(--text-primary); flex: 1; text-align: left; }
+        .item-qty { font-weight: 700; color: var(--text-muted); width: 40px; text-align: center; }
+        .item-price { font-weight: 700; color: var(--text-primary); width: 60px; text-align: right; }
+        .empty-hint { color: var(--text-dimmed); font-style: italic; text-align: center; padding: 2rem 0; font-size: 0.95rem; }
+
+        /* ── Order Status Screen ──────────────────────────────────────── */
+        #orderStatusScreen {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-deep);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .order-status-card {
+            background: var(--glass-bg-strong);
+            backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            padding: 2.5rem;
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-ambient);
+            max-width: 28rem;
+            width: 100%;
+            text-align: center;
+        }
+
+        .order-status-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            letter-spacing: var(--tracking-tight);
+            margin-bottom: 0.5rem;
+        }
+
+        #orderIdDisplay {
+            font-size: 0.85rem;
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .status-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+            isolation: isolate;
+        }
+
+        .status-steps::before {
+            content: "";
+            position: absolute;
+            left: 1.5rem;
+            top: 1.5rem;
+            bottom: 1.5rem;
+            width: 2px;
+            background: var(--border);
+            z-index: -1;
+            border-radius: var(--radius-pill);
+        }
+
+        .status-step {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            opacity: 0.3;
+            transition: opacity 0.3s;
+        }
+
+        .status-step-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            border: 2px solid var(--border);
+            background: var(--bg-surface-variant);
+        }
+
+        .status-step-label {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        /* Active step overrides from JS */
+        #orderStatusScreen .active-step { opacity: 1 !important; }
+        #orderStatusScreen .active-step > div:first-child {
+            background: var(--primary-raw);
+            color: #fff;
+            border-color: var(--primary-raw);
+            box-shadow: 0 0 20px var(--primary-glow-strong);
+        }
+        #orderStatusScreen .active-step > div:last-child { color: var(--text-primary); }
+
+        .status-message {
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-top: 2.5rem;
+            font-size: 0.875rem;
+            background: var(--bg-surface-variant);
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-md);
+            display: inline-block;
+            border: 1px solid var(--border);
+        }
+
+        /* ── QR Payment Screen ───────────────────────────────────────── */
+        #qrPaymentScreen {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-deep);
+            z-index: 60;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .payment-card {
+            background: var(--glass-bg-strong);
+            backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            padding: 2.5rem;
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-ambient);
+            max-width: 24rem;
+            width: 100%;
+            text-align: center;
+        }
+
+        .payment-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        #qrBox {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: var(--radius-xl);
+            display: inline-block;
+            margin-bottom: 1.5rem;
+        }
+
+        #qrTotal {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 2rem;
+        }
+
+        .payment-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .payment-method {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: var(--bg-surface-variant);
+            padding: 1rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .payment-method:hover { border-color: var(--glass-border-hover); }
+        .payment-method:focus-within { border-color: rgba(99, 102, 241, 0.4); box-shadow: 0 0 0 3px var(--primary-glow); }
+
+        .payment-method input[type="radio"] {
+            width: 1.25rem;
+            height: 1.25rem;
+            accent-color: var(--primary-raw);
+        }
+
+        .payment-method span { font-weight: 700; color: var(--text-secondary); }
+
+        #paymentDoneBtn {
+            background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
+            color: #fff;
+            font-weight: 800;
+            padding: 1rem 2rem;
+            border-radius: var(--radius-pill);
+            border: none;
+            width: 100%;
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-out);
+            box-shadow: 0 4px 16px var(--primary-glow);
+        }
+
+        #paymentDoneBtn:hover { transform: translateY(-2px); box-shadow: var(--shadow-glow-strong); }
+
+        /* ── Feedback Modal ───────────────────────────────────────────── */
+        #feedbackModal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 70;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .feedback-modal-card {
+            background: var(--bg-surface);
+            padding: 2.5rem;
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-ambient);
+            max-width: 28rem;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .feedback-modal-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+        }
+
+        #starRating {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+        }
+
+        .star {
+            cursor: pointer;
+            opacity: 0.3;
+            transition: opacity var(--duration-fast), transform var(--duration-fast);
+        }
+
+        .star.selected { opacity: 1; transform: scale(1.1); }
+
+        #feedbackComment {
+            width: 100%;
+            background: var(--bg-surface-variant);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            outline: none;
+            transition: all var(--duration-fast) var(--ease-out);
+            resize: none;
+            margin-bottom: 2rem;
+            font-family: var(--font-sans);
+        }
+
+        #feedbackComment:focus {
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+            background: var(--bg-surface-bright);
+        }
+
+        #submitFeedbackBtn {
+            background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
+            color: #fff;
+            font-weight: 800;
+            padding: 1rem 2rem;
+            border-radius: var(--radius-pill);
+            border: none;
+            width: 100%;
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-out);
+        }
+
+        #submitFeedbackBtn:hover { transform: translateY(-1px); box-shadow: var(--shadow-glow); }
+
+        /* Thank You overlay */
+        #thankYouMsg {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--bg-surface), var(--bg-surface-low));
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        /* ── Doraemon VTuber Avatar ──────────────────────────────────── */
+        #doraemonAvatar {
+            position: fixed;
+            bottom: 100px;
+            left: 20px;
+            z-index: 100;
+            width: 130px;
+            height: 130px;
+            animation: avatarBob 3s ease-in-out infinite;
+            filter: drop-shadow(0 8px 24px rgba(99, 102, 241, 0.25));
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+
+        #doraemonAvatar:hover {
+            transform: scale(1.1);
+        }
+
+        /* Idle bob animation */
+        @keyframes avatarBob {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-8px); }
+        }
+
+        /* Blink animation for eyes */
+        .dora-eye-white {
+            animation: doraemonBlink 4s ease-in-out infinite;
+        }
+
+        @keyframes doraemonBlink {
+            0%, 90%, 100% { transform: scaleY(1); }
+            95%            { transform: scaleY(0.05); }
+        }
+
+        /* Mouth animation when talking */
+        .dora-mouth {
+            transition: all 0.1s ease;
+        }
+
+        #doraemonAvatar.talking .dora-mouth {
+            animation: mouthFlap 0.25s ease-in-out infinite alternate;
+        }
+
+        @keyframes mouthFlap {
+            0%   { transform: scaleY(0.6) translateY(2px); }
+            100% { transform: scaleY(1.3) translateY(-1px); }
+        }
+
+        /* Glow ring when talking */
+        #doraemonAvatar.talking {
+            filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.6)) drop-shadow(0 8px 24px rgba(99, 102, 241, 0.3));
+        }
+
+        /* Sound wave indicator */
+        .avatar-sound-waves {
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 3px;
+            align-items: flex-end;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #doraemonAvatar.talking .avatar-sound-waves {
+            opacity: 1;
+        }
+
+        .sound-bar {
+            width: 4px;
+            border-radius: 4px;
+            background: var(--primary-raw);
+        }
+
+        .sound-bar:nth-child(1) { height: 8px;  animation: soundWave 0.4s ease-in-out infinite alternate; animation-delay: 0s; }
+        .sound-bar:nth-child(2) { height: 14px; animation: soundWave 0.4s ease-in-out infinite alternate; animation-delay: 0.1s; }
+        .sound-bar:nth-child(3) { height: 10px; animation: soundWave 0.4s ease-in-out infinite alternate; animation-delay: 0.2s; }
+        .sound-bar:nth-child(4) { height: 16px; animation: soundWave 0.4s ease-in-out infinite alternate; animation-delay: 0.05s; }
+        .sound-bar:nth-child(5) { height: 8px;  animation: soundWave 0.4s ease-in-out infinite alternate; animation-delay: 0.15s; }
+
+        @keyframes soundWave {
+            0%   { height: 4px; }
+            100% { height: 18px; }
+        }
+
+        /* Hide avatar when not Doraemon */
+        body:not(.character-doraemon) #doraemonAvatar { display: none; }
+
+        /* ── Doraemon Emotion Animations ──────────────────────────────── */
+        /* Happy: bouncy and warm */
+        #doraemonAvatar.emotion-happy {
+            animation: happyBounce 0.5s ease-in-out 3;
+        }
+        #doraemonAvatar.emotion-happy .dora-mouth {
+            transform: scaleY(1.2);
+        }
+        @keyframes happyBounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-12px) rotate(-3deg); }
+            75% { transform: translateY(-8px) rotate(3deg); }
+        }
+
+        /* Excited: fast wiggle */
+        #doraemonAvatar.emotion-excited {
+            animation: excitedWiggle 0.3s ease-in-out 4;
+        }
+        @keyframes excitedWiggle {
+            0%, 100% { transform: translateX(0) scale(1); }
+            25% { transform: translateX(-6px) scale(1.05); }
+            75% { transform: translateX(6px) scale(1.05); }
+        }
+
+        /* Confused: head tilt + question mark effect */
+        #doraemonAvatar.emotion-confused {
+            animation: confusedTilt 2s ease-in-out infinite;
+        }
+        @keyframes confusedTilt {
+            0%, 100% { transform: rotate(0deg); }
+            30% { transform: rotate(12deg); }
+            60% { transform: rotate(-8deg); }
+        }
+
+        /* Shy: blush glow + slight shrink */
+        #doraemonAvatar.emotion-shy {
+            animation: shyPulse 1.5s ease-in-out infinite;
+            filter: drop-shadow(0 0 15px rgba(255, 105, 180, 0.4)) drop-shadow(0 8px 24px rgba(99, 102, 241, 0.25));
+        }
+        @keyframes shyPulse {
+            0%, 100% { transform: scale(0.95) rotate(0deg); }
+            50% { transform: scale(0.9) rotate(-5deg); }
+        }
+
+        /* Frustrated: shake */
+        #doraemonAvatar.emotion-frustrated {
+            animation: frustratedShake 0.4s ease-in-out 3;
+        }
+        @keyframes frustratedShake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-5px); }
+            80% { transform: translateX(5px); }
+        }
+
+        /* Thinking: slow float upward */
+        #doraemonAvatar.emotion-thinking {
+            animation: thinkingFloat 2s ease-in-out infinite;
+        }
+        @keyframes thinkingFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(3deg); }
+        }
+
+        /* Sad: droopy */
+        #doraemonAvatar.emotion-sad {
+            animation: sadDroop 2s ease-in-out infinite;
+            filter: drop-shadow(0 8px 24px rgba(100, 100, 200, 0.3)) brightness(0.85);
+        }
+        @keyframes sadDroop {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(5px) rotate(-3deg); }
+        }
+
+        /* Scared: tremble */
+        #doraemonAvatar.emotion-scared {
+            animation: scaredTremble 0.15s ease-in-out infinite;
+        }
+        @keyframes scaredTremble {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-2px, -1px); }
+            75% { transform: translate(2px, 1px); }
+        }
+
+        /* ── In-chat Doraemon mini avatar ─────────────────────────────── */
+        .chat-doraemon-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .chat-doraemon-avatar {
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: #0099DD;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 12px rgba(0, 153, 221, 0.3);
+            overflow: hidden;
+        }
+        .chat-doraemon-avatar svg {
+            width: 38px;
+            height: 38px;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+        }
+    </style>
 </head>
-<body>
+<body class="character-doraemon">
 
-  <!-- ═══════════════════════════ FIXED HEADER ═══════════════════════════ -->
-  <header class="app-header">
-    <div class="header-left">
-      <span class="header-logo">🐱 Maneki Neko</span>
-      <span class="character-badge" id="characterBadge">🤖 Doraemon</span>
+    <!-- ═══════════════════════════ DORAEMON VTUBER AVATAR ═══════════════════════════ -->
+    <div id="doraemonAvatar" title="Doraemon is here!">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <!-- Head (blue circle) -->
+            <circle cx="100" cy="95" r="85" fill="#0099DD"/>
+            <!-- Face (white inner) -->
+            <ellipse cx="100" cy="105" rx="68" ry="72" fill="#FFFFFF"/>
+            <!-- Left eye white -->
+            <g class="dora-eye-white" style="transform-origin: 82px 75px;">
+                <ellipse cx="82" cy="75" rx="20" ry="24" fill="#FFFFFF" stroke="#333" stroke-width="2"/>
+                <!-- Left pupil -->
+                <circle cx="88" cy="78" r="8" fill="#111"/>
+                <circle cx="91" cy="74" r="3" fill="#FFF"/>
+            </g>
+            <!-- Right eye white -->
+            <g class="dora-eye-white" style="transform-origin: 118px 75px;">
+                <ellipse cx="118" cy="75" rx="20" ry="24" fill="#FFFFFF" stroke="#333" stroke-width="2"/>
+                <!-- Right pupil -->
+                <circle cx="112" cy="78" r="8" fill="#111"/>
+                <circle cx="115" cy="74" r="3" fill="#FFF"/>
+            </g>
+            <!-- Nose -->
+            <circle cx="100" cy="98" r="10" fill="#DD3333"/>
+            <circle cx="103" cy="94" r="3" fill="rgba(255,255,255,0.5)"/>
+            <!-- Nose line -->
+            <line x1="100" y1="108" x2="100" y2="130" stroke="#333" stroke-width="2"/>
+            <!-- Mouth -->
+            <g class="dora-mouth" style="transform-origin: 100px 135px;">
+                <path d="M 60 125 Q 100 165 140 125" stroke="#333" stroke-width="2.5" fill="none"/>
+            </g>
+            <!-- Whiskers left -->
+            <line x1="20" y1="95" x2="60" y2="100" stroke="#333" stroke-width="2"/>
+            <line x1="18" y1="110" x2="58" y2="112" stroke="#333" stroke-width="2"/>
+            <line x1="22" y1="125" x2="60" y2="120" stroke="#333" stroke-width="2"/>
+            <!-- Whiskers right -->
+            <line x1="140" y1="100" x2="180" y2="95" stroke="#333" stroke-width="2"/>
+            <line x1="142" y1="112" x2="182" y2="110" stroke="#333" stroke-width="2"/>
+            <line x1="140" y1="120" x2="178" y2="125" stroke="#333" stroke-width="2"/>
+            <!-- Bell collar -->
+            <rect x="55" y="160" width="90" height="12" rx="6" fill="#DD3333"/>
+            <circle cx="100" cy="175" r="10" fill="#FFD700" stroke="#CC9900" stroke-width="1.5"/>
+            <line x1="100" y1="175" x2="100" y2="183" stroke="#CC9900" stroke-width="1.5"/>
+            <circle cx="100" cy="175" r="3" fill="#CC9900"/>
+        </svg>
+        <!-- Sound wave bars (visible when talking) -->
+        <div class="avatar-sound-waves">
+            <div class="sound-bar"></div>
+            <div class="sound-bar"></div>
+            <div class="sound-bar"></div>
+            <div class="sound-bar"></div>
+            <div class="sound-bar"></div>
+        </div>
     </div>
-    <div class="header-center">
-      <span class="table-display" id="tableDisplay">Table 1</span>
+
+    <!-- ═══════════════════════════ FIXED HEADER ═══════════════════════════ -->
+    <header class="customer-header">
+        <div class="header-left">
+            <span class="header-brand">🐱 Maneki Neko</span>
+            <span id="characterBadge">🤖 Doraemon</span>
+        </div>
+        <div class="header-table">
+            <span id="tableDisplay">Table 1</span>
+        </div>
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <button id="statusToggleBtn" style="display: none; background: var(--bg-surface-high); border: 1px solid var(--border); color: var(--text-primary); border-radius: var(--radius-pill); font-weight: 700; padding: 0.5rem 1rem; cursor: pointer;">🧾 Bill & Payment</button>
+            <button id="cartToggleBtn">
+                <span>🛒</span> 
+                <span id="cartCount">0</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ═══════════════════════════ WELCOME SCREEN ═══════════════════════════ -->
+    <div id="welcomeScreen">
+        <div class="welcome-gradient"></div>
+        <div class="welcome-card">
+            <div class="welcome-cat">🐱</div>
+            <h1 class="welcome-title">Welcome to <br/><span class="welcome-title-accent">Maneki Neko</span></h1>
+            <p id="characterTagline">I have the perfect dish for you! 🔔</p>
+            <button id="startBtn">Start Ordering 🍽️</button>
+        </div>
     </div>
-    <div class="header-right">
-      <button class="cart-btn" id="cartToggleBtn" aria-label="Open cart">
-        🛒 <span class="cart-count-badge" id="cartCount">0</span>
-      </button>
-    </div>
-  </header>
 
-  <!-- ═══════════════════════════ WELCOME SCREEN ═══════════════════════════ -->
-  <div class="welcome-screen" id="welcomeScreen">
-    <div class="welcome-glow"></div>
-    <div class="welcome-content">
-      <div class="cat-emoji">🐱</div>
-      <h1 class="welcome-title">Welcome to Maneki Neko</h1>
-      <p class="welcome-tagline" id="characterTagline">I have the perfect dish for you! 🔔</p>
-      <button class="btn-start" id="startBtn">Start Ordering 🍽️</button>
-    </div>
-  </div>
+    <!-- ═══════════════════════════ MAIN APP ═══════════════════════════ -->
+    <main id="mainApp" style="display:none; flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative;">
 
-  <!-- ═══════════════════════════ MAIN APP ═══════════════════════════ -->
-  <main class="main-app" id="mainApp" style="display:none;">
-
-    <!-- Mode Tabs -->
-    <div class="mode-tabs">
-      <button class="mode-tab active" data-mode="ai">🤖 AI Assistant</button>
-      <button class="mode-tab" data-mode="manual">📋 Manual Order</button>
-    </div>
-
-    <!-- ─────────── AI MODE ─────────── -->
-    <div class="mode-panel" id="mode-ai">
-      <div class="ai-layout">
-
-        <!-- Left: Chat -->
-        <div class="chat-panel">
-          <div class="chat-messages" id="chatMessages"></div>
-          <div class="chat-input-row">
-            <input
-              type="text"
-              id="chatInput"
-              class="chat-input"
-              placeholder="Ask me anything about the menu…"
-              autocomplete="off"
-            />
-            <button class="icon-btn send-btn" id="sendBtn" aria-label="Send">📤</button>
-            <button class="icon-btn voice-btn" id="voiceBtn" aria-label="Voice input">🎙️</button>
-          </div>
+        <!-- Mode Tabs -->
+        <div class="mode-tabs">
+            <div class="mode-tabs-inner">
+                <button class="mode-tab active" data-mode="ai">🤖 AI Assistant</button>
+                <button class="mode-tab" data-mode="manual">📋 Manual Order</button>
+            </div>
         </div>
 
-        <!-- Right: AI Order Summary -->
-        <div class="ai-order-panel glass-card">
-          <h3 class="ai-order-title">Your Order 🛒</h3>
-          <div class="ai-order-items" id="aiOrderItems">
-            <p class="empty-hint">No items yet. Chat with me to order!</p>
-          </div>
-          <div class="ai-order-total" id="aiOrderTotal">Total: ₹0.00</div>
-          <button class="btn-confirm" id="aiConfirmOrder">✅ Confirm &amp; Place Order</button>
-          <button class="btn-clear" id="aiClearOrder">🗑️ Clear Order</button>
+        <!-- ─────────── AI MODE ─────────── -->
+        <div id="mode-ai" style="flex: 1; overflow: hidden; position: relative;">
+            <div class="ai-layout">
+                <!-- Left: Chat -->
+                <div class="chat-panel">
+                    <div class="chat-fade-top"></div>
+                    <div id="chatMessages"></div>
+                    <div class="chat-input-area">
+                        <div class="chat-input-wrapper">
+                            <input type="text" id="chatInput" placeholder="Ask me anything about the menu…" autocomplete="off" />
+                            <div class="chat-actions">
+                                <button id="voiceBtn" aria-label="Voice input">🎙️</button>
+                                <button id="sendBtn" aria-label="Send">📤</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: AI Order Summary -->
+                <div class="order-summary-panel">
+                    <h3 class="order-summary-title">Your Order 🛒</h3>
+                    <div id="aiOrderItems">
+                        <p class="empty-hint">No items yet. Chat with me to order!</p>
+                    </div>
+                    <div id="aiOrderTotal">Total: ₹0.00</div>
+                    <div class="order-actions">
+                        <button id="aiConfirmOrder">✅ Confirm &amp; Place</button>
+                        <button id="aiClearOrder">🗑️ Clear Order</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
-      </div>
-    </div>
-
-    <!-- ─────────── MANUAL MODE ─────────── -->
-    <div class="mode-panel" id="mode-manual" style="display:none;">
-      <div class="manual-layout">
-
-        <!-- Category Tabs -->
-        <div class="category-tabs" id="manualCategoryTabs"></div>
-
-        <!-- Menu Grid -->
-        <div class="menu-grid" id="manualMenuGrid"></div>
-
-      </div>
-    </div>
-
-  </main>
-
-  <!-- ═══════════════════════════ CART SIDEBAR ═══════════════════════════ -->
-  <div class="cart-backdrop" id="cartBackdrop"></div>
-  <aside class="cart-sidebar" id="cartSidebar">
-    <div class="cart-header">
-      <h3>Your Cart 🛒</h3>
-      <button class="cart-close-btn" id="cartCloseBtn" aria-label="Close cart">✕</button>
-    </div>
-    <div class="cart-items-list" id="cartItemsList">
-      <p class="empty-hint">Your cart is empty.</p>
-    </div>
-    <div class="cart-footer">
-      <div class="cart-total" id="cartTotal">Total: ₹0.00</div>
-      <button class="btn-confirm" id="placeOrderBtn">🍽️ Place Order</button>
-    </div>
-  </aside>
-
-  <!-- ═══════════════════════════ ORDER STATUS SCREEN ═══════════════════════════ -->
-  <div class="fullscreen-panel" id="orderStatusScreen" style="display:none;">
-    <div class="status-card glass-card">
-      <h2 class="status-title">Order Status</h2>
-      <p class="order-id-display" id="orderIdDisplay"></p>
-
-      <div class="status-steps">
-        <div class="status-step" id="step-pending">
-          <div class="step-circle">✅</div>
-          <div class="step-label">Placed</div>
+        <!-- ─────────── MANUAL MODE ─────────── -->
+        <div id="mode-manual" style="flex: 1; overflow-y: auto; padding: 1rem; display: none;">
+            <div style="max-width: 80rem; margin: 0 auto;">
+                <div id="manualCategoryTabs" style="display: flex; overflow-x: auto; gap: 0.75rem; padding-bottom: 1rem; margin-bottom: 1.5rem; padding-top: 0.5rem;"></div>
+                <div id="manualMenuGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem;"></div>
+            </div>
         </div>
-        <div class="step-line"></div>
-        <div class="status-step" id="step-preparing">
-          <div class="step-circle">🍳</div>
-          <div class="step-label">Preparing</div>
+    </main>
+
+    <!-- ═══════════════════════════ CART SIDEBAR ═══════════════════════════ -->
+    <div id="cartBackdrop"></div>
+    
+    <aside id="cartSidebar">
+        <div class="cart-header">
+            <h3>Your Cart 🛒</h3>
+            <button id="cartCloseBtn" aria-label="Close cart">✕</button>
         </div>
-        <div class="step-line"></div>
-        <div class="status-step" id="step-ready">
-          <div class="step-circle">🔔</div>
-          <div class="step-label">Ready</div>
+        <div id="cartItemsList">
+            <p class="empty-hint">Your cart is empty.</p>
         </div>
-        <div class="step-line"></div>
-        <div class="status-step" id="step-delivered">
-          <div class="step-circle">🍽️</div>
-          <div class="step-label">Delivered</div>
+        <div class="cart-footer">
+            <div id="cartTotal">Total: ₹0.00</div>
+            <button id="placeOrderBtn">🍽️ Place Order</button>
         </div>
-      </div>
+    </aside>
 
-      <p class="status-hint">We'll update you in real time. Hang tight!</p>
+    <!-- ═══════════════════════════ ORDER STATUS SCREEN ═══════════════════════════ -->
+    <div id="orderStatusScreen" style="display:none;">
+        <div class="order-status-card">
+            <h2 class="order-status-title">Order Status</h2>
+            <p id="orderIdDisplay"></p>
+
+            <div class="status-steps">
+                <div id="step-pending" class="status-step">
+                    <div class="status-step-icon">✅</div>
+                    <div class="status-step-label">Placed</div>
+                </div>
+                <div id="step-preparing" class="status-step">
+                    <div class="status-step-icon">🍳</div>
+                    <div class="status-step-label">Preparing</div>
+                </div>
+                <div id="step-ready" class="status-step">
+                    <div class="status-step-icon">🔔</div>
+                    <div class="status-step-label">Ready</div>
+                </div>
+                <div id="step-delivered" class="status-step">
+                    <div class="status-step-icon">🍽️</div>
+                    <div class="status-step-label">Delivered</div>
+                </div>
+            </div>
+            
+            <p class="status-message">We'll update you in real time. Hang tight!</p>
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button id="statusOrderMoreBtn" style="flex: 1; background: var(--bg-surface-variant); color: var(--text-primary); font-weight: 700; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border); cursor: pointer;">➕ Order More</button>
+                <button id="statusPayBillBtn" style="flex: 1; background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim)); color: #fff; font-weight: 800; padding: 1rem; border-radius: var(--radius-md); border: none; cursor: pointer; box-shadow: 0 4px 16px var(--primary-glow);">💳 Pay Bill</button>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <!-- ═══════════════════════════ QR PAYMENT SCREEN ═══════════════════════════ -->
-  <div class="fullscreen-panel" id="qrPaymentScreen" style="display:none;">
-    <div class="payment-card glass-card">
-      <h2>Payment 💳</h2>
-      <div class="qr-box" id="qrBox"></div>
-      <p class="qr-total" id="qrTotal">Total: ₹0.00</p>
+    <!-- ═══════════════════════════ QR PAYMENT SCREEN ═══════════════════════════ -->
+    <div id="qrPaymentScreen" style="display:none;">
+        <div class="payment-card">
+            <h2 class="payment-title">Payment 💳</h2>
+            <div id="qrBox"></div>
+            <p id="qrTotal">Total: ₹0.00</p>
 
-      <div class="payment-methods">
-        <label class="payment-method">
-          <input type="radio" name="paymentMethod" value="upi" checked /> UPI
-        </label>
-        <label class="payment-method">
-          <input type="radio" name="paymentMethod" value="card" /> Card
-        </label>
-        <label class="payment-method">
-          <input type="radio" name="paymentMethod" value="cash" /> Cash
-        </label>
-      </div>
+            <div class="payment-methods">
+                <label class="payment-method">
+                    <input type="radio" name="paymentMethod" value="upi" checked /> <span>UPI</span>
+                </label>
+                <label class="payment-method">
+                    <input type="radio" name="paymentMethod" value="card" /> <span>Card</span>
+                </label>
+                <label class="payment-method">
+                    <input type="radio" name="paymentMethod" value="cash" /> <span>Cash</span>
+                </label>
+            </div>
 
-      <button class="btn-confirm" id="paymentDoneBtn">✅ Payment Done</button>
+            <button id="paymentDoneBtn">✅ Payment Done</button>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button id="paymentBackToStatusBtn" style="flex: 1; background: transparent; border: 2px solid var(--border); color: var(--text-secondary); font-weight: 800; padding: 1rem; border-radius: var(--radius-pill); cursor: pointer;">⬅ Back</button>
+                <button id="paymentOrderMoreBtn" style="flex: 2; background: transparent; border: 2px solid var(--primary-raw); color: var(--primary-raw); font-weight: 800; padding: 1rem; border-radius: var(--radius-pill); cursor: pointer;">➕ Order More</button>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <!-- ═══════════════════════════ FEEDBACK MODAL ═══════════════════════════ -->
-  <div class="modal-overlay" id="feedbackModal" style="display:none;">
-    <div class="feedback-card glass-card">
-      <h2>How was your experience? 😊</h2>
+    <!-- ═══════════════════════════ FEEDBACK MODAL ═══════════════════════════ -->
+    <div id="feedbackModal" style="display:none;">
+        <div class="feedback-modal-card">
+            <h2 class="feedback-modal-title">How was your experience? 😊</h2>
 
-      <div class="star-rating" id="starRating">
-        <span class="star" data-value="1">⭐</span>
-        <span class="star" data-value="2">⭐</span>
-        <span class="star" data-value="3">⭐</span>
-        <span class="star" data-value="4">⭐</span>
-        <span class="star" data-value="5">⭐</span>
-      </div>
+            <div id="starRating">
+                <span class="star" data-value="1">⭐</span>
+                <span class="star" data-value="2">⭐</span>
+                <span class="star" data-value="3">⭐</span>
+                <span class="star" data-value="4">⭐</span>
+                <span class="star" data-value="5">⭐</span>
+            </div>
 
-      <textarea
-        id="feedbackComment"
-        class="feedback-textarea"
-        rows="4"
-        placeholder="Tell us what you loved (or didn't)…"
-      ></textarea>
+            <textarea
+                id="feedbackComment"
+                rows="4"
+                placeholder="Tell us what you loved (or didn't)…"
+            ></textarea>
 
-      <button class="btn-confirm" id="submitFeedbackBtn">Submit Feedback</button>
+            <button id="submitFeedbackBtn">Submit Feedback</button>
 
-      <div class="thank-you-msg" id="thankYouMsg" style="display:none;">
-        <h3>🎉 Thank you for dining with us!</h3>
-        <p>See you next time! 🐱</p>
-      </div>
+            <div id="thankYouMsg" style="display:none;">
+                <div style="font-size: 3.5rem; margin-bottom: 1.5rem; cursor: default;">🎉</div>
+                <h3 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.75rem;">Thank you for dining with us!</h3>
+                <p style="color: var(--text-secondary); font-weight: 500;">See you next time! 🐱</p>
+                <div style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1rem; width: 100%;">
+                    <p style="font-size: 0.75rem; color: var(--text-dimmed);">You may close this window.</p>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <!-- ═══════════════════════════ SCRIPTS ═══════════════════════════ -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../shared/supabase.js"></script>
-  <script src="app.js"></script>
+    <!-- ═══════════════════════════ SCRIPTS ═══════════════════════════ -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../shared/supabase.js"></script>
+    <script src="app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 
 </body>
 </html>
