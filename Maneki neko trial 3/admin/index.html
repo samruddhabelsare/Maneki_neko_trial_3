@@ -817,6 +817,73 @@
             box-shadow: 0 0 0 3px var(--primary-glow);
             background: var(--bg-surface-bright);
         }
+
+        /* ── Dashboard Filters ─────────────────────────────────────── */
+        .dashboard-filters {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--glass-border);
+        }
+
+        .filter-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: var(--tracking-wide);
+        }
+
+        .custom-range-box {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding-left: 1rem;
+            border-left: 1px solid var(--border);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .date-input {
+            background: var(--bg-surface-variant);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: var(--radius-sm);
+            padding: 0.4rem 0.75rem;
+            font-size: 0.85rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .date-input:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-apply {
+            background: var(--primary-raw);
+            color: white;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-apply:hover {
+            opacity: 0.9;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
     </style>
 </head>
 <body style="height: 100vh; display: flex; overflow: hidden;">
@@ -872,6 +939,25 @@
                 <p class="page-subtitle">Real-time restaurant neural metrics</p>
             </header>
 
+            <!-- Dashboard Filters -->
+            <div class="dashboard-filters">
+                <span class="filter-label">📅 Time Range</span>
+                <div class="filter-group" id="dashboardDateFilters">
+                    <button class="filter-btn active" data-range="all">All Time</button>
+                    <button class="filter-btn" data-range="1d">1 Day</button>
+                    <button class="filter-btn" data-range="7d">7 Days</button>
+                    <button class="filter-btn" data-range="1m">1 Month</button>
+                    <button class="filter-btn" data-range="custom">Custom</button>
+                </div>
+
+                <div id="customDateRange" class="custom-range-box hidden">
+                    <input type="date" id="startDate" class="date-input">
+                    <span style="color: var(--text-muted)">to</span>
+                    <input type="date" id="endDate" class="date-input">
+                    <button id="applyCustomDate" class="btn-apply">Apply</button>
+                </div>
+            </div>
+
             <!-- Stat Cards -->
             <div class="stat-grid">
                 <div class="stat-card">
@@ -918,7 +1004,7 @@
                                     <th>Items Count</th>
                                     <th>Total Amount</th>
                                     <th>Status</th>
-                                    <th>Time</th>
+                                    <th>Date & Time</th>
                                 </tr>
                             </thead>
                             <tbody id="recentOrdersBody"></tbody>
@@ -1031,11 +1117,11 @@
                                 <th>Order ID</th>
                                 <th>Table</th>
                                 <th>Items</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                                <th>Payment</th>
-                                <th>Time</th>
-                            </tr>
+                                 <th>Total</th>
+                                 <th>Status</th>
+                                 <th>Payment</th>
+                                 <th>Date & Time</th>
+                             </tr>
                         </thead>
                         <tbody id="fullOrdersBody"></tbody>
                     </table>

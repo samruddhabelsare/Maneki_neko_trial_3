@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
@@ -22,6 +23,13 @@ app.post('/api/proxy', async (req, res) => {
     
     if (!url) {
         return res.status(400).json({ error: 'URL is required for proxying.' });
+    }
+
+    // Inject server-side API keys if client sends placeholders or empty keys
+    if (url.includes('nvidia.com') && process.env.NVIDIA_API_KEY) {
+        if (!headers['Authorization'] || headers['Authorization'].includes('YOUR_NVIDIA') || headers['Authorization'] === 'Bearer ') {
+            headers['Authorization'] = `Bearer ${process.env.NVIDIA_API_KEY}`;
+        }
     }
 
     try {
@@ -56,10 +64,9 @@ app.post('/api/proxy', async (req, res) => {
         
     } catch (error) {
         const status = error.response ? error.response.status : 500;
-        const errorData = error.response ? error.response.data : { error: error.message };
         console.error(`[Proxy Error] ${status}:`, error.message);
         if (!res.headersSent) {
-            res.status(status).send(errorData);
+            res.status(status).json({ error: error.message });
         }
     }
 });
@@ -70,7 +77,12 @@ app.post('/api/proxy', async (req, res) => {
  * The client POSTs the voice params here and gets raw audio back.
  */
 app.post('/api/elevenlabs', async (req, res) => {
-    const { voiceId, apiKey, text, modelId, voiceSettings } = req.body;
+    let { voiceId, apiKey, text, modelId, voiceSettings } = req.body;
+
+    // Inject server-side API key if client has placeholder
+    if (!apiKey || apiKey.includes('YOUR_ELEVENLABS')) {
+        apiKey = process.env.ELEVENLABS_API_KEY || apiKey;
+    }
 
     if (!voiceId || !apiKey || !text) {
         return res.status(400).json({ error: 'voiceId, apiKey, and text are required.' });

@@ -39,6 +39,56 @@ const state = {
     selectedRating: 0
 };
 
+// ─── STATE PERSISTENCE ────────────────────────────────────────────────────────
+function saveSession() {
+    try {
+        var toSave = {
+            cart: state.cart,
+            aiOrderItems: state.aiOrderItems,
+            chatHistory: state.chatHistory,
+            orderId: state.orderId,
+            table: state.table
+        };
+        localStorage.setItem('maneki_customer_state', JSON.stringify(toSave));
+    } catch(e) {
+        console.warn('Could not save session:', e);
+    }
+}
+
+function loadSession() {
+    try {
+        var saved = localStorage.getItem('maneki_customer_state');
+        if (saved) {
+            var parsed = JSON.parse(saved);
+            state.cart = parsed.cart || [];
+            state.aiOrderItems = parsed.aiOrderItems || [];
+            state.chatHistory = parsed.chatHistory || [];
+            state.orderId = parsed.orderId || null;
+            if (parsed.table) state.table = parsed.table;
+
+            // Restore UI if we have data
+            if (state.cart.length > 0) updateCartUI();
+            if (state.aiOrderItems.length > 0) updateAIOrderPanel(state.aiOrderItems);
+            
+            // Re-render chat history securely
+            if (state.chatHistory.length > 0) {
+                var chatBox = document.getElementById('chatMessages');
+                chatBox.innerHTML = '';
+                state.chatHistory.forEach(function(msg) {
+                    if (msg.role !== 'system') {
+                        // We use the existing appendMessageUI method but need to skip saving it again
+                        // Easiest is to manually reconstruct the DOM here safely, or just call appendMessageUI
+                        appendMessageUI(msg.role, msg.content, true);
+                    }
+                });
+            }
+        }
+    } catch(e) {
+        console.warn('Could not load session:', e);
+    }
+}
+
+
 // ─── CHARACTER CONFIG ─────────────────────────────────────────────────────────
 const characterConfig = {
     Naruto: {
@@ -117,9 +167,29 @@ document.addEventListener('DOMContentLoaded', function () {
         console.warn('window.getMenu not available — supabase.js may not have loaded.');
     }
 
-    // --- Show welcome screen ---
-    document.getElementById('welcomeScreen').style.display = 'flex';
-    document.getElementById('mainApp').style.display = 'none';
+    // --- Restore State if any ---
+    loadSession();
+
+    // --- Show welcome screen only if no active order polling ---
+    if (!state.orderId) {
+        document.getElementById('welcomeScreen').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
+    } else {
+        // If we have an active order ID, skip welcome and resume polling
+        document.getElementById('welcomeScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'flex';
+        
+        // Ensure status button is prominent
+        var statusBtn = document.getElementById('statusToggleBtn');
+        if (statusBtn) statusBtn.style.display = 'inline-block';
+
+        // Ensure floating bar is prominent
+        var activeBar = document.getElementById('activeOrderBar');
+        if (activeBar) activeBar.style.display = 'flex';
+        
+        // Resume Real-time polling
+        startPollOrderStatus();
+    }
 
     // --- Bind all events ---
     bindEvents();
@@ -181,6 +251,78 @@ function bindEvents() {
         star.addEventListener('click', function () {
             setRating(parseInt(star.getAttribute('data-value'), 10));
         });
+    });
+
+    // Status / Bill toggle from header
+    var statusToggleBtn = document.getElementById('statusToggleBtn');
+    if (statusToggleBtn) {
+        statusToggleBtn.addEventListener('click', function() {
+            if (!state.orderId) {
+                alert("You haven't ordered anything yet!");
+                return;
+            }
+            document.getElementById('orderStatusScreen').style.display = 'flex';
+            document.getElementById('qrPaymentScreen').style.display = 'none';
+        });
+    }
+
+    // Status -> Payment
+    var statusPayBillBtn = document.getElementById('statusPayBillBtn');
+    if (statusPayBillBtn) {
+        statusPayBillBtn.addEventListener('click', function() {
+            document.getElementById('orderStatusScreen').style.display = 'none';
+            document.getElementById('qrPaymentScreen').style.display = 'flex';
+        });
+    }
+
+    // Payment -> Back to Status
+    var paymentBackToStatusBtn = document.getElementById('paymentBackToStatusBtn');
+    if (paymentBackToStatusBtn) {
+        paymentBackToStatusBtn.addEventListener('click', function() {
+            document.getElementById('qrPaymentScreen').style.display = 'none';
+            document.getElementById('orderStatusScreen').style.display = 'flex';
+        });
+    }
+
+    // Floating Active Order Bar Buttons
+    var barStatusBtn = document.getElementById('barStatusBtn');
+    if (barStatusBtn) {
+        barStatusBtn.addEventListener('click', function() {
+            document.getElementById('orderStatusScreen').style.display = 'flex';
+            document.getElementById('qrPaymentScreen').style.display = 'none';
+        });
+    }
+
+    var barPayBtn = document.getElementById('barPayBtn');
+    if (barPayBtn) {
+        barPayBtn.addEventListener('click', function() {
+            document.getElementById('orderStatusScreen').style.display = 'none';
+            document.getElementById('qrPaymentScreen').style.display = 'flex';
+        });
+    }
+
+    // Order More Action
+    var statusOrderMoreBtn = document.getElementById('statusOrderMoreBtn');
+    if (statusOrderMoreBtn) {
+        statusOrderMoreBtn.addEventListener('click', orderMoreAction);
+    }
+    
+    var paymentOrderMoreBtn = document.getElementById('paymentOrderMoreBtn');
+    if (paymentOrderMoreBtn) {
+        paymentOrderMoreBtn.addEventListener('click', orderMoreAction);
+    }
+}
+
+function orderMoreAction() {
+    document.getElementById('orderStatusScreen').style.display = 'none';
+    document.getElementById('qrPaymentScreen').style.display = 'none';
+    
+    // Switch to manual mode by default so they see the full menu
+    document.getElementById('mode-ai').style.display = 'none';
+    document.getElementById('mode-manual').style.display = 'block';
+    
+    document.querySelectorAll('.mode-tab').forEach(function (tab) {
+        tab.classList.toggle('active', tab.getAttribute('data-mode') === 'manual');
     });
 }
 
@@ -427,8 +569,10 @@ async function corsFetch(bodyObj) {
                     stream: bodyObj.stream
                 })
             });
-            if (resp.ok) return resp;
-            console.warn('[corsFetch] Local proxy failed, trying public ones...');
+            if (resp.ok || resp.status === 401 || resp.status === 402 || resp.status === 429) {
+                return resp;
+            }
+            console.warn('[corsFetch] Local proxy returned 500, trying public ones...');
         } catch (e) {
             console.warn('[corsFetch] Local proxy error:', e.message);
         }
@@ -628,6 +772,7 @@ function sendMessage(text) {
 
     appendUserMessage(text);
     state.chatHistory.push({ role: 'user', content: text });
+    saveSession();
 
     document.getElementById('chatInput').value = '';
     document.getElementById('chatInput').disabled = true;
@@ -677,6 +822,8 @@ function sendMessage(text) {
 
         // Speak reply (cleaned: no actions, no JSON, no emotion tags)
         speakReply(cleanTextForTTS(fullText));
+
+        saveSession();
 
         document.getElementById('chatInput').disabled = false;
         document.getElementById('sendBtn').disabled = false;
@@ -1011,8 +1158,21 @@ async function confirmAIOrder() {
         return;
     }
 
-    document.getElementById('mode-ai').style.display = 'none';
-    document.getElementById('orderStatusScreen').style.display = 'flex';
+    // Clear items
+    state.aiOrderItems = [];
+    state.cart = [];
+    updateCartUI();
+    updateAIOrderPanel([]);
+    saveSession();
+
+    // Show status buttons
+    var statusBtn = document.getElementById('statusToggleBtn');
+    if (statusBtn) statusBtn.style.display = 'inline-block';
+    
+    var activeBar = document.getElementById('activeOrderBar');
+    if (activeBar) activeBar.style.display = 'flex';
+
+    // Stay on AI mode but clear the order UI
     document.getElementById('orderIdDisplay').textContent = 'Order ID: ' + (state.orderId || 'N/A');
 
     updateStatusBar('pending');
@@ -1189,8 +1349,11 @@ function updateCartUI() {
         input.addEventListener('input', function () {
             var i = parseInt(input.getAttribute('data-idx'), 10);
             if (state.cart[i]) state.cart[i].instructions = input.value;
+            saveSession();
         });
     });
+
+    saveSession();
 }
 
 function toggleCart() {
@@ -1248,9 +1411,31 @@ async function placeManualOrder() {
         return;
     }
 
+    state.cart = [];
+    state.aiOrderItems = [];
+    updateCartUI();
+    updateAIOrderPanel([]);
+    saveSession();
+
     closeCart();
-    document.getElementById('mode-manual').style.display = 'none';
-    document.getElementById('orderStatusScreen').style.display = 'flex';
+    
+    // Return them to menu
+    document.getElementById('mode-manual').style.display = 'block';
+    document.getElementById('mode-ai').style.display = 'none';
+    document.querySelectorAll('.mode-tab').forEach(function(t) {
+        t.classList.toggle('active', t.getAttribute('data-mode') === 'manual');
+    });
+
+    // Show status button in header
+    var statusBtn = document.getElementById('statusToggleBtn');
+    if (statusBtn) statusBtn.style.display = 'inline-block';
+
+    // Show floating active order bar for quick tracking/payment
+    var activeBar = document.getElementById('activeOrderBar');
+    if (activeBar) activeBar.style.display = 'flex';
+
+    document.getElementById('orderStatusScreen').style.display = 'none';
+    document.getElementById('qrPaymentScreen').style.display = 'none';
     document.getElementById('orderIdDisplay').textContent = 'Order ID: ' + (state.orderId || 'N/A');
 
     updateStatusBar('pending');
@@ -1275,16 +1460,9 @@ function startPollOrderStatus() {
                 var status = res.data.status;
                 updateStatusBar(status);
 
-                if (status === 'ready') {
-                    document.getElementById('orderStatusScreen').style.display = 'none';
-                    document.getElementById('qrPaymentScreen').style.display = 'flex';
-                }
-
                 if (status === 'delivered' || status === 'billed') {
                     clearInterval(state.pollInterval);
                     state.pollInterval = null;
-                    document.getElementById('qrPaymentScreen').style.display = 'none';
-                    showFeedbackModal();
                 }
             }
         } catch (e) {
@@ -1299,7 +1477,7 @@ function updateStatusBar(status) {
 
     steps.forEach(function (step, idx) {
         var stepEl = document.getElementById('step-' + step);
-        if (stepEl) stepEl.classList.toggle('active', idx <= curIndex);
+        if (stepEl) stepEl.classList.toggle('active-step', idx <= curIndex);
     });
 
     document.querySelectorAll('.step-line').forEach(function (line, idx) {
@@ -1354,7 +1532,7 @@ async function markAsBilled() {
 // ─── FEEDBACK ─────────────────────────────────────────────────────────────────
 function showFeedbackModal() {
     state.selectedRating = 0;
-    document.querySelectorAll('.star').forEach(function (s) { s.classList.remove('active'); });
+    document.querySelectorAll('.star').forEach(function (s) { s.classList.remove('selected'); });
     document.getElementById('feedbackComment').value = '';
     document.getElementById('thankYouMsg').style.display = 'none';
     document.getElementById('submitFeedbackBtn').style.display = 'block';
@@ -1364,7 +1542,7 @@ function showFeedbackModal() {
 function setRating(n) {
     state.selectedRating = n;
     document.querySelectorAll('.star').forEach(function (star) {
-        star.classList.toggle('active', parseInt(star.getAttribute('data-value'), 10) <= n);
+        star.classList.toggle('selected', parseInt(star.getAttribute('data-value'), 10) <= n);
     });
 }
 
@@ -1389,7 +1567,7 @@ async function submitFeedbackHandler() {
     }
 
     document.getElementById('submitFeedbackBtn').style.display = 'none';
-    document.getElementById('thankYouMsg').style.display = 'block';
+    document.getElementById('thankYouMsg').style.display = 'flex';
 
     setTimeout(resetForNextCustomer, 3000);
 }
@@ -1401,6 +1579,16 @@ function resetForNextCustomer() {
     state.chatHistory = [];
     state.orderId = null;
     state.selectedRating = 0;
+
+    localStorage.removeItem('maneki_customer_state');
+
+    // Hide status button
+    var statusBtn = document.getElementById('statusToggleBtn');
+    if (statusBtn) statusBtn.style.display = 'none';
+
+    // Hide floating active order bar
+    var activeBar = document.getElementById('activeOrderBar');
+    if (activeBar) activeBar.style.display = 'none';
 
     if (state.pollInterval) {
         clearInterval(state.pollInterval);

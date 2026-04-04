@@ -938,11 +938,11 @@
 
         .star {
             cursor: pointer;
-            filter: grayscale(100%);
-            transition: filter var(--duration-fast), transform var(--duration-fast);
+            opacity: 0.3;
+            transition: opacity var(--duration-fast), transform var(--duration-fast);
         }
 
-        .star.selected { filter: grayscale(0%); transform: scale(1.1); }
+        .star.selected { opacity: 1; transform: scale(1.1); }
 
         #feedbackComment {
             width: 100%;
@@ -1264,7 +1264,8 @@
         <div class="header-table">
             <span id="tableDisplay">Table 1</span>
         </div>
-        <div>
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <button id="statusToggleBtn" style="display: none; background: var(--bg-surface-high); border: 1px solid var(--border); color: var(--text-primary); border-radius: var(--radius-pill); font-weight: 700; padding: 0.5rem 1rem; cursor: pointer;">🧾 Bill & Payment</button>
             <button id="cartToggleBtn">
                 <span>🛒</span> 
                 <span id="cartCount">0</span>
@@ -1379,6 +1380,10 @@
             </div>
             
             <p class="status-message">We'll update you in real time. Hang tight!</p>
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button id="statusOrderMoreBtn" style="flex: 1; background: var(--bg-surface-variant); color: var(--text-primary); font-weight: 700; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border); cursor: pointer;">➕ Order More</button>
+                <button id="statusPayBillBtn" style="flex: 1; background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim)); color: #fff; font-weight: 800; padding: 1rem; border-radius: var(--radius-md); border: none; cursor: pointer; box-shadow: 0 4px 16px var(--primary-glow);">💳 Pay Bill</button>
+            </div>
         </div>
     </div>
 
@@ -1402,6 +1407,10 @@
             </div>
 
             <button id="paymentDoneBtn">✅ Payment Done</button>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button id="paymentBackToStatusBtn" style="flex: 1; background: transparent; border: 2px solid var(--border); color: var(--text-secondary); font-weight: 800; padding: 1rem; border-radius: var(--radius-pill); cursor: pointer;">⬅ Back</button>
+                <button id="paymentOrderMoreBtn" style="flex: 2; background: transparent; border: 2px solid var(--primary-raw); color: var(--primary-raw); font-weight: 800; padding: 1rem; border-radius: var(--radius-pill); cursor: pointer;">➕ Order More</button>
+            </div>
         </div>
     </div>
 
