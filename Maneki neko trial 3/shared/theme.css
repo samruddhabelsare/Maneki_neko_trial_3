@@ -1,88 +1,499 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   MANEKI NOIR — Stitch Design System
+   "The Digital Sommelier" · Linear × Apple · Dark-Mode-First
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Design Tokens ─────────────────────────────────────────────────────────── */
 :root {
-    /* Core Colors - Obsidian & Neon */
-    --bg-deep: #050505;
-    --bg-surface: #121212;
-    --bg-card: rgba(255, 255, 255, 0.03);
-    
-    --accent-teal: #00f2ea;
-    --accent-amber: #ffaa00;
-    --accent-purple: #9d00ff;
-    
-    --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.6);
-    --text-muted: rgba(255, 255, 255, 0.3);
-    
-    --border: rgba(255, 255, 255, 0.1);
-    --border-glow: rgba(0, 242, 234, 0.3);
-    
-    /* Effects */
-    --glass: blur(12px);
-    --shadow-neon: 0 0 20px rgba(0, 242, 234, 0.15);
-    --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    /* Background Surfaces */
+    --bg-deep:              #0e0e10;
+    --bg-surface:           #18181b;
+    --bg-surface-low:       #131315;
+    --bg-surface-container:  #19191c;
+    --bg-surface-high:      #1f1f22;
+    --bg-surface-highest:   #262528;
+    --bg-surface-bright:    #2c2c2f;
+    --bg-surface-variant:   #262528;
+
+    /* Glass */
+    --glass-bg:             rgba(24, 24, 27, 0.55);
+    --glass-bg-strong:      rgba(38, 37, 40, 0.6);
+    --glass-blur:           blur(20px);
+    --glass-border:         rgba(255, 255, 255, 0.06);
+    --glass-border-hover:   rgba(255, 255, 255, 0.14);
+
+    /* Primary — Electric Indigo */
+    --primary:              #a3a6ff;
+    --primary-container:    #9396ff;
+    --primary-dim:          #6063ee;
+    --primary-fixed:        #9396ff;
+    --primary-fixed-dim:    #8387ff;
+    --primary-raw:          #6366f1;
+    --primary-glow:         rgba(99, 102, 241, 0.15);
+    --primary-glow-strong:  rgba(99, 102, 241, 0.30);
+    --on-primary:           #0f00a4;
+
+    /* Secondary */
+    --secondary:            #a28efc;
+    --secondary-container:  #49339d;
+    --on-secondary:         #21006d;
+
+    /* Tertiary */
+    --tertiary:             #ffa5d9;
+    --tertiary-container:   #ff8ed2;
+    --on-tertiary:          #701455;
+
+    /* Text */
+    --text-primary:         #f9f5f8;
+    --text-secondary:       #adaaad;
+    --text-muted:           #767577;
+    --text-dimmed:          #48474a;
+
+    /* Semantic Colors */
+    --success:              #10b981;
+    --success-bg:           rgba(16, 185, 129, 0.12);
+    --success-border:       rgba(16, 185, 129, 0.25);
+    --warning:              #f59e0b;
+    --warning-bg:           rgba(245, 158, 11, 0.12);
+    --warning-border:       rgba(245, 158, 11, 0.25);
+    --danger:               #ef4444;
+    --danger-bg:            rgba(239, 68, 68, 0.12);
+    --danger-border:        rgba(239, 68, 68, 0.25);
+    --info:                 #3b82f6;
+    --info-bg:              rgba(59, 130, 246, 0.12);
+    --info-border:          rgba(59, 130, 246, 0.25);
+
+    /* Border & Outline */
+    --border:               rgba(255, 255, 255, 0.06);
+    --border-hover:         rgba(255, 255, 255, 0.12);
+    --outline:              #767577;
+    --outline-variant:      #48474a;
+
+    /* Shapes */
+    --radius-xs:            6px;
+    --radius-sm:            8px;
+    --radius-md:            12px;
+    --radius-lg:            16px;
+    --radius-xl:            20px;
+    --radius-2xl:           24px;
+    --radius-pill:          9999px;
+
+    /* Shadows */
+    --shadow-ambient:       0 4px 12px rgba(0, 0, 0, 0.5), 0 20px 40px rgba(0, 0, 0, 0.3);
+    --shadow-soft:          0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-glow:          0 0 24px var(--primary-glow);
+    --shadow-glow-strong:   0 0 32px var(--primary-glow-strong);
+    --shadow-card:          0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-card-hover:    0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--glass-border-hover);
+
+    /* Transitions */
+    --ease-out:             cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-spring:          cubic-bezier(0.34, 1.56, 0.64, 1);
+    --duration-fast:        0.15s;
+    --duration-normal:      0.25s;
+    --duration-slow:        0.4s;
+
+    /* Typography */
+    --font-sans:            'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono:            'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+    --tracking-tight:       -0.02em;
+    --tracking-normal:      0;
+    --tracking-wide:        0.05em;
 }
 
-* {
+/* ── 2. Reset & Base ──────────────────────────────────────────────────────────── */
+*, *::before, *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 body {
     background-color: var(--bg-deep);
     color: var(--text-primary);
+    font-family: var(--font-sans);
     line-height: 1.6;
     overflow-x: hidden;
 }
 
-/* Glassmorphism Card Base */
-.glass-card {
-    background: var(--bg-card);
-    backdrop-filter: var(--glass);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 2rem;
-    transition: all 0.3s var(--transition-smooth);
+/* ── 3. Grain Texture Overlay ─────────────────────────────────────────────────── */
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 128px 128px;
 }
 
-.glass-card:hover {
-    border-color: var(--accent-teal);
-    box-shadow: var(--shadow-neon);
-}
-
-/* Typography Utility */
-h1, h2, h3 {
+/* ── 4. Typography System ─────────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: var(--tracking-tight);
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.display-lg {
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+}
+
+.display-md {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+}
+
+.display-sm {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 700;
 }
 
 .text-gradient {
-    background: linear-gradient(135deg, var(--accent-teal), var(--accent-purple));
+    background: linear-gradient(135deg, var(--primary), var(--primary-dim));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
-/* Interactive Elements */
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+
+/* ── 5. Custom Scrollbar ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--outline-variant);
+    border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* ── 6. Glassmorphism Card ────────────────────────────────────────────────────── */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    transition: all var(--duration-normal) var(--ease-out);
+}
+
+.glass-card:hover {
+    border-color: var(--glass-border-hover);
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-4px);
+}
+
+.glass-card-static {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+}
+
+/* ── 7. Buttons ───────────────────────────────────────────────────────────────── */
 button {
     cursor: pointer;
     border: none;
     outline: none;
+    font-family: var(--font-sans);
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--accent-teal), #00d4cc);
-    color: var(--bg-deep);
-    padding: 0.8rem 1.5rem;
-    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
     font-weight: 600;
-    transition: transform 0.2s ease;
+    font-size: 0.95rem;
+    border: none;
+    transition: all var(--duration-normal) var(--ease-out);
+    box-shadow: var(--shadow-soft);
+}
+
+.btn-primary:hover {
+    box-shadow: var(--shadow-glow), var(--shadow-soft);
+    transform: scale(1.02);
 }
 
 .btn-primary:active {
-    transform: scale(0.95);
+    transform: scale(0.97);
 }
 
-/* Shared Layout Spacing */
+.btn-secondary {
+    background: var(--bg-surface-variant);
+    color: var(--text-primary);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: 1px solid var(--glass-border);
+    transition: all var(--duration-normal) var(--ease-out);
+}
+
+.btn-secondary:hover {
+    border-color: var(--glass-border-hover);
+    background: var(--bg-surface-bright);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--primary);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: none;
+    transition: all var(--duration-normal) var(--ease-out);
+}
+
+.btn-ghost:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* ── 8. Badges & Pills ───────────────────────────────────────────────────────── */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+}
+
+.badge-pending   { background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning-border); }
+.badge-preparing { background: var(--info-bg);    color: var(--info);    border: 1px solid var(--info-border); }
+.badge-ready     { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
+.badge-delivered { background: rgba(148,163,184,0.12); color: #94a3b8; border: 1px solid rgba(148,163,184,0.25); }
+.badge-billed    { background: rgba(168,85,247,0.12);  color: #a855f7; border: 1px solid rgba(168,85,247,0.25); }
+
+/* ── 9. Filter Buttons ────────────────────────────────────────────────────────── */
+.filter-btn {
+    background: var(--bg-surface-variant);
+    color: var(--text-secondary);
+    border: 1px solid var(--glass-border);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-pill);
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all var(--duration-fast) var(--ease-out);
+    cursor: pointer;
+}
+
+.filter-btn:hover {
+    border-color: var(--glass-border-hover);
+    background: var(--bg-surface-bright);
+    color: var(--text-primary);
+}
+
+.filter-btn.active {
+    background: var(--primary-raw);
+    color: #fff;
+    border-color: var(--primary-raw);
+    box-shadow: 0 0 16px var(--primary-glow);
+}
+
+/* ── 10. Status Indicators ────────────────────────────────────────────────────── */
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-dot.green {
+    background-color: var(--success);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+.status-dot.grey {
+    background-color: var(--text-muted);
+}
+
+.status-dot.red {
+    background-color: var(--danger);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+.status-dot.yellow {
+    background-color: var(--warning);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+}
+
+/* ── 11. Toggle Switch ────────────────────────────────────────────────────────── */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: var(--bg-surface-bright);
+    transition: 0.3s;
+    border-radius: 34px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--text-primary);
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: var(--primary-raw);
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+/* ── 12. Tables ───────────────────────────────────────────────────────────────── */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+th {
+    padding: 1rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    border-bottom: 1px solid var(--border);
+}
+
+td {
+    padding: 1rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    font-size: 0.95rem;
+}
+
+tr:last-child td { border-bottom: none; }
+
+tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* ── 13. Input Fields ─────────────────────────────────────────────────────────── */
+input[type="text"],
+input[type="number"],
+input[type="search"],
+input[type="email"],
+input[type="tel"],
+select,
+textarea {
+    background: var(--bg-surface-highest);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    transition: all var(--duration-fast) var(--ease-out);
+    outline: none;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    background: var(--bg-surface-bright);
+    border-color: rgba(99, 102, 241, 0.4);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+::placeholder {
+    color: var(--text-dimmed);
+}
+
+/* ── 14. Selection ────────────────────────────────────────────────────────────── */
+::selection {
+    background: var(--primary-raw);
+    color: #fff;
+}
+
+/* ── 15. Animations ───────────────────────────────────────────────────────────── */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(8px); }
+}
+
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 12px var(--primary-glow); }
+    50%      { box-shadow: 0 0 24px var(--primary-glow-strong); }
+}
+
+@keyframes wave {
+    0%, 100% { transform: rotate(-10deg); }
+    50%      { transform: rotate(10deg); }
+}
+
+.animate-fadeInUp {
+    animation: fadeInUp 0.6s var(--ease-out) forwards;
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.4s var(--ease-out) forwards;
+}
+
+/* ── 16. Utility: Hidden (preserved for JS toggle logic) ──────────────────────── */
+.hidden { display: none !important; }
+
+/* ── 17. Container ────────────────────────────────────────────────────────────── */
 .container {
     max-width: 1200px;
     margin: 0 auto;
