@@ -188,8 +188,8 @@
         /* ── Stat Cards ────────────────────────────────────────────── */
         .stat-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.25rem;
             margin-bottom: 2.5rem;
         }
 
@@ -198,11 +198,12 @@
             backdrop-filter: var(--glass-blur);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-lg);
-            padding: 1.5rem;
+            padding: 1.25rem;
             display: flex;
             align-items: center;
-            gap: 1.25rem;
+            gap: 1rem;
             transition: all var(--duration-normal) var(--ease-out);
+            min-width: 0;
         }
 
         .stat-card:hover {
@@ -212,8 +213,8 @@
         }
 
         .stat-icon {
-            width: 3.5rem;
-            height: 3.5rem;
+            width: 3rem;
+            height: 3rem;
             border-radius: var(--radius-md);
             display: flex;
             align-items: center;
@@ -228,13 +229,21 @@
         .stat-icon-rating   { background: var(--warning-bg); }
 
         .stat-value {
-            font-size: 1.75rem;
+            font-size: 1.5rem;
             font-weight: 800;
             color: var(--text-primary);
-            line-height: 1;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .stat-value-green { color: var(--success); }
+
+        .stat-card > div:not(.stat-icon) {
+            min-width: 0;
+            flex: 1;
+        }
 
         .stat-label {
             font-size: 0.75rem;
@@ -793,10 +802,11 @@
 
         .search-icon {
             position: absolute;
-            left: 1rem;
+            left: 1.25rem;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-dimmed);
+            pointer-events: none;
         }
 
         .search-input {
@@ -805,7 +815,7 @@
             border: 1px solid var(--border);
             color: var(--text-primary);
             border-radius: var(--radius-pill);
-            padding: 0.75rem 1rem 0.75rem 3rem;
+            padding: 0.75rem 1rem 0.75rem 3rem !important;
             font-family: var(--font-sans);
             font-size: 0.95rem;
             outline: none;
@@ -942,7 +952,7 @@
             <!-- Dashboard Filters -->
             <div class="dashboard-filters">
                 <span class="filter-label">📅 Time Range</span>
-                <div class="filter-group" id="dashboardDateFilters">
+                <div class="filter-group global-date-filters">
                     <button class="filter-btn active" data-range="all">All Time</button>
                     <button class="filter-btn" data-range="1d">1 Day</button>
                     <button class="filter-btn" data-range="7d">7 Days</button>
@@ -950,11 +960,11 @@
                     <button class="filter-btn" data-range="custom">Custom</button>
                 </div>
 
-                <div id="customDateRange" class="custom-range-box hidden">
-                    <input type="date" id="startDate" class="date-input">
+                <div class="custom-range-box global-custom-range hidden">
+                    <input type="date" class="date-input global-start-date">
                     <span style="color: var(--text-muted)">to</span>
-                    <input type="date" id="endDate" class="date-input">
-                    <button id="applyCustomDate" class="btn-apply">Apply</button>
+                    <input type="date" class="date-input global-end-date">
+                    <button class="btn-apply global-apply-date">Apply</button>
                 </div>
             </div>
 
@@ -1158,9 +1168,32 @@
 
         <!-- ═══════════ 5. FEEDBACK ═══════════ -->
         <section id="feedback" class="section admin-section hidden">
+            <header class="page-header">
+                <h1 class="page-title">💬 Customer Feedback</h1>
+            </header>
+
+            <!-- Global Date Filters -->
+            <div class="dashboard-filters">
+                <span class="filter-label">📅 Time Range</span>
+                <div class="filter-group global-date-filters">
+                    <button class="filter-btn active" data-range="all">All Time</button>
+                    <button class="filter-btn" data-range="1d">1 Day</button>
+                    <button class="filter-btn" data-range="7d">7 Days</button>
+                    <button class="filter-btn" data-range="1m">1 Month</button>
+                    <button class="filter-btn" data-range="custom">Custom</button>
+                </div>
+
+                <div class="custom-range-box global-custom-range hidden">
+                    <input type="date" class="date-input global-start-date">
+                    <span style="color: var(--text-muted)">to</span>
+                    <input type="date" class="date-input global-end-date">
+                    <button class="btn-apply global-apply-date">Apply</button>
+                </div>
+            </div>
+
             <header class="feedback-header">
                 <div style="flex: 1;">
-                    <h1 class="page-title" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">💬 Customer Feedback</h1>
+                    <span class="filter-label" style="display: block; margin-bottom: 0.75rem;">⭐ Rating Filter</span>
                     <div class="feedback-filters" id="feedbackFilters">
                         <button class="filter-btn active" data-rating="all">All</button>
                         <button class="filter-btn" data-rating="1">1★</button>
@@ -1176,6 +1209,7 @@
                     <span class="feedback-sentiment-stars" id="avg-stars-display"></span>
                 </div>
             </header>
+
             <div class="feedback-grid" id="feedbackList"></div>
         </section>
 
@@ -1184,6 +1218,25 @@
             <header class="page-header">
                 <h1 class="page-title">📈 Temporal Analytics</h1>
             </header>
+
+            <!-- Global Date Filters -->
+            <div class="dashboard-filters">
+                <span class="filter-label">📅 Time Range</span>
+                <div class="filter-group global-date-filters">
+                    <button class="filter-btn active" data-range="all">All Time</button>
+                    <button class="filter-btn" data-range="1d">1 Day</button>
+                    <button class="filter-btn" data-range="7d">7 Days</button>
+                    <button class="filter-btn" data-range="1m">1 Month</button>
+                    <button class="filter-btn" data-range="custom">Custom</button>
+                </div>
+
+                <div class="custom-range-box global-custom-range hidden">
+                    <input type="date" class="date-input global-start-date">
+                    <span style="color: var(--text-muted)">to</span>
+                    <input type="date" class="date-input global-end-date">
+                    <button class="btn-apply global-apply-date">Apply</button>
+                </div>
+            </div>
 
             <div class="analytics-grid">
                 <!-- Peak Hours -->

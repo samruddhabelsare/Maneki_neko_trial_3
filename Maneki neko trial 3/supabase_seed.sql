@@ -56,7 +56,7 @@ CREATE TABLE customers (
     id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     restaurant_id UUID REFERENCES restaurants(id),
     name          TEXT NOT NULL,
-    phone         TEXT,
+    phone         TEXT UNIQUE,
     visit_count   INT  DEFAULT 1,
     preferences   TEXT[],
     created_at    TIMESTAMPTZ DEFAULT NOW()
@@ -67,6 +67,7 @@ CREATE TABLE orders (
     id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     restaurant_id  UUID REFERENCES restaurants(id),
     customer_id    UUID REFERENCES customers(id),
+    customer_phone TEXT,
     table_number   INT  NOT NULL,
     items          JSONB NOT NULL DEFAULT '[]',
     total_amount   NUMERIC(8,2) NOT NULL DEFAULT 0,

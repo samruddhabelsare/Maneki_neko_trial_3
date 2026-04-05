@@ -1,9 +1,9 @@
-// ═══════════════════════════════════════════════════════
-//  Maneki Neko — Customer Ordering — app.js
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  Maneki Neko â€” Customer Ordering â€” app.js
 //  No import/export. All globals attached to window.
-// ═══════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-// ─── CONSTANTS ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ CONSTANTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const NVIDIA_API_KEY = 'YOUR_NVIDIA_API_KEY_HERE';
 const NVIDIA_MODEL = 'meta/llama-3.3-70b-instruct';
 // Multiple CORS proxy options for resilience (file:// origin sends null Origin header)
@@ -17,13 +17,37 @@ const CORS_PROXIES = [
 var workingProxyIndex = 0;
 const RESTAURANT_ID = 'aaaaaaaa-0000-0000-0000-000000000001';
 
-// ─── ELEVENLABS VOICE CLONING ────────────────────────────────────────────────
+// ── TOAST NOTIFICATIONS ──────────────────────────────────────────────────────
+function showToast(message, type = 'info') {
+    var container = document.getElementById('toastContainer');
+    if (!container) return;
+    
+    var toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    
+    var icon = 'ℹ️';
+    if (type === 'success') icon = '✅';
+    if (type === 'error') icon = '❌';
+    
+    toast.innerHTML = '<span style="font-size: 1.25rem;">' + icon + '</span> <span>' + escapeHtml(message) + '</span>';
+    
+    container.appendChild(toast);
+    
+    setTimeout(function() {
+        toast.classList.add('hiding');
+        toast.addEventListener('animationend', function() {
+            toast.remove();
+        }, { once: true });
+    }, 3000);
+}
+
+// ── ELEVENLABS VOICE CLONING ───────────────────────────────────────────────
 const ELEVENLABS_API_KEY = 'YOUR_ELEVENLABS_API_KEY_HERE';
 const ELEVENLABS_VOICE_ID = '7ddqsJSJmhrKwkSMqFJq';
 const ELEVENLABS_ENDPOINT = 'https://api.elevenlabs.io/v1/text-to-speech/' + ELEVENLABS_VOICE_ID;
 var currentAudio = null; // Track currently playing audio for stop/cleanup
 
-// ─── STATE ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const state = {
     table: 1,
     botId: null,
@@ -36,10 +60,11 @@ const state = {
     isRecording: false,
     recognition: null,
     pollInterval: null,
-    selectedRating: 0
+    selectedRating: 0,
+    user: null // { name, phone, preferences, visit_count }
 };
 
-// ─── STATE PERSISTENCE ────────────────────────────────────────────────────────
+// â”€â”€â”€ STATE PERSISTENCE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function saveSession() {
     try {
         var toSave = {
@@ -47,7 +72,8 @@ function saveSession() {
             aiOrderItems: state.aiOrderItems,
             chatHistory: state.chatHistory,
             orderId: state.orderId,
-            table: state.table
+            table: state.table,
+            user: state.user
         };
         localStorage.setItem('maneki_customer_state', JSON.stringify(toSave));
     } catch(e) {
@@ -64,11 +90,15 @@ function loadSession() {
             state.aiOrderItems = parsed.aiOrderItems || [];
             state.chatHistory = parsed.chatHistory || [];
             state.orderId = parsed.orderId || null;
+            state.user = parsed.user || null;
             if (parsed.table) state.table = parsed.table;
 
             // Restore UI if we have data
             if (state.cart.length > 0) updateCartUI();
             if (state.aiOrderItems.length > 0) updateAIOrderPanel(state.aiOrderItems);
+            
+            // Sync Auth
+            setTimeout(checkAuthStatus, 100);
             
             // Re-render chat history securely
             if (state.chatHistory.length > 0) {
@@ -89,7 +119,7 @@ function loadSession() {
 }
 
 
-// ─── CHARACTER CONFIG ─────────────────────────────────────────────────────────
+// ——— CHARACTER CONFIG ———————————————————————————————————————————————————————————
 const characterConfig = {
     Naruto: {
         prompt: 'You are a Maneki Neko robot waiter with the personality of Naruto Uzumaki. You are EXTREMELY energetic, enthusiastic, and never give up on helping customers. You frequently say "Dattebayo!" and "Believe it!" at the end of sentences. You compare food to ramen constantly. You call the customer your "friend" or "comrade". When recommending dishes, you say things like "This dish has as much power as a Rasengan!" or "Even Ichiraku Ramen can\'t beat this!" Keep responses short (2-3 sentences max) and ALWAYS stay in character.',
@@ -100,7 +130,7 @@ const characterConfig = {
     },
     Goku: {
         prompt: 'You are a Maneki Neko robot waiter with the personality of Son Goku from Dragon Ball. You are innocent, cheerful, and OBSESSED with food. You get incredibly excited about every dish. You say things like "Wow!" and "This looks amazing!" and "I could eat a hundred of these!" You relate everything to training and getting stronger. "If you eat this, you\'ll be as strong as a Super Saiyan!" You are simple-minded but very lovable. Keep responses short (2-3 sentences max) and ALWAYS stay in character.',
-        tagline: 'Wow, the food here looks amazing! Let\'s eat! 🐉',
+        tagline: 'Wow, the food here looks amazing! Let\'s eat! 🍖',
         pitch: 1.1,
         rate: 1.2,
         voicePrefs: ['male', 'cheerful']
@@ -129,7 +159,7 @@ const characterConfig = {
     }
 };
 
-// ─── DOM CONTENT LOADED ───────────────────────────────────────────────────────
+// ——— DOM CONTENT LOADED ————————————————————————————————————————————————————————
 document.addEventListener('DOMContentLoaded', function () {
 
     // --- URL Params ---
@@ -167,42 +197,194 @@ document.addEventListener('DOMContentLoaded', function () {
         console.warn('window.getMenu not available — supabase.js may not have loaded.');
     }
 
-    // --- Restore State if any ---
+    // --- Restore State ---
     loadSession();
 
-    // --- Show welcome screen only if no active order polling ---
-    if (!state.orderId) {
-        document.getElementById('welcomeScreen').style.display = 'flex';
-        document.getElementById('mainApp').style.display = 'none';
-    } else {
-        // If we have an active order ID, skip welcome and resume polling
-        document.getElementById('welcomeScreen').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'flex';
-        
-        // Ensure status button is prominent
-        var statusBtn = document.getElementById('statusToggleBtn');
-        if (statusBtn) statusBtn.style.display = 'inline-block';
-
-        // Ensure floating bar is prominent
-        var activeBar = document.getElementById('activeOrderBar');
-        if (activeBar) activeBar.style.display = 'flex';
-        
-        // Resume Real-time polling
-        startPollOrderStatus();
-    }
+    // --- Auth Check ---
+    checkAuthStatus();
 
     // --- Bind all events ---
     bindEvents();
 });
 
-// ─── BIND EVENTS ─────────────────────────────────────────────────────────────
+// ——— AUTHENTICATION & PROFILE ———————————————————————————————————————————————————
+function checkAuthStatus() {
+    const overlay = document.getElementById('loginOverlay');
+    const welcome = document.getElementById('welcomeScreen');
+    const mainApp = document.getElementById('mainApp');
+
+    if (!state.user) {
+        overlay.style.display = 'flex';
+        mainApp.style.display = 'none';
+        // Keep welcome screen visible in background if not already started
+    } else {
+        overlay.style.display = 'none';
+        welcome.style.display = 'none';
+        mainApp.style.display = 'flex';
+        updateProfileUI();
+        loadOrderHistory();
+    }
+}
+
+// Helper to format Indian phone numbers consistently (+91-XXXXX-XXXXX)
+function formatPhoneNumber(phoneStr) {
+    let digits = phoneStr.replace(/\D/g, '');
+    if (digits.length === 12 && digits.startsWith('91')) {
+        digits = digits.substring(2);
+    }
+    if (digits.length === 10) {
+        return `+91-${digits.substring(0, 5)}-${digits.substring(5)}`;
+    }
+    return phoneStr; // Return original if it doesn't match standard 10-digit format
+}
+
+async function handleLogin(e) {
+    e.preventDefault();
+    let rawPhone = document.getElementById('loginPhone').value.trim();
+    const nameInput = document.getElementById('loginName');
+    const name = nameInput.value.trim();
+    const submitBtn = document.getElementById('loginSubmitBtn');
+
+    if (!rawPhone) return;
+    
+    const phone = formatPhoneNumber(rawPhone);
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Verifying...';
+
+    try {
+        // 1. Check if customer exists
+        const { data: customer, error } = await window.getCustomerByPhone(phone);
+        
+        if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "not found"
+
+        if (!customer) {
+            const nameGroup = document.getElementById('nameGroup');
+            if (nameGroup.classList.contains('hidden')) {
+                nameGroup.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Account';
+                showToast("Welcome! Since this is your first time, please enter your name.", "info");
+                return;
+            }
+            if (!name) {
+                showToast("Please enter your name to continue!", "error");
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Account';
+                return;
+            }
+
+            const prefs = Array.from(document.querySelectorAll('input[name="pref"]:checked')).map(cb => cb.value);
+            const { data: created, error: upsertError } = await window.upsertCustomer({
+                phone,
+                name,
+                visit_count: 1,
+                preferences: prefs,
+                restaurant_id: RESTAURANT_ID
+            });
+            if (upsertError) throw upsertError;
+            state.user = created ? (created[0] || created) : null;
+        } else {
+            // Existing User Flow
+            const updated = { ...customer, visit_count: (customer.visit_count || 0) + 1 };
+            await window.upsertCustomer(updated);
+            state.user = updated;
+        }
+
+        saveSession();
+        checkAuthStatus();
+        addInitialGreeting();
+    } catch (err) {
+        console.error('Login error:', err);
+        alert('Authentication failed. Please try again.');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Continue';
+    }
+}
+
+function updateProfileUI() {
+    const profileBtn = document.getElementById('profileBtn');
+    if (state.user && profileBtn) {
+        profileBtn.innerHTML = '<span style="font-size: 1.1rem; line-height: 1;">👤</span> <span>' + escapeHtml((state.user.name || 'User').split(' ')[0]) + '</span>';
+        profileBtn.title = `Logged in as ${state.user.name} (${state.user.phone})`;
+    }
+}
+
+async function loadOrderHistory() {
+    if (!state.user || !state.user.id) {
+        document.getElementById('historyList').innerHTML = '<p class="empty-hint">Log in to track your order history and favorite dishes!</p>';
+        return;
+    }
+    const list = document.getElementById('historyList');
+    list.innerHTML = '<p class="empty-hint">Loading your favorites...</p>';
+
+    try {
+        const { data: orders, error } = await window.getCustomerOrdersById(state.user.id);
+        if (error) throw error;
+
+        if (!orders || orders.length === 0) {
+            list.innerHTML = '<p class="empty-hint">No past orders yet. Time to start a feast!</p>';
+            return;
+        }
+
+        list.innerHTML = '';
+        orders.slice(0, 10).forEach(order => {
+            const date = new Date(order.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' });
+            const card = document.createElement('div');
+            card.className = 'history-card';
+            
+            const itemsSummary = order.items.map(it => `${it.qty}x ${it.name}`).join(', ');
+            
+            card.innerHTML = `
+                <div class="history-card-header">
+                    <span class="history-date">${date}</span>
+                    <span class="history-status status-${order.status}">${order.status}</span>
+                </div>
+                <div class="history-items">${itemsSummary}</div>
+                <div class="history-total">₹${parseFloat(order.total_amount).toFixed(2)}</div>
+            `;
+            list.appendChild(card);
+        });
+    } catch (err) {
+        console.warn('History load error:', err);
+        list.innerHTML = '<p class="empty-hint">Could not load history.</p>';
+    }
+}
+
+// ——— BIND EVENTS ———————————————————————————————————————————————————————————————
 function bindEvents() {
 
+    // Login form
+    document.getElementById('loginForm').addEventListener('submit', handleLogin);
+
+    // Guest button
+    document.getElementById('guestBtn').addEventListener('click', function () {
+        state.user = { name: 'Guest', phone: 'guest-' + Date.now(), preferences: [], visit_count: 0 };
+        checkAuthStatus();
+        addInitialGreeting();
+    });
+
+    // Profile button (opens history)
+    document.getElementById('profileBtn').addEventListener('click', function () {
+        document.getElementById('historyModal').style.display = 'flex';
+        loadOrderHistory();
+    });
+
+    // Close history
+    document.getElementById('closeHistory').addEventListener('click', function () {
+        document.getElementById('historyModal').style.display = 'none';
+    });
+    
     // Start button
     document.getElementById('startBtn').addEventListener('click', function () {
-        document.getElementById('welcomeScreen').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'flex';
-        addInitialGreeting();
+        if (!state.user) {
+            checkAuthStatus(); // Show login if not logged in
+        } else {
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'flex';
+            addInitialGreeting();
+        }
     });
 
     // Mode tabs
@@ -326,7 +508,7 @@ function orderMoreAction() {
     });
 }
 
-// ─── INITIAL GREETING ─────────────────────────────────────────────────────────
+// ——— INITIAL GREETING ———————————————————————————————————————————————————————————
 function addInitialGreeting() {
     var cfg = characterConfig[state.character];
     var greetings;
@@ -350,7 +532,7 @@ function addInitialGreeting() {
     detectAndSetEmotion(text);
 }
 
-// ─── SWITCH MODE ─────────────────────────────────────────────────────────────
+// ——— SWITCH MODE ————————————————————————————————————————————————————————————————
 function switchMode(mode) {
     document.getElementById('mode-ai').style.display = mode === 'ai' ? 'block' : 'none';
     document.getElementById('mode-manual').style.display = mode === 'manual' ? 'block' : 'none';
@@ -362,85 +544,66 @@ function switchMode(mode) {
     if (mode === 'manual') loadManualMenu();
 }
 
-// ─── APPEND MESSAGE HELPERS ───────────────────────────────────────────────────
+// ——— APPEND MESSAGE HELPERS —————————————————————————————————————————————————————
 function appendUserMessage(text) {
-    var wrap = document.getElementById('chatMessages');
-    var div = document.createElement('div');
-    div.className = 'message user';
-    div.innerHTML =
-        '<div class="msg-bubble">' + escapeHtml(text) + '</div>' +
-        '<span class="msg-role">👤</span>';
-    wrap.appendChild(div);
-    wrap.scrollTop = wrap.scrollHeight;
-}
-
-function getDoraemonMiniSVG() {
-    return '<svg viewBox="60 50 80 80" xmlns="http://www.w3.org/2000/svg" width="28" height="28">'
-        + '<circle cx="100" cy="95" r="45" fill="#0099DD"/>'
-        + '<ellipse cx="100" cy="100" rx="35" ry="37" fill="#FFF"/>'
-        + '<ellipse cx="90" cy="90" rx="10" ry="12" fill="#FFF" stroke="#333" stroke-width="1.5"/>'
-        + '<circle cx="93" cy="92" r="4" fill="#111"/>'
-        + '<ellipse cx="110" cy="90" rx="10" ry="12" fill="#FFF" stroke="#333" stroke-width="1.5"/>'
-        + '<circle cx="107" cy="92" r="4" fill="#111"/>'
-        + '<circle cx="100" cy="100" r="5" fill="#DD3333"/>'
-        + '<path d="M 80 108 Q 100 125 120 108" stroke="#333" stroke-width="1.5" fill="none"/>'
-        + '</svg>';
+    appendMessageUI('user', text);
 }
 
 function appendBotMessage(text) {
-    var wrap = document.getElementById('chatMessages');
+    appendMessageUI('bot', text);
+}
+
+function appendMessageUI(role, content, isHistory) {
+    var chatMessages = document.getElementById('chatMessages');
+    if (!chatMessages) return;
+
     var div = document.createElement('div');
-    div.className = 'message bot';
-    var roleIcon = (state.character === 'Doraemon') ? getDoraemonMiniSVG() : '🐱';
-    div.innerHTML =
-        '<span class="msg-role">' + roleIcon + '</span>' +
-        '<div class="msg-bubble">' + escapeHtml(text) + '</div>';
-    wrap.appendChild(div);
-    wrap.scrollTop = wrap.scrollHeight;
+    div.className = 'message ' + role;
+    
+    var icon = (role === 'user') ? '👤' : (state.character === 'Doraemon' ? getDoraemonMiniSVG() : '🐱');
+    
+    div.innerHTML = 
+        '<span class="msg-role">' + icon + '</span>' +
+        '<div class="msg-bubble">' + 
+        escapeHtml(cleanTextForDisplay(content)) + 
+        '</div>';
+    
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function escapeHtml(str) {
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+function getDoraemonMiniSVG() {
+    return '<svg viewBox="0 0 100 100" width="24" height="24"><circle cx="50" cy="50" r="45" fill="#00A0E9" stroke="white" stroke-width="2"/><circle cx="50" cy="55" r="35" fill="white"/><circle cx="40" cy="35" r="8" fill="white" stroke="black"/><circle cx="60" cy="35" r="8" fill="white" stroke="black"/><circle cx="42" cy="35" r="2" fill="black"/><circle cx="58" cy="35" r="2" fill="black"/><circle cx="50" cy="45" r="5" fill="#E40011"/><line x1="50" y1="50" x2="50" y2="70" stroke="black"/><path d="M30 65 Q50 85 70 65" fill="none" stroke="black" stroke-width="2"/></svg>';
 }
 
-// ─── STRIP ORDER_UPDATE FROM TEXT ────────────────────────────────────────────
+function escapeHtml(text) {
+    if (!text) return '';
+    var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
 function stripOrderUpdate(text) {
-    // Greedy match to capture full nested JSON
     return text.replace(/ORDER_UPDATE:\{[\s\S]*\}/g, '').trim();
 }
 
-// ─── CLEAN TEXT FOR DISPLAY (strips emotion tags, keeps actions as italic) ──
 function cleanTextForDisplay(text) {
-    // Remove emotion tags like [happy], [confused], etc.
-    var cleaned = text.replace(/\[(happy|excited|confused|shy|frustrated|thinking|sad|angry|scared)\]/gi, '');
-    // Strip ORDER_UPDATE
-    cleaned = stripOrderUpdate(cleaned);
-    return cleaned.trim();
+    if (!text) return '';
+    return text
+        .replace(/ORDER_UPDATE:\{[\s\S]*\}/g, '')
+        .replace(/\[[a-zA-Z]+\]/g, '')
+        .replace(/\*[^*]+\*/g, '')
+        .trim();
 }
 
-// ─── CLEAN TEXT FOR TTS (strips actions, emotion tags, JSON, stage directions) ──
 function cleanTextForTTS(text) {
-    // Remove emotion tags
-    var cleaned = text.replace(/\[(happy|excited|confused|shy|frustrated|thinking|sad|angry|scared)\]/gi, '');
-    // Remove ORDER_UPDATE and all trailing JSON/curly bracket garbage
-    cleaned = stripOrderUpdate(cleaned);
-    // Remove action text between asterisks (*4D pocket mein haath daalta hai*)
-    cleaned = cleaned.replace(/\*[^*]+\*/g, '');
-    // Remove any stray curly bracket content
-    cleaned = cleaned.replace(/\{[^}]*\}/g, '');
-    // Remove leftover brackets and cleanup
-    cleaned = cleaned.replace(/[\[\]{}]/g, '');
-    // Collapse multiple spaces/newlines
-    cleaned = cleaned.replace(/\s+/g, ' ').trim();
-    return cleaned;
+    if (!text) return '';
+    return text
+        .replace(/ORDER_UPDATE:\{[\s\S]*\}/g, '')
+        .replace(/\[[a-zA-Z]+\]/g, '')
+        .replace(/\*/g, '')
+        .trim();
 }
 
-// ─── DETECT EMOTION FROM AI RESPONSE ────────────────────────────────────────
 function detectAndSetEmotion(text) {
     var avatar = document.getElementById('doraemonAvatar');
     if (!avatar) return 'neutral';
@@ -466,12 +629,16 @@ function detectAndSetEmotion(text) {
     }
     
     if (emotion !== 'neutral') {
+        avatar.setAttribute('data-emotion', emotion);
         avatar.classList.add('emotion-' + emotion);
+    } else {
+        avatar.setAttribute('data-emotion', 'happy');
+        avatar.classList.add('emotion-happy');
     }
     return emotion;
 }
 
-// ─── PLAY ACTION SOUND EFFECTS ─────────────────────────────────────────────
+// ——— PLAY ACTION SOUND EFFECTS ——————————————————————————————————————————————————
 function playActionSFX(text) {
     // Detect action markers like *4D pocket mein haath daalta hai*
     var actions = text.match(/\*([^*]+)\*/g);
@@ -538,7 +705,7 @@ function playWhooshSound(ctx) {
     osc.stop(ctx.currentTime + 0.4);
 }
 
-// ─── LOCAL PROXY HELPER ──────────────────────────────────────────────────────
+// ——— LOCAL PROXY HELPER —————————————————————————————————————————————————————————
 function getLocalProxy() {
     if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
         return '/api/proxy';
@@ -546,7 +713,7 @@ function getLocalProxy() {
     return null;
 }
 
-// ─── CORS-RESILIENT FETCH ────────────────────────────────────────────────────
+// ——— CORS-RESILIENT FETCH ———————————————————————————————————————————————————————
 // Tries multiple CORS proxy strategies. Remembers which proxy works.
 async function corsFetch(bodyObj) {
     const localProxy = getLocalProxy();
@@ -626,7 +793,7 @@ async function corsFetch(bodyObj) {
     throw new Error('All CORS proxies failed. Please run via a local server (npx serve) or check your network.');
 }
 
-// ─── NVIDIA NON-STREAMING FALLBACK ───────────────────────────────────────────
+// ——— NVIDIA NON-STREAMING FALLBACK ——————————————————————————————————————————————
 // Used when streaming is unavailable (e.g. file:// origin, CORS blocked body).
 async function callNvidiaAPIFallback(messages, onDone) {
     var response;
@@ -670,7 +837,7 @@ async function callNvidiaAPIFallback(messages, onDone) {
     return fullText;
 }
 
-// ─── NVIDIA STREAMING API ─────────────────────────────────────────────────────
+// ——— NVIDIA STREAMING API ———————————————————————————————————————————————————————
 async function callNvidiaAPIStream(messages, onDone) {
     var response;
     try {
@@ -731,9 +898,11 @@ async function callNvidiaAPIStream(messages, onDone) {
             if (!line.startsWith('data: ')) continue;
             var jsonStr = line.replace('data: ', '').trim();
             if (jsonStr === '[DONE]') {
-                // FIX: strip ORDER_UPDATE + emotions before displaying in bubble
+                // Remove streamer bubble
                 bubble.innerHTML = escapeHtml(cleanTextForDisplay(fullText)) || '…';
                 bubble.removeAttribute('id');
+                // Persist the cleaned version for future history
+                state.chatHistory.push({ role: 'assistant', content: fullText });
                 if (onDone) onDone(fullText);
                 return fullText;
             }
@@ -765,7 +934,7 @@ async function callNvidiaAPIStream(messages, onDone) {
 }
 
 
-// ─── SEND MESSAGE ─────────────────────────────────────────────────────────────
+// ——— SEND MESSAGE ———————————————————————————————————————————————————————————————
 function sendMessage(text) {
     text = (text || '').trim();
     if (!text) return;
@@ -788,9 +957,14 @@ function sendMessage(text) {
     var cartJson = JSON.stringify(state.aiOrderItems);
 
     var cfg = characterConfig[state.character];
+    var userName = state.user ? state.user.name : 'Guest';
+    var userPrefs = (state.user && state.user.preferences) ? state.user.preferences.join(', ') : 'No specific preferences';
+    
     var systemPrompt =
         cfg.prompt +
-        '\n\nYou are a waiter at Maneki Neko restaurant. Here is the current menu (JSON): ' + menuJson +
+        '\n\nYou are a waiter at Maneki Neko restaurant. You are talking to ' + userName + '.' +
+        '\nCustomer preferences: ' + userPrefs + '.' +
+        '\n\nHere is the current menu (JSON): ' + menuJson +
         '\n\nCurrent order so far (JSON): ' + cartJson +
         '\n\nWhen the user orders one or more items, at the VERY END of your reply (after your message) add EXACTLY this block (no extra whitespace, no markdown formatting around it):' +
         '\nORDER_UPDATE:{"items":[{"name":"Item Name","qty":1,"price":0.00}]}' +
@@ -831,7 +1005,7 @@ function sendMessage(text) {
     });
 }
 
-// ─── UPDATE AI ORDER PANEL ────────────────────────────────────────────────────
+// ——— UPDATE AI ORDER PANEL ——————————————————————————————————————————————————————
 function updateAIOrderPanel(newItems) {
     newItems.forEach(function (newItem) {
         var existing = state.aiOrderItems.find(function (it) {
@@ -875,7 +1049,7 @@ function updateAIOrderPanel(newItems) {
     totalEl.textContent = 'Total: ₹' + total.toFixed(2);
 }
 
-// ─── VOICE SELECTION ─────────────────────────────────────────────────────────
+// ————————————————————————————————————————————————————————————————
 // Pick the best available browser voice for each character personality.
 var cachedVoices = [];
 function loadVoices() {
@@ -924,7 +1098,7 @@ function pickVoiceForCharacter(prefs) {
     return sorted[0] || null;
 }
 
-// ─── ELEVENLABS TTS ──────────────────────────────────────────────────────────
+// ————————————————————————————————————————————————————————————————
 // Plays text using the cloned Doraemon voice via ElevenLabs API.
 async function speakWithElevenLabs(text) {
     // Stop any currently playing audio
@@ -1036,7 +1210,7 @@ async function speakWithElevenLabs(text) {
 }
 
 
-// ─── AVATAR LIP-SYNC CONTROL ─────────────────────────────────────────────────
+// ————————————————————————————————————————————————————————————————
 function setAvatarTalking(isTalking) {
     var avatar = document.getElementById('doraemonAvatar');
     if (!avatar) return;
@@ -1047,7 +1221,7 @@ function setAvatarTalking(isTalking) {
     }
 }
 
-// ─── BROWSER TTS FALLBACK ────────────────────────────────────────────────────
+// ————————————————————————————————————————————————————————————————
 function speakWithBrowserTTS(text) {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
@@ -1071,7 +1245,7 @@ function speakWithBrowserTTS(text) {
     window.speechSynthesis.speak(utterance);
 }
 
-// ─── SPEAK REPLY (ROUTER) ────────────────────────────────────────────────────
+// ——— SPEAK REPLY (ROUTER) ———————————————————————————————————————————————————————
 function speakReply(text) {
     var cfg = characterConfig[state.character];
     if (cfg.useElevenLabs) {
@@ -1081,7 +1255,7 @@ function speakReply(text) {
     }
 }
 
-// ─── VOICE INPUT ─────────────────────────────────────────────────────────────
+// ——— VOICE INPUT ————————————————————————————————————————————————————————————————
 function toggleVoice() {
     var voiceBtn = document.getElementById('voiceBtn');
 
@@ -1124,7 +1298,7 @@ function toggleVoice() {
     }
 }
 
-// ─── CONFIRM AI ORDER ─────────────────────────────────────────────────────────
+// ——— CONFIRM AI ORDER ———————————————————————————————————————————————————————————
 async function confirmAIOrder() {
     if (state.aiOrderItems.length === 0) {
         alert('Please order something first!');
@@ -1138,6 +1312,8 @@ async function confirmAIOrder() {
     var orderData = {
         restaurant_id: RESTAURANT_ID,
         table_number: state.table,
+        customer_id: state.user ? state.user.id : null,
+        customer_phone: state.user ? state.user.phone : null,
         items: state.aiOrderItems,
         total_amount: parseFloat(total.toFixed(2)),
         status: 'pending',
@@ -1180,7 +1356,7 @@ async function confirmAIOrder() {
     setQrTotal(total);
 }
 
-// ─── MANUAL MENU ─────────────────────────────────────────────────────────────
+// ——— MANUAL MENU ————————————————————————————————————————————————————————————————
 function loadManualMenu() {
     var categories = ['All'];
     state.menu.forEach(function (item) {
@@ -1246,7 +1422,7 @@ function renderMenuGrid(filter) {
     });
 }
 
-// ─── CART LOGIC ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ CART LOGIC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function addToCart(itemId) {
     var menuItem = state.menu.find(function (m) { return m.id === itemId; });
     if (!menuItem) return;
@@ -1375,10 +1551,10 @@ function closeCart() {
     document.getElementById('cartBackdrop').classList.remove('visible');
 }
 
-// ─── PLACE MANUAL ORDER ───────────────────────────────────────────────────────
+// â”€â”€â”€ PLACE MANUAL ORDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function placeManualOrder() {
     if (state.cart.length === 0) {
-        alert('Your cart is empty!');
+        showToast('Your cart is empty!', 'error');
         return;
     }
 
@@ -1391,6 +1567,8 @@ async function placeManualOrder() {
     var orderData = {
         restaurant_id: RESTAURANT_ID,
         table_number: state.table,
+        customer_id: state.user ? state.user.id : null,
+        customer_phone: state.user ? state.user.phone : null,
         items: orderItems,
         total_amount: parseFloat(total.toFixed(2)),
         status: 'pending',
@@ -1407,7 +1585,7 @@ async function placeManualOrder() {
         }
     } catch (e) {
         console.error('Order error:', e);
-        alert('Could not place order. Please try again.');
+        showToast('Could not place order. Please try again.', 'error');
         return;
     }
 
@@ -1443,7 +1621,7 @@ async function placeManualOrder() {
     setQrTotal(total);
 }
 
-// ─── ORDER STATUS POLLING ─────────────────────────────────────────────────────
+// ————————————————————————————————————————————————————————————————————————————————————————————————————
 function startPollOrderStatus() {
     if (state.pollInterval) clearInterval(state.pollInterval);
 
@@ -1485,7 +1663,7 @@ function updateStatusBar(status) {
     });
 }
 
-// ─── QR PAYMENT ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ QR PAYMENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function setQrTotal(total) {
     document.getElementById('qrTotal').textContent = 'Total: ₹' + parseFloat(total).toFixed(2);
     buildQrCode();
@@ -1495,7 +1673,7 @@ function buildQrCode() {
     var qrBox = document.getElementById('qrBox');
     qrBox.innerHTML = '';
     var seed = state.orderId
-        ? state.orderId.charCodeAt(0) + state.orderId.charCodeAt(1)
+        ? state.orderId.charCodeAt(0) + state.orderId.charCodeAt(state.orderId.length - 1)
         : 42;
     for (var i = 0; i < 100; i++) {
         var cell = document.createElement('div');
@@ -1529,7 +1707,7 @@ async function markAsBilled() {
     showFeedbackModal();
 }
 
-// ─── FEEDBACK ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ FEEDBACK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function showFeedbackModal() {
     state.selectedRating = 0;
     document.querySelectorAll('.star').forEach(function (s) { s.classList.remove('selected'); });
@@ -1548,7 +1726,7 @@ function setRating(n) {
 
 async function submitFeedbackHandler() {
     if (!state.selectedRating) {
-        alert('Please select a rating!');
+        showToast('Please select a rating!', 'error');
         return;
     }
 
@@ -1572,21 +1750,22 @@ async function submitFeedbackHandler() {
     setTimeout(resetForNextCustomer, 3000);
 }
 
-// ─── RESET FOR NEXT CUSTOMER ─────────────────────────────────────────────────
+// â”€â”€â”€ RESET FOR NEXT CUSTOMER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function resetForNextCustomer() {
     state.cart = [];
     state.aiOrderItems = [];
     state.chatHistory = [];
     state.orderId = null;
     state.selectedRating = 0;
+    
+    // Auto logout feature
+    state.user = null;
 
     localStorage.removeItem('maneki_customer_state');
 
-    // Hide status button
     var statusBtn = document.getElementById('statusToggleBtn');
     if (statusBtn) statusBtn.style.display = 'none';
 
-    // Hide floating active order bar
     var activeBar = document.getElementById('activeOrderBar');
     if (activeBar) activeBar.style.display = 'none';
 
@@ -1615,4 +1794,21 @@ function resetForNextCustomer() {
 
     document.getElementById('mainApp').style.display = 'none';
     document.getElementById('welcomeScreen').style.display = 'flex';
+    
+    // Reset login form fields for next customer
+    var phoneInput = document.getElementById('loginPhone');
+    if (phoneInput) phoneInput.value = '';
+    var nameInput = document.getElementById('loginName');
+    if (nameInput) nameInput.value = '';
+    var nameGroup = document.getElementById('nameGroup');
+    if (nameGroup) nameGroup.classList.add('hidden');
+    var submitBtn = document.getElementById('loginSubmitBtn');
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Login to Order';
+    }
+    
+    // Re-check auth to show overlay
+    checkAuthStatus();
 }
+

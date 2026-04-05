@@ -26,6 +26,20 @@ document.addEventListener('DOMContentLoaded', () => {
         return [...new Set(data.map(item => item.category))].filter(Boolean).sort();
     }
 
+    // ── formatPhoneNumber Helper ──────────────────────────────────────────
+    function formatPhoneNumberAdmin(phoneStr) {
+        if (!phoneStr) return '—';
+        let StringStr = String(phoneStr);
+        let digits = StringStr.replace(/\D/g, '');
+        if (digits.length === 12 && digits.startsWith('91')) {
+            digits = digits.substring(2);
+        }
+        if (digits.length === 10) {
+            return `+91-${digits.substring(0, 5)}-${digits.substring(5)}`;
+        }
+        return StringStr;
+    }
+
     // ── App Object ─────────────────────────────────────────────────────────
     const app = {
 
@@ -83,34 +97,49 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.renderFeedbackCards();
                 });
 
-            // Dashboard Date Filters
-            document.getElementById('dashboardDateFilters')
-                ?.addEventListener('click', (e) => {
+            // Global Date Filters
+            document.querySelectorAll('.global-date-filters').forEach(group => {
+                group.addEventListener('click', (e) => {
                     if (!e.target.classList.contains('filter-btn')) return;
                     const range = e.target.dataset.range;
-                    this.setActiveFilter('dashboardDateFilters', e.target);
                     this.handleDateFilterChange(range);
                 });
+            });
 
             // Custom Date Apply
-            document.getElementById('applyCustomDate')
-                ?.addEventListener('click', () => {
-                    const start = document.getElementById('startDate').value;
-                    const end = document.getElementById('endDate').value;
+            document.querySelectorAll('.global-apply-date').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const customBox = e.target.closest('.global-custom-range');
+                    const start = customBox.querySelector('.global-start-date').value;
+                    const end = customBox.querySelector('.global-end-date').value;
                     if (!start || !end) return alert('Please select both start and end dates.');
                     state.customRange = { start, end };
-                    this.loadDashboard();
+                    
+                    // Sync the date inputs across all custom boxes
+                    document.querySelectorAll('.global-start-date').forEach(inp => inp.value = start);
+                    document.querySelectorAll('.global-end-date').forEach(inp => inp.value = end);
+                    
+                    this.loadSectionData(state.currentSection);
                 });
+            });
         },
 
         handleDateFilterChange(range) {
             state.dateRange = range;
-            const customBox = document.getElementById('customDateRange');
+            
+            // Sync active button across all global date filters
+            document.querySelectorAll('.global-date-filters').forEach(group => {
+                group.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                const activeBtn = group.querySelector(`.filter-btn[data-range="${range}"]`);
+                if (activeBtn) activeBtn.classList.add('active');
+            });
+
+            const customBoxes = document.querySelectorAll('.global-custom-range');
             if (range === 'custom') {
-                customBox?.classList.remove('hidden');
+                customBoxes.forEach(box => box.classList.remove('hidden'));
             } else {
-                customBox?.classList.add('hidden');
-                this.loadDashboard();
+                customBoxes.forEach(box => box.classList.add('hidden'));
+                this.loadSectionData(state.currentSection);
             }
         },
 
@@ -554,7 +583,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const q = (query || '').toLowerCase();
             const filtered = state.customers.filter(c =>
                 (c.name || '').toLowerCase().includes(q) ||
-                (c.phone || '').includes(q)
+                (c.phone || '').includes(q) ||
+                formatPhoneNumberAdmin(c.phone).includes(q)
             );
 
             body.innerHTML = '';
@@ -569,7 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     : (c.preferences || '—');
                 tr.innerHTML = `
                     <td>${c.name || '—'}</td>
-                    <td>${c.phone || '—'}</td>
+                    <td>${formatPhoneNumberAdmin(c.phone)}</td>
                     <td>${c.visit_count ?? 0}</td>
                     <td>${prefs}</td>
                     <td>${this._formatDate(c.created_at)}</td>
