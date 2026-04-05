@@ -128,8 +128,8 @@ if not exist ".env" (
       echo PORT=3000
       echo NVIDIA_API_KEY=YOUR_NVIDIA_API_KEY_HERE
       echo ELEVENLABS_API_KEY=YOUR_ELEVENLABS_API_KEY_HERE
-      echo SUPABASE_URL=https://znnznynkeamfxrscpnal.supabase.co
-      echo SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpubnpueW5rZWFtZnhyc2NwbmFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTAyOTEsImV4cCI6MjA4OTU4NjI5MX0.9PXGZLjQPpSOgstH9BL-VUEoqNnqUU8D7tDr0fCeDVQ
+      echo SUPABASE_URL=putfuckingurlhere
+      echo SUPABASE_ANON_KEY=putfuckingkeyhere
     ) > .env
     color 0A
     echo        OK - Configuration file created
