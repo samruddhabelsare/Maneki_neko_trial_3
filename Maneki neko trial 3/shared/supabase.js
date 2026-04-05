@@ -7,6 +7,9 @@ window.supabaseClient = window.supabase.createClient(
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpubnpueW5rZWFtZnhyc2NwbmFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTAyOTEsImV4cCI6MjA4OTU4NjI5MX0.9PXGZLjQPpSOgstH9BL-VUEoqNnqUU8D7tDr0fCeDVQ'
 );
 
+// ─── INITIALIZATION ─────────────────────────────────────────────────────────
+console.log('Maneki Neko — Supabase Helper — v2.1.0-manual-upsert loaded');
+
 // ── Menu ──────────────────────────────────────────────────────────────────────
 window.getMenu = async () =>
     await window.supabaseClient.from('menu_items').select('*').order('category', { ascending: true });
@@ -34,12 +37,43 @@ window.updateBotStatus = async (id, data) =>
 window.getCustomers = async () =>
     await window.supabaseClient.from('customers').select('*').order('visit_count', { ascending: false });
 
+window.getCustomerByPhone = async (phone) =>
+    await window.supabaseClient.from('customers').select('*').eq('phone', phone).maybeSingle();
+
+window.upsertCustomer = async (data) => {
+    console.log('Maneki Neko — Manual Upsert for phone:', data.phone);
+    // Manual Upsert: check for phone then update or insert to bypass UNIQUE constraint dependency
+    const { data: existing, error: getError } = await window.supabaseClient.from('customers').select('*').eq('phone', data.phone).maybeSingle();
+    
+    if (getError) {
+        console.error('Manual upsert lookup error:', getError);
+        // Fallback to direct insert if it's a first time or error
+    }
+
+    if (existing) {
+        console.log('Customer exists, updating ID:', existing.id);
+        return await window.supabaseClient.from('customers').update(data).eq('id', existing.id).select();
+    } else {
+        console.log('New customer, inserting...');
+        return await window.supabaseClient.from('customers').insert([data]).select();
+    }
+};
+
 // ── Feedback ──────────────────────────────────────────────────────────────────
 window.getFeedback = async () =>
     await window.supabaseClient.from('feedback').select('*').order('created_at', { ascending: false });
 
 window.submitFeedback = async (data) =>
     await window.supabaseClient.from('feedback').insert([data]);
+
+// ── Order History ─────────────────────────────────────────────────────────────
+window.getCustomerOrders = async (customerId) => {
+    if (!customerId) return { data: [], error: null };
+    return await window.supabaseClient.from('orders').select('*').eq('customer_id', customerId).order('created_at', { ascending: false });
+};
+
+window.getCustomerOrdersById = async (customerId) =>
+    await window.supabaseClient.from('orders').select('*').eq('customer_id', customerId).order('created_at', { ascending: false });
 
 window.getRestaurantInfo = async function () {
     const { data, error } = await window.supabaseClient
