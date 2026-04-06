@@ -136,12 +136,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const itemsHtml = items.length === 0
             ? '<li><span class="item-name" style="color:rgba(255,255,255,0.3)">No items</span></li>'
             : items.map(i => {
-                const isVeg = i.is_veg !== undefined ? i.is_veg : true; // default veg dot green
+                const isVeg = i.is_veg !== undefined ? i.is_veg : true;
+                const instructionsHtml = i.instructions ? `<div class="item-instructions">"${i.instructions}"</div>` : '';
                 return `
                   <li>
-                    <span class="item-qty">${i.qty || 1}×</span>
-                    <span class="item-name">${i.name || '?'}</span>
-                    <span class="veg-dot ${isVeg ? 'veg' : 'nonveg'}"></span>
+                    <div class="item-main">
+                        <span class="item-qty">${i.qty || 1}×</span>
+                        <span class="item-name">${i.name || '?'}</span>
+                        <span class="veg-dot ${isVeg ? 'veg' : 'nonveg'}"></span>
+                    </div>
+                    ${instructionsHtml}
                   </li>
                 `;
               }).join('');
@@ -174,19 +178,26 @@ document.addEventListener('DOMContentLoaded', () => {
             <ul class="items-list">
                 ${itemsHtml}
             </ul>
-            ${nextStatus !== null ? `<button class="${btnClass}" data-id="${order.id}" data-status="${order.status}">${btnLabel}</button>` : ''}
+            <div class="card-actions">
+                ${order.status === 'pending' ? `<button class="action-btn btn-cancel" data-action="cancel">Cancel</button>` : ''}
+                ${nextStatus !== null ? `<button class="${btnClass}" data-id="${order.id}" data-status="${order.status}" data-action="next">${btnLabel}</button>` : ''}
+            </div>
         `;
 
-        // ── Attach Button Event ───────────────────────────────────────────
-        if (nextStatus !== null) {
-            const btn = card.querySelector('.action-btn');
-            if (btn) {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
+        // ── Attach Button Events ─────────────────────────────────────────
+        card.querySelectorAll('.action-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const action = btn.dataset.action;
+                if (action === 'cancel') {
+                    if (confirm('Are you sure you want to cancel this order?')) {
+                        moveOrder(order.id, 'cancelled');
+                    }
+                } else if (action === 'next') {
                     moveOrder(order.id, nextStatus);
-                });
-            }
-        }
+                }
+            });
+        });
 
         return card;
     }

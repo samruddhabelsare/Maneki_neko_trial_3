@@ -291,6 +291,7 @@ button {
 .badge-ready     { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
 .badge-delivered { background: rgba(148,163,184,0.12); color: #94a3b8; border: 1px solid rgba(148,163,184,0.25); }
 .badge-billed    { background: rgba(168,85,247,0.12);  color: #a855f7; border: 1px solid rgba(168,85,247,0.25); }
+.badge-cancelled { background: rgba(239,68,68,0.10);   color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
 
 /* ── 9. Filter Buttons ────────────────────────────────────────────────────────── */
 .filter-btn {

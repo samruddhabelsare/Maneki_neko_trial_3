@@ -967,7 +967,8 @@ function sendMessage(text) {
         '\n\nHere is the current menu (JSON): ' + menuJson +
         '\n\nCurrent order so far (JSON): ' + cartJson +
         '\n\nWhen the user orders one or more items, at the VERY END of your reply (after your message) add EXACTLY this block (no extra whitespace, no markdown formatting around it):' +
-        '\nORDER_UPDATE:{"items":[{"name":"Item Name","qty":1,"price":0.00}]}' +
+        '\nORDER_UPDATE:{"items":[{"name":"Item Name","qty":1,"price":0.00,"instructions":""}]}' +
+        '\nIf the customer mentions any special requests for an item (e.g. "no onion", "extra spicy", "less salt"), put them in the "instructions" field for that item. If no special request, leave "instructions" as an empty string.' +
         '\nOnly include items actually ordered or added in this message. Do not include the ORDER_UPDATE block if the user is just asking a question.';
 
     var messages = [{ role: 'system', content: systemPrompt }].concat(state.chatHistory);
@@ -1013,11 +1014,18 @@ function updateAIOrderPanel(newItems) {
         });
         if (existing) {
             existing.qty += (newItem.qty || 1);
+            // Append new instructions if different
+            if (newItem.instructions && newItem.instructions !== existing.instructions) {
+                existing.instructions = existing.instructions
+                    ? existing.instructions + '; ' + newItem.instructions
+                    : newItem.instructions;
+            }
         } else {
             state.aiOrderItems.push({
                 name: newItem.name,
                 qty: newItem.qty || 1,
-                price: newItem.price || 0
+                price: newItem.price || 0,
+                instructions: newItem.instructions || ''
             });
         }
     });
@@ -1039,10 +1047,16 @@ function updateAIOrderPanel(newItems) {
         total += subtotal;
         var row = document.createElement('div');
         row.className = 'order-item-row';
+        var instrHtml = item.instructions
+            ? '<div class="ai-item-instructions">' + escapeHtml(item.instructions) + '</div>'
+            : '';
         row.innerHTML =
+            '<div class="ai-item-main">' +
             '<span class="item-name">' + escapeHtml(item.name) + '</span>' +
             '<span class="item-qty">×' + item.qty + '</span>' +
-            '<span class="item-price">₹' + subtotal.toFixed(2) + '</span>';
+            '<span class="item-price">₹' + subtotal.toFixed(2) + '</span>' +
+            '</div>' +
+            instrHtml;
         container.appendChild(row);
     });
 
