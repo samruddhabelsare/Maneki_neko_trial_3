@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 : 0;
 
             this._setText('stat-orders',  totalOrders);
-            this._setText('stat-revenue', `$${revenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+            this._setText('stat-revenue', `₹${revenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
             this._setText('stat-bots',    onlineBots);
             this._setText('stat-rating',  avgRating.toFixed(1));
 
@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         tr.innerHTML = `
                             <td>T-${o.table_number || '—'}</td>
                             <td>${items.length} item${items.length !== 1 ? 's' : ''}</td>
-                            <td>$${parseFloat(o.total_amount || 0).toFixed(2)}</td>
+                            <td>₹${parseFloat(o.total_amount || 0).toFixed(2)}</td>
                             <td><span class="badge badge-${o.status}">${o.status}</span></td>
                             <td>${this._formatTime(o.created_at)}</td>
                         `;
@@ -538,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>#${(o.id || '').slice(0, 8)}</td>
                     <td>T-${o.table_number || '—'}</td>
                     <td>${items.length} item${items.length !== 1 ? 's' : ''}</td>
-                    <td>$${parseFloat(o.total_amount || 0).toFixed(2)}</td>
+                    <td>₹${parseFloat(o.total_amount || 0).toFixed(2)}</td>
                     <td><span class="badge badge-${o.status}">${o.status}</span></td>
                     <td>${o.payment_method || '—'}</td>
                     <td>${this._formatTime(o.created_at)}</td>
@@ -549,7 +549,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 expandTr.className = 'order-expand-row';
                 const itemRows = items.length === 0
                     ? '<tr><td colspan="3" style="color:var(--text-muted)">No item details</td></tr>'
-                    : items.map(i => `<tr><td>${i.name || '—'}</td><td>${i.qty || 1}</td><td>$${parseFloat(i.price || 0).toFixed(2)}</td></tr>`).join('');
+                    : items.map(i => {
+                        const instr = i.instructions ? `<div class="item-instructions">"${i.instructions}"</div>` : '';
+                        return `<tr><td>${i.name || '—'}${instr}</td><td>${i.qty || 1}</td><td>₹${parseFloat(i.price || 0).toFixed(2)}</td></tr>`;
+                    }).join('');
                 expandTr.innerHTML = `
                     <td colspan="7">
                         <table class="expand-mini-table">
@@ -758,7 +761,7 @@ document.addEventListener('DOMContentLoaded', () => {
             chart.innerHTML = monToSun.map((rev, i) => `
                 <div class="bar"
                      style="height:${Math.max((rev / maxVal) * 100, 4)}%"
-                     data-val="$${rev.toFixed(2)}"></div>
+                     data-val="₹${rev.toFixed(2)}"></div>
             `).join('');
         },
 

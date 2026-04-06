@@ -690,8 +690,26 @@
         #placeOrderBtn:hover { box-shadow: var(--shadow-glow-strong); transform: translateY(-1px); }
 
         /* ── Order Items (in AI summary) ─────────────────────────────── */
-        .order-item-row { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        .order-item-row {
+            display: flex;
+            flex-direction: column;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+            gap: 0.35rem;
+        }
         .order-item-row:last-child { border-bottom: none; }
+        .ai-item-main { display: flex; justify-content: space-between; align-items: center; }
+        .ai-item-instructions {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 0.25rem 0.5rem;
+            border-left: 2px solid var(--primary-raw);
+            margin-left: 0.25rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 0 4px 4px 0;
+        }
         .item-name { font-weight: 600; color: var(--text-primary); flex: 1; text-align: left; }
         .item-qty { font-weight: 700; color: var(--text-muted); width: 40px; text-align: center; }
         .item-price { font-weight: 700; color: var(--text-primary); width: 60px; text-align: right; }

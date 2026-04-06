@@ -327,6 +327,16 @@
             font-size: 0.85rem;
         }
 
+        .item-instructions {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-style: italic;
+            display: block;
+            margin-top: 0.25rem;
+            padding-left: 0.5rem;
+            border-left: 2px solid var(--primary-raw);
+        }
+
         /* ── Charts ────────────────────────────────────────────────── */
         .bar-chart {
             display: flex;
@@ -980,7 +990,7 @@
                 <div class="stat-card">
                     <div class="stat-icon stat-icon-revenue">💰</div>
                     <div>
-                        <div class="stat-value stat-value-green" id="stat-revenue">$0.00</div>
+                        <div class="stat-value stat-value-green" id="stat-revenue">₹0.00</div>
                         <div class="stat-label">Revenue</div>
                     </div>
                 </div>
@@ -1117,6 +1127,7 @@
                     <button class="filter-btn" data-status="ready">Ready</button>
                     <button class="filter-btn" data-status="delivered">Delivered</button>
                     <button class="filter-btn" data-status="billed">Billed</button>
+                    <button class="filter-btn" data-status="cancelled">Cancelled</button>
                 </div>
             </header>
             <div class="panel">
