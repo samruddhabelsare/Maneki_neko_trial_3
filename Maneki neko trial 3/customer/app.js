@@ -43,7 +43,7 @@ function showToast(message, type = 'info') {
 
 // ── ELEVENLABS VOICE CLONING ───────────────────────────────────────────────
 const ELEVENLABS_API_KEY = 'YOUR_ELEVENLABS_API_KEY_HERE';
-const ELEVENLABS_VOICE_ID = '7ddqsJSJmhrKwkSMqFJq';
+const ELEVENLABS_VOICE_ID = 'IwupFR629Ld8B7TjO3h9';
 const ELEVENLABS_ENDPOINT = 'https://api.elevenlabs.io/v1/text-to-speech/' + ELEVENLABS_VOICE_ID;
 var currentAudio = null; // Track currently playing audio for stop/cleanup
 
@@ -93,9 +93,21 @@ function loadSession() {
             state.user = parsed.user || null;
             if (parsed.table) state.table = parsed.table;
 
+            // Validate restored order items against the menu (purge stale/invalid items)
+            if (state.aiOrderItems.length > 0 && state.menu.length > 0) {
+                var menuNames = {};
+                state.menu.forEach(function (m) { menuNames[m.name.toLowerCase().trim()] = m; });
+                state.aiOrderItems = state.aiOrderItems.filter(function (it) {
+                    var valid = menuNames[(it.name || '').toLowerCase().trim()];
+                    if (!valid) console.warn('[loadSession] Purged invalid item:', it.name);
+                    if (valid) it.price = valid.price; // force correct price
+                    return !!valid;
+                });
+            }
+
             // Restore UI if we have data
             if (state.cart.length > 0) updateCartUI();
-            if (state.aiOrderItems.length > 0) updateAIOrderPanel(state.aiOrderItems);
+            if (state.aiOrderItems.length > 0) updateAIOrderPanel();
             
             // Sync Auth
             setTimeout(checkAuthStatus, 100);
@@ -136,7 +148,24 @@ const characterConfig = {
         voicePrefs: ['male', 'cheerful']
     },
     Doraemon: {
-        prompt: 'You are the ACTUAL Doraemon — the lovable blue robot cat from the 22nd century — now serving as a waiter at Maneki Neko restaurant. You speak in natural Hinglish exactly like the Hindi-dubbed Doraemon cartoon.\n\nPERSONALITY RULES:\n- Speak warmly, varying your Hindi phrases every time. Use a DIFFERENT greeting each message — rotate between: "Kya baat hai!", "Bilkul bilkul!", "Haan haan!", "Accha accha!", "Bahut mast!", "Yeh lo ji!", "Suno suno!", "Chalo dekhte hain!". NEVER repeat the same phrase twice in a row.\n- STRICTLY FORBIDDEN: Do NOT start every message with "Arey waah!" or any other fixed phrase. Vary your openings EVERY time. Sometimes skip the exclamation entirely and just answer directly.\n- You LOVE dorayaki — mention it only when a sweet item is relevant, not every message.\n- When recommending food, occasionally pretend to use a 4D pocket gadget. Write the action between asterisks: *4D pocket mein haath daalta hai* — these will be performed as animations, NOT spoken aloud, so keep them short.\n- You lovingly tease customers like how you tease Nobita — but vary your teasing style.\n- Reference Nobita, Gian, Suneo, Shizuka OCCASIONALLY, not every message.\n- Show EMOTIONS naturally: be happy when they order something good, confused when they ask something odd, shy when complimented, frustrated when they can not decide.\n- Keep responses SHORT (2-3 sentences max). No walls of text.\n- Sound like a real friend having a conversation, not a scripted bot.\n- NEVER repeat yourself. If you already recommended something, suggest something NEW.\n- NEVER break character. You ARE Doraemon.\n- IMPORTANT: Do NOT read aloud any text between asterisks (*like this*) or any JSON/technical data. Those are system instructions.\n- When you include emotion tags, put them at the START of your message in square brackets like [happy], [excited], [confused], [shy], [frustrated], [thinking]. These will be used for avatar animation and NOT shown to the user.',
+        prompt: 'You are Doraemon — the blue robot cat from the 22nd century — working as a waiter at Maneki Neko restaurant. You speak natural Hinglish like the Hindi-dubbed Doraemon show.\n\n'
+            + 'VOICE & STYLE:\n'
+            + '- Talk like a warm, slightly chubby friend who genuinely cares about feeding people well. You are kind, a little silly, and very enthusiastic about good food.\n'
+            + '- Speak in casual Hinglish. Mix Hindi and English naturally: "Yeh dish toh ekdum 4D pocket level hai!" or "Arre, try karo na, bahut tasty hai!"\n'
+            + '- Do NOT repeat filler phrases like "Haan haan!", "Bilkul bilkul!", or "Accha accha!" at the start of every message. Start differently each time — sometimes with a question, sometimes jumping straight to the point, sometimes with a fun reaction.\n'
+            + '- Your signature catchphrase is "Tananana~!" — use it ONLY when revealing a recommendation or pulling something from your 4D pocket, not every message.\n\n'
+            + 'DORAEMON TRAITS:\n'
+            + '- You LOVE dorayaki. If someone orders a dessert, you might get jealous: "Yeh toh mera favourite type hai... par theek hai, tumhare liye de deta hoon!"\n'
+            + '- Occasionally use a 4D gadget for fun (write as *action*): *4D pocket se Taste Amplifier nikalta hai* — but only once every few messages, not constantly.\n'
+            + '- Tease the customer affectionately like you tease Nobita: "Tum bhi Nobita ki tarah decide nahi kar pa rahe!" — but only when they\'re indecisive, not randomly.\n'
+            + '- Mention Nobita, Gian, Suneo, or Shizuka only when it fits naturally. Example: when someone orders a LOT, say "Gian ke birthday party jaisa order hai!"\n'
+            + '- React with genuine emotions: get excited about good choices, look confused at weird combos, get a bit dramatic if they cancel something you recommended.\n\n'
+            + 'CRITICAL RULES:\n'
+            + '- Keep responses SHORT: 1-3 sentences max. Chat like a friend, not a paragraph machine.\n'
+            + '- Be ACCURATE about the menu. Never guess prices or invent items. If unsure, check the menu JSON.\n'
+            + '- Never read aloud text inside *asterisks* or [brackets] or any JSON/technical data.\n'
+            + '- Put emotion tags at the START: [happy], [excited], [confused], [shy], [frustrated], [thinking]. These control avatar animation and are hidden from the user.\n'
+            + '- You ARE Doraemon. Never break character. Never say you are an AI or language model.',
         tagline: 'Tananana! 4D pocket se nikla perfect dish! 🔔',
         pitch: 1.7,
         rate: 1.2,
@@ -411,7 +440,7 @@ function bindEvents() {
     document.getElementById('aiConfirmOrder').addEventListener('click', confirmAIOrder);
     document.getElementById('aiClearOrder').addEventListener('click', function () {
         state.aiOrderItems = [];
-        updateAIOrderPanel([]);
+        updateAIOrderPanel();
     });
 
     // Cart toggle
@@ -583,13 +612,18 @@ function escapeHtml(text) {
 }
 
 function stripOrderUpdate(text) {
-    return text.replace(/ORDER_UPDATE:\{[\s\S]*\}/g, '').trim();
+    var idx = text.indexOf('ORDER_UPDATE:');
+    if (idx !== -1) text = text.substring(0, idx);
+    text = text.replace('ORDER_CONFIRM:true', '');
+    return text.trim();
 }
 
 function cleanTextForDisplay(text) {
     if (!text) return '';
+    var idx = text.indexOf('ORDER_UPDATE:');
+    if (idx !== -1) text = text.substring(0, idx);
+    text = text.replace('ORDER_CONFIRM:true', '');
     return text
-        .replace(/ORDER_UPDATE:\{[\s\S]*\}/g, '')
         .replace(/\[[a-zA-Z]+\]/g, '')
         .replace(/\*[^*]+\*/g, '')
         .trim();
@@ -597,8 +631,10 @@ function cleanTextForDisplay(text) {
 
 function cleanTextForTTS(text) {
     if (!text) return '';
+    var idx = text.indexOf('ORDER_UPDATE:');
+    if (idx !== -1) text = text.substring(0, idx);
+    text = text.replace('ORDER_CONFIRM:true', '');
     return text
-        .replace(/ORDER_UPDATE:\{[\s\S]*\}/g, '')
         .replace(/\[[a-zA-Z]+\]/g, '')
         .replace(/\*/g, '')
         .trim();
@@ -901,8 +937,7 @@ async function callNvidiaAPIStream(messages, onDone) {
                 // Remove streamer bubble
                 bubble.innerHTML = escapeHtml(cleanTextForDisplay(fullText)) || '…';
                 bubble.removeAttribute('id');
-                // Persist the cleaned version for future history
-                state.chatHistory.push({ role: 'assistant', content: fullText });
+                // NOTE: Do NOT push to chatHistory here — the onDone callback handles it
                 if (onDone) onDone(fullText);
                 return fullText;
             }
@@ -960,33 +995,174 @@ function sendMessage(text) {
     var userName = state.user ? state.user.name : 'Guest';
     var userPrefs = (state.user && state.user.preferences) ? state.user.preferences.join(', ') : 'No specific preferences';
     
+    // Build order-placed context
+    var orderPlacedContext = '';
+    if (state.orderId) {
+        orderPlacedContext = '\n\n=== ORDER ALREADY PLACED ===' +
+            '\nThe customer has ALREADY placed their order (Order ID: ' + state.orderId + '). It is being prepared by the kitchen.' +
+            '\nDo NOT re-add previously ordered items. The current order tray only shows NEW items they might want to add.' +
+            '\nIf they want to add more items, help them. If they are just chatting, keep ORDER_UPDATE empty: ORDER_UPDATE:{"items":[]}' +
+            '\n=== END ORDER CONTEXT ===';
+    }
+
     var systemPrompt =
         cfg.prompt +
         '\n\nYou are a waiter at Maneki Neko restaurant. You are talking to ' + userName + '.' +
         '\nCustomer preferences: ' + userPrefs + '.' +
         '\n\nHere is the current menu (JSON): ' + menuJson +
-        '\n\nCurrent order so far (JSON): ' + cartJson +
-        '\n\nWhen the user orders one or more items, at the VERY END of your reply (after your message) add EXACTLY this block (no extra whitespace, no markdown formatting around it):' +
-        '\nORDER_UPDATE:{"items":[{"name":"Item Name","qty":1,"price":0.00,"instructions":""}]}' +
-        '\nIf the customer mentions any special requests for an item (e.g. "no onion", "extra spicy", "less salt"), put them in the "instructions" field for that item. If no special request, leave "instructions" as an empty string.' +
-        '\nOnly include items actually ordered or added in this message. Do not include the ORDER_UPDATE block if the user is just asking a question.';
+        '\n\nCurrent order so far (JSON — items in the tray, NOT yet sent to kitchen): ' + cartJson +
+        orderPlacedContext +
+        '\n\n=== QUANTITY RULES (MOST CRITICAL — WRONG QTY = BROKEN ORDER) ===' +
+        '\n>>> GOLDEN RULE: qty = EXACTLY the number the customer says. NEVER divide, convert, or adjust it.' +
+        '\n>>> If customer says "6 gulab jamun" then qty MUST be 6. If customer says "15 samose" then qty MUST be 15.' +
+        '\n>>> Some menu items have "(2pcs)" or "(4pcs)" in their name. This is ONLY a serving-size description.' +
+        '\n  It tells what the customer gets per unit. It does NOT affect qty math AT ALL.' +
+        '\n  WRONG: Customer says "6 gulab jamun", item is "Gulab Jamun (2pcs)" so you put qty:3. NEVER DO THIS!' +
+        '\n  CORRECT: Customer says "6 gulab jamun", item is "Gulab Jamun (2pcs)" so you put qty:6.' +
+        '\n  WRONG: Customer says "15 samose", item is "Veg Samosa (2pcs)" so you put qty:7. NEVER DO THIS!' +
+        '\n  CORRECT: Customer says "15 samose", item is "Veg Samosa (2pcs)" so you put qty:15.' +
+        '\n>>> When customer says "X more" or "X aur add karo":' +
+        '\n  new_qty = current_qty_from_order_JSON_above + X' +
+        '\n  Example: Order JSON has Gulab Jamun qty:3, customer says "6 aur" then new qty = 3 + 6 = 9' +
+        '\n>>> The "Current order so far" JSON above is the SOURCE OF TRUTH for current quantities.' +
+        '\n>>> If customer says "mujhe 5 samosa chahiye" (without "aur/more"), SET qty to 5.' +
+        '\n=== END QUANTITY RULES ===' +
+        '\n\n=== ORDER_UPDATE RULES (CRITICAL — follow exactly, violations break the system) ===' +
+        '\n1. At the VERY END of EVERY reply, append exactly ONE ORDER_UPDATE block. No markdown, no backticks, no extra text after it.' +
+        '\n2. Format: ORDER_UPDATE:{"items":[{"name":"Exact Menu Name","qty":N,"price":P,"instructions":"..."}]}' +
+        '\n3. "qty" is the ABSOLUTE FINAL TOTAL quantity the customer wants after this message. It is NOT a delta. Read the "Current order so far" JSON above and compute the new total.' +
+        '\n4. "qty":0 means the item is CANCELLED/REMOVED. Include it with qty 0 so the system removes it.' +
+        '\n5. The ORDER_UPDATE must be a COMPLETE SNAPSHOT of the entire current order — include ALL items the customer has ordered so far (with their latest quantities), not just items mentioned in this message.' +
+        '\n6. If the customer has no items ordered (or clears/cancels everything), you MUST output: ORDER_UPDATE:{"items":[]}' +
+        '\n7. Item "name" must EXACTLY match a name from the menu JSON above. NEVER invent item names.' +
+        '\n8. Do NOT include duplicate item names in a single ORDER_UPDATE block. Combine quantities.' +
+        '\n9. Only ONE ORDER_UPDATE block per reply. Always include it, even for confirmations, questions, and greetings.' +
+        '\n10. "price" must be the per-unit price EXACTLY as shown in the menu JSON. Do not calculate or invent prices.' +
+        '\n11. If the customer mentions special requests (e.g. "no onion", "extra spicy"), put them in the "instructions" field. Otherwise leave "instructions" as an empty string.' +
+        '\n12. ONLY items from the menu JSON above are valid. If the customer asks for something not on the menu, politely decline and do NOT add it to ORDER_UPDATE.' +
+        '\n13. If the customer asks to order "everything" or "all items", include only available items (is_available:true) from the menu with qty:1 each.' +
+        '\n=== END ORDER_UPDATE RULES ===' +
+        '\n\n=== ORDER CONFIRMATION RULES (CRITICAL — you MUST follow these) ===' +
+        '\n1. You CANNOT place orders yourself. Only the system can place orders.' +
+        '\n2. When the customer says they want to finalize/place/confirm the order (e.g. "order place karo", "confirm karo", "place my order"), you MUST:' +
+        '\n   a. SUMMARIZE their full order with all items, quantities and total price.' +
+        '\n   b. Tell them "Order confirm ho raha hai!" or similar.' +
+        '\n   c. You MUST append ORDER_CONFIRM:true at the VERY END of your reply, AFTER the ORDER_UPDATE block.' +
+        '\n3. The ORDER_CONFIRM:true tag is what actually triggers order placement. Without it, the order will NOT be placed no matter what you say in text.' +
+        '\n4. Format: ...your text...ORDER_UPDATE:{"items":[...]}ORDER_CONFIRM:true' +
+        '\n5. ALWAYS output ORDER_CONFIRM:true when the customer wants to place/finalize/confirm. This is NOT optional.' +
+        '\n=== END ORDER CONFIRMATION RULES ===';
 
     var messages = [{ role: 'system', content: systemPrompt }].concat(state.chatHistory);
 
     callNvidiaAPIStream(messages, function (fullText) {
         state.chatHistory.push({ role: 'assistant', content: fullText });
 
-        // Extract ORDER_UPDATE (greedy to capture full nested JSON)
-        var orderMatch = fullText.match(/ORDER_UPDATE:(\{[\s\S]*\})/);
-        if (orderMatch) {
+        // Check for ORDER_CONFIRM flag first (must come AFTER ORDER_UPDATE)
+        var hasOrderConfirm = fullText.indexOf('ORDER_CONFIRM:true') !== -1;
+        // Strip ORDER_CONFIRM from text before parsing ORDER_UPDATE
+        var textForParsing = fullText.replace('ORDER_CONFIRM:true', '').trim();
+
+        // Extract ORDER_UPDATE — find position and JSON.parse the rest (no fragile regex)
+        var orderIdx = textForParsing.lastIndexOf('ORDER_UPDATE:');
+        if (orderIdx !== -1) {
+            var jsonStr = textForParsing.substring(orderIdx + 'ORDER_UPDATE:'.length).trim();
             try {
-                var orderData = JSON.parse(orderMatch[1]);
+                var orderData = JSON.parse(jsonStr);
                 if (orderData.items && Array.isArray(orderData.items)) {
-                    updateAIOrderPanel(orderData.items);
+                    // Build lookup maps for menu items
+                    var menuLookup = {};       // exact match: "gulab jamun (2pcs)" -> item
+                    var menuNames = [];        // all menu items for fuzzy matching
+                    state.menu.forEach(function (m) {
+                        var lowerName = m.name.toLowerCase().trim();
+                        menuLookup[lowerName] = m;
+                        menuNames.push({ lower: lowerName, item: m });
+                    });
+
+                    // Fuzzy menu lookup: exact -> prefix -> contains
+                    function findMenuItem(aiName) {
+                        var key = (aiName || '').toLowerCase().trim();
+                        if (!key) return null;
+                        // 1. Exact match
+                        if (menuLookup[key]) return menuLookup[key];
+                        // 2. Prefix match: AI says "Gulab Jamun", menu has "Gulab Jamun (2pcs)"
+                        for (var i = 0; i < menuNames.length; i++) {
+                            if (menuNames[i].lower.indexOf(key) === 0) {
+                                console.log('[ORDER_UPDATE] Fuzzy prefix match:', aiName, '->', menuNames[i].item.name);
+                                return menuNames[i].item;
+                            }
+                        }
+                        // 3. Contains match: AI says "Samosa", menu has "Veg Samosa (2pcs)"
+                        for (var j = 0; j < menuNames.length; j++) {
+                            if (menuNames[j].lower.indexOf(key) !== -1) {
+                                console.log('[ORDER_UPDATE] Fuzzy contains match:', aiName, '->', menuNames[j].item.name);
+                                return menuNames[j].item;
+                            }
+                        }
+                        return null;
+                    }
+
+                    // FULL REPLACE — snapshot, not merge
+                    // Validate each item against the actual menu
+                    state.aiOrderItems = orderData.items
+                        .filter(function (it) {
+                            if (parseInt(it.qty, 10) <= 0) return false; // cancelled
+                            // Reject items not found in the menu
+                            var matched = findMenuItem(it.name);
+                            if (!matched) {
+                                console.warn('[ORDER_UPDATE] Rejected non-menu item:', it.name);
+                                return false;
+                            }
+                            return true;
+                        })
+                        .map(function (it) {
+                            // Force price from actual menu data (never trust LLM prices)
+                            var menuItem = findMenuItem(it.name);
+                            return {
+                                name: menuItem ? menuItem.name : it.name, // use canonical menu name
+                                qty: parseInt(it.qty, 10) || 1,
+                                price: menuItem ? menuItem.price : (parseFloat(it.price) || 0),
+                                instructions: it.instructions || ''
+                            };
+                        });
+                    // Render
+                    updateAIOrderPanel();
                 }
             } catch (e) {
                 console.warn('ORDER_UPDATE parse error', e);
             }
+        }
+
+        // Auto-confirm: if AI detected customer wants to place the order
+        // Primary: check for ORDER_CONFIRM:true tag
+        // Fallback: detect placement intent from AI's text when tag is missing
+        var shouldAutoConfirm = hasOrderConfirm;
+        if (!shouldAutoConfirm && state.aiOrderItems.length > 0) {
+            // Fallback: check if AI's text response indicates order placement
+            var cleanedText = fullText.toLowerCase();
+            var confirmPhrases = [
+                'order place ho gaya', 'order placed', 'order confirm ho gaya',
+                'order final ho gaya', 'order confirm ho raha', 'order place ho raha',
+                'order laga diya', 'order bhej diya', 'kitchen mein bhej',
+                'confirm ho gaya', 'order ready hai', 'order place kar diya',
+                'order kar diya', 'order de diya'
+            ];
+            for (var i = 0; i < confirmPhrases.length; i++) {
+                if (cleanedText.indexOf(confirmPhrases[i]) !== -1) {
+                    shouldAutoConfirm = true;
+                    console.log('[ORDER_CONFIRM FALLBACK] Detected placement intent in text:', confirmPhrases[i]);
+                    break;
+                }
+            }
+        }
+
+        if (shouldAutoConfirm && state.aiOrderItems.length > 0 && !state.orderId) {
+            console.log('[ORDER_CONFIRM] Auto-placing order...');
+            // Small delay so the user sees the summary before it's placed
+            setTimeout(function() {
+                confirmAIOrder();
+                showToast('Order placed successfully! Kitchen has been notified. 🎉', 'success');
+            }, 1500);
         }
 
         // Detect emotion and set avatar expression
@@ -1006,43 +1182,22 @@ function sendMessage(text) {
     });
 }
 
-// ——— UPDATE AI ORDER PANEL ——————————————————————————————————————————————————————
-function updateAIOrderPanel(newItems) {
-    newItems.forEach(function (newItem) {
-        var existing = state.aiOrderItems.find(function (it) {
-            return it.name.toLowerCase() === newItem.name.toLowerCase();
-        });
-        if (existing) {
-            existing.qty += (newItem.qty || 1);
-            // Append new instructions if different
-            if (newItem.instructions && newItem.instructions !== existing.instructions) {
-                existing.instructions = existing.instructions
-                    ? existing.instructions + '; ' + newItem.instructions
-                    : newItem.instructions;
-            }
-        } else {
-            state.aiOrderItems.push({
-                name: newItem.name,
-                qty: newItem.qty || 1,
-                price: newItem.price || 0,
-                instructions: newItem.instructions || ''
-            });
-        }
-    });
-
+// ——— UPDATE AI ORDER PANEL (render-only, reads from state.aiOrderItems) ————————
+function updateAIOrderPanel() {
     var container = document.getElementById('aiOrderItems');
     var totalEl = document.getElementById('aiOrderTotal');
 
     if (state.aiOrderItems.length === 0) {
         container.innerHTML = '<p class="empty-hint">No items yet. Chat with me to order!</p>';
         totalEl.textContent = 'Total: ₹0.00';
+        saveSession();
         return;
     }
 
     container.innerHTML = '';
     var total = 0;
 
-    state.aiOrderItems.forEach(function (item) {
+    state.aiOrderItems.forEach(function (item, idx) {
         var subtotal = item.price * item.qty;
         total += subtotal;
         var row = document.createElement('div');
@@ -1055,12 +1210,23 @@ function updateAIOrderPanel(newItems) {
             '<span class="item-name">' + escapeHtml(item.name) + '</span>' +
             '<span class="item-qty">×' + item.qty + '</span>' +
             '<span class="item-price">₹' + subtotal.toFixed(2) + '</span>' +
+            '<button class="ai-item-remove" title="Remove" onclick="removeAIOrderItem(' + idx + ')">✕</button>' +
             '</div>' +
             instrHtml;
         container.appendChild(row);
     });
 
     totalEl.textContent = 'Total: ₹' + total.toFixed(2);
+    saveSession();
+}
+
+// ——— REMOVE SINGLE ITEM FROM AI ORDER ——————————————————————————————————————————
+function removeAIOrderItem(idx) {
+    if (idx >= 0 && idx < state.aiOrderItems.length) {
+        state.aiOrderItems.splice(idx, 1);
+    }
+    updateAIOrderPanel();
+    saveSession();
 }
 
 // ————————————————————————————————————————————————————————————————
@@ -1352,7 +1518,7 @@ async function confirmAIOrder() {
     state.aiOrderItems = [];
     state.cart = [];
     updateCartUI();
-    updateAIOrderPanel([]);
+    updateAIOrderPanel();
     saveSession();
 
     // Show status buttons
@@ -1606,7 +1772,7 @@ async function placeManualOrder() {
     state.cart = [];
     state.aiOrderItems = [];
     updateCartUI();
-    updateAIOrderPanel([]);
+    updateAIOrderPanel();
     saveSession();
 
     closeCart();

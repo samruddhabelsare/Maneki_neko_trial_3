@@ -713,6 +713,23 @@
         .item-name { font-weight: 600; color: var(--text-primary); flex: 1; text-align: left; }
         .item-qty { font-weight: 700; color: var(--text-muted); width: 40px; text-align: center; }
         .item-price { font-weight: 700; color: var(--text-primary); width: 60px; text-align: right; }
+        .ai-item-remove {
+            background: transparent;
+            border: none;
+            color: var(--text-dimmed);
+            font-size: 0.95rem;
+            cursor: pointer;
+            padding: 2px 6px;
+            margin-left: 0.5rem;
+            border-radius: 50%;
+            transition: all var(--duration-fast) var(--ease-out);
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .ai-item-remove:hover {
+            color: var(--danger);
+            background: var(--danger-bg);
+        }
         .empty-hint { color: var(--text-dimmed); font-style: italic; text-align: center; padding: 2rem 0; font-size: 0.95rem; }
 
         /* ── Order Status Screen ──────────────────────────────────────── */
