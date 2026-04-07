@@ -527,14 +527,12 @@ function bindEvents() {
 function orderMoreAction() {
     document.getElementById('orderStatusScreen').style.display = 'none';
     document.getElementById('qrPaymentScreen').style.display = 'none';
-    
-    // Switch to manual mode by default so they see the full menu
-    document.getElementById('mode-ai').style.display = 'none';
-    document.getElementById('mode-manual').style.display = 'block';
-    
-    document.querySelectorAll('.mode-tab').forEach(function (tab) {
-        tab.classList.toggle('active', tab.getAttribute('data-mode') === 'manual');
-    });
+
+    // Re-show the main app (it may have been hidden by the status/payment bar buttons)
+    document.getElementById('mainApp').style.display = 'flex';
+
+    // Use switchMode to properly show the menu tab AND load menu items
+    switchMode('manual');
 }
 
 // ——— INITIAL GREETING ———————————————————————————————————————————————————————————
@@ -1135,28 +1133,72 @@ function sendMessage(text) {
 
         // Auto-confirm: if AI detected customer wants to place the order
         // Primary: check for ORDER_CONFIRM:true tag
-        // Fallback: detect placement intent from AI's text when tag is missing
+        // Fallback: detect placement intent from AI's text AND user's message
         var shouldAutoConfirm = hasOrderConfirm;
         if (!shouldAutoConfirm && state.aiOrderItems.length > 0) {
-            // Fallback: check if AI's text response indicates order placement
+            // Fallback 1: check if AI's text response indicates order placement
             var cleanedText = fullText.toLowerCase();
-            var confirmPhrases = [
+            var aiConfirmPhrases = [
                 'order place ho gaya', 'order placed', 'order confirm ho gaya',
                 'order final ho gaya', 'order confirm ho raha', 'order place ho raha',
                 'order laga diya', 'order bhej diya', 'kitchen mein bhej',
                 'confirm ho gaya', 'order ready hai', 'order place kar diya',
-                'order kar diya', 'order de diya'
+                'order kar diya', 'order de diya', 'order confirmed',
+                'placing your order', 'sending your order', 'order has been placed',
+                'order is confirmed', 'confirming your order', 'order sent',
+                'dattebayo! order', 'your order is on its way',
+                'order has been sent', 'i\'ve placed your order',
+                'kitchen ko bhej', 'kitchen bhej diya', 'order go karo',
+                'order laga raha', 'order bhej raha', 'order pakka',
+                'done! your order', 'alright! placing', 'yosh! order',
+                'shishishi! order', 'ohhh! order confirmed',
+                'haan haan, order', 'bilkul! order', 'theek hai! order'
             ];
-            for (var i = 0; i < confirmPhrases.length; i++) {
-                if (cleanedText.indexOf(confirmPhrases[i]) !== -1) {
+            for (var i = 0; i < aiConfirmPhrases.length; i++) {
+                if (cleanedText.indexOf(aiConfirmPhrases[i]) !== -1) {
                     shouldAutoConfirm = true;
-                    console.log('[ORDER_CONFIRM FALLBACK] Detected placement intent in text:', confirmPhrases[i]);
+                    console.log('[ORDER_CONFIRM FALLBACK] Detected placement intent in AI text:', aiConfirmPhrases[i]);
                     break;
+                }
+            }
+
+            // Fallback 2: check if the USER's last message was asking to confirm/place
+            if (!shouldAutoConfirm) {
+                var lastUserMsg = '';
+                for (var u = state.chatHistory.length - 1; u >= 0; u--) {
+                    if (state.chatHistory[u].role === 'user') {
+                        lastUserMsg = state.chatHistory[u].content.toLowerCase().trim();
+                        break;
+                    }
+                }
+                var userConfirmPhrases = [
+                    'confirm', 'place order', 'place my order', 'order place',
+                    'order karo', 'order kar do', 'order de do', 'order do',
+                    'confirm karo', 'confirm kar do', 'final karo', 'finalize',
+                    'place karo', 'place kar do', 'laga do', 'laga de',
+                    'bhej do', 'bhej de', 'send order', 'submit order',
+                    'done ordering', 'that\'s all', 'bas itna', 'itna hi',
+                    'ho gaya', 'ban gaya', 'pakka karo', 'pakka kar do',
+                    'yes confirm', 'yes place', 'haan confirm', 'haan place',
+                    'go ahead', 'proceed', 'checkout', 'check out',
+                    'order bhej', 'kitchen bhej', 'send to kitchen',
+                    'ready to order', 'let\'s order', 'order now',
+                    'haa karo', 'ha karo', 'kar do order', 'de do order',
+                    'order lagao', 'order laga do', 'thats it', 'that is all',
+                    'aur kuch nahi', 'nothing else', 'order please',
+                    'yep', 'yup', 'sure', 'ok confirm', 'okay confirm'
+                ];
+                for (var j = 0; j < userConfirmPhrases.length; j++) {
+                    if (lastUserMsg.indexOf(userConfirmPhrases[j]) !== -1) {
+                        shouldAutoConfirm = true;
+                        console.log('[ORDER_CONFIRM FALLBACK] Detected confirm intent in USER message:', userConfirmPhrases[j]);
+                        break;
+                    }
                 }
             }
         }
 
-        if (shouldAutoConfirm && state.aiOrderItems.length > 0 && !state.orderId) {
+        if (shouldAutoConfirm && state.aiOrderItems.length > 0) {
             console.log('[ORDER_CONFIRM] Auto-placing order...');
             // Small delay so the user sees the summary before it's placed
             setTimeout(function() {
