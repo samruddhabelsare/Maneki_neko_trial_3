@@ -4,14 +4,14 @@
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 // â”€â”€â”€ CONSTANTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const NVIDIA_API_KEY = 'YOUR_NVIDIA_API_KEY_HERE';
-const NVIDIA_MODEL = 'meta/llama-3.3-70b-instruct';
+const NVIDIA_API_KEY = 'YOUR_NVIDIA_API_KEY_HERE'; // API key injected server-side via /api/proxy
+const NVIDIA_MODEL = 'nvidia/nemotron-3.5-lightning-30b-a3b';
 // Multiple CORS proxy options for resilience (file:// origin sends null Origin header)
 const NVIDIA_RAW_ENDPOINT = 'https://integrate.api.nvidia.com/v1/chat/completions';
 const CORS_PROXIES = [
-    function(url) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url); },
-    function(url) { return 'https://corsproxy.io/?' + url; },
-    function(url) { return 'https://cors-anywhere.herokuapp.com/' + url; }
+    function (url) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url); },
+    function (url) { return 'https://corsproxy.io/?' + url; },
+    function (url) { return 'https://cors-anywhere.herokuapp.com/' + url; }
 ];
 // Will be set to the working proxy index after first successful call
 var workingProxyIndex = 0;
@@ -21,21 +21,21 @@ const RESTAURANT_ID = 'aaaaaaaa-0000-0000-0000-000000000001';
 function showToast(message, type = 'info') {
     var container = document.getElementById('toastContainer');
     if (!container) return;
-    
+
     var toast = document.createElement('div');
     toast.className = 'toast ' + type;
-    
+
     var icon = 'ℹ️';
     if (type === 'success') icon = '✅';
     if (type === 'error') icon = '❌';
-    
+
     toast.innerHTML = '<span style="font-size: 1.25rem;">' + icon + '</span> <span>' + escapeHtml(message) + '</span>';
-    
+
     container.appendChild(toast);
-    
-    setTimeout(function() {
+
+    setTimeout(function () {
         toast.classList.add('hiding');
-        toast.addEventListener('animationend', function() {
+        toast.addEventListener('animationend', function () {
             toast.remove();
         }, { once: true });
     }, 3000);
@@ -76,7 +76,7 @@ function saveSession() {
             user: state.user
         };
         localStorage.setItem('maneki_customer_state', JSON.stringify(toSave));
-    } catch(e) {
+    } catch (e) {
         console.warn('Could not save session:', e);
     }
 }
@@ -108,15 +108,15 @@ function loadSession() {
             // Restore UI if we have data
             if (state.cart.length > 0) updateCartUI();
             if (state.aiOrderItems.length > 0) updateAIOrderPanel();
-            
+
             // Sync Auth
             setTimeout(checkAuthStatus, 100);
-            
+
             // Re-render chat history securely
             if (state.chatHistory.length > 0) {
                 var chatBox = document.getElementById('chatMessages');
                 chatBox.innerHTML = '';
-                state.chatHistory.forEach(function(msg) {
+                state.chatHistory.forEach(function (msg) {
                     if (msg.role !== 'system') {
                         // We use the existing appendMessageUI method but need to skip saving it again
                         // Easiest is to manually reconstruct the DOM here safely, or just call appendMessageUI
@@ -125,7 +125,7 @@ function loadSession() {
                 });
             }
         }
-    } catch(e) {
+    } catch (e) {
         console.warn('Could not load session:', e);
     }
 }
@@ -275,7 +275,7 @@ async function handleLogin(e) {
     const submitBtn = document.getElementById('loginSubmitBtn');
 
     if (!rawPhone) return;
-    
+
     const phone = formatPhoneNumber(rawPhone);
 
     submitBtn.disabled = true;
@@ -284,7 +284,7 @@ async function handleLogin(e) {
     try {
         // 1. Check if customer exists
         const { data: customer, error } = await window.getCustomerByPhone(phone);
-        
+
         if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "not found"
 
         if (!customer) {
@@ -362,9 +362,9 @@ async function loadOrderHistory() {
             const date = new Date(order.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' });
             const card = document.createElement('div');
             card.className = 'history-card';
-            
+
             const itemsSummary = order.items.map(it => `${it.qty}x ${it.name}`).join(', ');
-            
+
             card.innerHTML = `
                 <div class="history-card-header">
                     <span class="history-date">${date}</span>
@@ -404,7 +404,7 @@ function bindEvents() {
     document.getElementById('closeHistory').addEventListener('click', function () {
         document.getElementById('historyModal').style.display = 'none';
     });
-    
+
     // Start button
     document.getElementById('startBtn').addEventListener('click', function () {
         if (!state.user) {
@@ -467,7 +467,7 @@ function bindEvents() {
     // Status / Bill toggle from header
     var statusToggleBtn = document.getElementById('statusToggleBtn');
     if (statusToggleBtn) {
-        statusToggleBtn.addEventListener('click', function() {
+        statusToggleBtn.addEventListener('click', function () {
             if (!state.orderId) {
                 alert("You haven't ordered anything yet!");
                 return;
@@ -480,7 +480,7 @@ function bindEvents() {
     // Status -> Payment
     var statusPayBillBtn = document.getElementById('statusPayBillBtn');
     if (statusPayBillBtn) {
-        statusPayBillBtn.addEventListener('click', function() {
+        statusPayBillBtn.addEventListener('click', function () {
             document.getElementById('orderStatusScreen').style.display = 'none';
             document.getElementById('qrPaymentScreen').style.display = 'flex';
         });
@@ -489,7 +489,7 @@ function bindEvents() {
     // Payment -> Back to Status
     var paymentBackToStatusBtn = document.getElementById('paymentBackToStatusBtn');
     if (paymentBackToStatusBtn) {
-        paymentBackToStatusBtn.addEventListener('click', function() {
+        paymentBackToStatusBtn.addEventListener('click', function () {
             document.getElementById('qrPaymentScreen').style.display = 'none';
             document.getElementById('orderStatusScreen').style.display = 'flex';
         });
@@ -498,7 +498,7 @@ function bindEvents() {
     // Floating Active Order Bar Buttons
     var barStatusBtn = document.getElementById('barStatusBtn');
     if (barStatusBtn) {
-        barStatusBtn.addEventListener('click', function() {
+        barStatusBtn.addEventListener('click', function () {
             document.getElementById('orderStatusScreen').style.display = 'flex';
             document.getElementById('qrPaymentScreen').style.display = 'none';
         });
@@ -506,7 +506,7 @@ function bindEvents() {
 
     var barPayBtn = document.getElementById('barPayBtn');
     if (barPayBtn) {
-        barPayBtn.addEventListener('click', function() {
+        barPayBtn.addEventListener('click', function () {
             document.getElementById('orderStatusScreen').style.display = 'none';
             document.getElementById('qrPaymentScreen').style.display = 'flex';
         });
@@ -517,7 +517,7 @@ function bindEvents() {
     if (statusOrderMoreBtn) {
         statusOrderMoreBtn.addEventListener('click', orderMoreAction);
     }
-    
+
     var paymentOrderMoreBtn = document.getElementById('paymentOrderMoreBtn');
     if (paymentOrderMoreBtn) {
         paymentOrderMoreBtn.addEventListener('click', orderMoreAction);
@@ -586,15 +586,15 @@ function appendMessageUI(role, content, isHistory) {
 
     var div = document.createElement('div');
     div.className = 'message ' + role;
-    
+
     var icon = (role === 'user') ? '👤' : (state.character === 'Doraemon' ? getDoraemonMiniSVG() : '🐱');
-    
-    div.innerHTML = 
+
+    div.innerHTML =
         '<span class="msg-role">' + icon + '</span>' +
-        '<div class="msg-bubble">' + 
-        escapeHtml(cleanTextForDisplay(content)) + 
+        '<div class="msg-bubble">' +
+        escapeHtml(cleanTextForDisplay(content)) +
         '</div>';
-    
+
     chatMessages.appendChild(div);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
@@ -606,7 +606,7 @@ function getDoraemonMiniSVG() {
 function escapeHtml(text) {
     if (!text) return '';
     var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-    return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+    return text.toString().replace(/[&<>"']/g, function (m) { return map[m]; });
 }
 
 function stripOrderUpdate(text) {
@@ -641,11 +641,11 @@ function cleanTextForTTS(text) {
 function detectAndSetEmotion(text) {
     var avatar = document.getElementById('doraemonAvatar');
     if (!avatar) return 'neutral';
-    
+
     // Remove all previous emotion classes
-    avatar.classList.remove('emotion-happy', 'emotion-excited', 'emotion-confused', 
+    avatar.classList.remove('emotion-happy', 'emotion-excited', 'emotion-confused',
         'emotion-shy', 'emotion-frustrated', 'emotion-thinking', 'emotion-sad', 'emotion-scared');
-    
+
     var emotion = 'neutral';
     // Check for explicit emotion tags
     var emotionMatch = text.match(/\[(happy|excited|confused|shy|frustrated|thinking|sad|angry|scared)\]/i);
@@ -661,7 +661,7 @@ function detectAndSetEmotion(text) {
         else if (lowerText.match(/exciting|wow|best|amazing|special/)) emotion = 'excited';
         else if (lowerText.match(/sochta|think|let me|ruko|dekhta/)) emotion = 'thinking';
     }
-    
+
     if (emotion !== 'neutral') {
         avatar.setAttribute('data-emotion', emotion);
         avatar.classList.add('emotion-' + emotion);
@@ -677,11 +677,11 @@ function playActionSFX(text) {
     // Detect action markers like *4D pocket mein haath daalta hai*
     var actions = text.match(/\*([^*]+)\*/g);
     if (!actions || actions.length === 0) return;
-    
-    actions.forEach(function(action) {
+
+    actions.forEach(function (action) {
         var actionText = action.replace(/\*/g, '').toLowerCase();
         var ctx = new (window.AudioContext || window.webkitAudioContext)();
-        
+
         if (actionText.match(/4d pocket|pocket se|haath daalta/)) {
             // Magical gadget pull sound — ascending sparkle
             playSparkleSound(ctx);
@@ -697,7 +697,7 @@ function playActionSFX(text) {
 
 function playSparkleSound(ctx) {
     var notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-    notes.forEach(function(freq, i) {
+    notes.forEach(function (freq, i) {
         var osc = ctx.createOscillator();
         var gain = ctx.createGain();
         osc.type = 'sine';
@@ -712,7 +712,7 @@ function playSparkleSound(ctx) {
 
 function playRevealJingle(ctx) {
     var notes = [392, 523.25, 659.25, 783.99]; // G4, C5, E5, G5
-    notes.forEach(function(freq, i) {
+    notes.forEach(function (freq, i) {
         var osc = ctx.createOscillator();
         var gain = ctx.createGain();
         osc.type = 'triangle';
@@ -791,7 +791,7 @@ async function corsFetch(bodyObj) {
                 body: JSON.stringify(bodyObj)
             });
             if (directResp.ok) return directResp;
-        } catch(e) {
+        } catch (e) {
             console.warn('[corsFetch] Direct fetch failed, trying proxies...', e.message);
         }
     }
@@ -835,9 +835,9 @@ async function callNvidiaAPIFallback(messages, onDone) {
         response = await corsFetch({
             model: NVIDIA_MODEL,
             messages: messages,
-            temperature: 0.2,
-            top_p: 0.7,
-            max_tokens: 1024,
+            temperature: 1,
+            top_p: 0.95,
+            max_tokens: 4096,
             stream: false
         });
     } catch (netErr) {
@@ -849,7 +849,7 @@ async function callNvidiaAPIFallback(messages, onDone) {
 
     if (!response.ok) {
         var errBody = '';
-        try { errBody = await response.text(); } catch(e) {}
+        try { errBody = await response.text(); } catch (e) { }
         console.error('[NVIDIA fallback] HTTP ' + response.status, errBody);
         appendBotMessage('⚠️ AI error (' + response.status + '): ' + (errBody.slice(0, 120) || 'Unknown error'));
         if (onDone) onDone('');
@@ -857,7 +857,7 @@ async function callNvidiaAPIFallback(messages, onDone) {
     }
 
     var data;
-    try { data = await response.json(); } catch(e) {
+    try { data = await response.json(); } catch (e) {
         appendBotMessage('⚠️ Could not parse AI response.');
         if (onDone) onDone('');
         return '';
@@ -878,9 +878,9 @@ async function callNvidiaAPIStream(messages, onDone) {
         response = await corsFetch({
             model: NVIDIA_MODEL,
             messages: messages,
-            temperature: 0.2,
-            top_p: 0.7,
-            max_tokens: 1024,
+            temperature: 1,
+            top_p: 0.95,
+            max_tokens: 4096,
             stream: true
         });
     } catch (networkErr) {
@@ -891,7 +891,7 @@ async function callNvidiaAPIStream(messages, onDone) {
 
     if (!response.ok) {
         var errText = '';
-        try { errText = await response.text(); } catch(e) {}
+        try { errText = await response.text(); } catch (e) { }
         console.error('[NVIDIA stream] HTTP ' + response.status, errText);
         appendBotMessage('⚠️ AI error (' + response.status + '): ' + (errText.slice(0, 120) || 'Unknown'));
         if (onDone) onDone('');
@@ -992,7 +992,7 @@ function sendMessage(text) {
     var cfg = characterConfig[state.character];
     var userName = state.user ? state.user.name : 'Guest';
     var userPrefs = (state.user && state.user.preferences) ? state.user.preferences.join(', ') : 'No specific preferences';
-    
+
     // Build order-placed context
     var orderPlacedContext = '';
     if (state.orderId) {
@@ -1201,7 +1201,7 @@ function sendMessage(text) {
         if (shouldAutoConfirm && state.aiOrderItems.length > 0) {
             console.log('[ORDER_CONFIRM] Auto-placing order...');
             // Small delay so the user sees the summary before it's placed
-            setTimeout(function() {
+            setTimeout(function () {
                 confirmAIOrder();
                 showToast('Order placed successfully! Kitchen has been notified. 🎉', 'success');
             }, 1500);
@@ -1209,7 +1209,7 @@ function sendMessage(text) {
 
         // Detect emotion and set avatar expression
         detectAndSetEmotion(fullText);
-        
+
         // Play action sound effects for *actions*
         playActionSFX(fullText);
 
@@ -1290,7 +1290,7 @@ function pickVoiceForCharacter(prefs) {
     var wantMale = prefs.indexOf('male') !== -1;
 
     // Preference order: Google voices > Microsoft voices > others (Google sounds most natural)
-    var sorted = cachedVoices.slice().sort(function(a, b) {
+    var sorted = cachedVoices.slice().sort(function (a, b) {
         var aGoogle = a.name.toLowerCase().indexOf('google') !== -1 ? 0 : 1;
         var bGoogle = b.name.toLowerCase().indexOf('google') !== -1 ? 0 : 1;
         return aGoogle - bGoogle;
@@ -1379,7 +1379,7 @@ async function speakWithElevenLabs(text) {
 
         if (!response.ok) {
             var errText = '';
-            try { errText = await response.text(); } catch(e) {}
+            try { errText = await response.text(); } catch (e) { }
             console.error('[ElevenLabs] HTTP ' + response.status, errText);
             // Fall back to browser speech
             setAvatarTalking(false);
@@ -1396,19 +1396,19 @@ async function speakWithElevenLabs(text) {
         var audio = new Audio(audioUrl);
         currentAudio = audio;
 
-        audio.onplay = function() {
+        audio.onplay = function () {
             console.log('[ElevenLabs] Audio playing!');
             setAvatarTalking(true);
         };
 
-        audio.onended = function() {
+        audio.onended = function () {
             console.log('[ElevenLabs] Audio ended.');
             setAvatarTalking(false);
             currentAudio = null;
             URL.revokeObjectURL(audioUrl);
         };
 
-        audio.onerror = function(e) {
+        audio.onerror = function (e) {
             console.error('[ElevenLabs] Audio playback error:', e);
             setAvatarTalking(false);
             currentAudio = null;
@@ -1416,7 +1416,7 @@ async function speakWithElevenLabs(text) {
             speakWithBrowserTTS(text);
         };
 
-        audio.play().catch(function(e) {
+        audio.play().catch(function (e) {
             console.warn('[ElevenLabs] Autoplay blocked:', e.message);
             setAvatarTalking(false);
             // Fallback to browser TTS
@@ -1460,9 +1460,9 @@ function speakWithBrowserTTS(text) {
         utterance.lang = voice.lang || 'en-IN';
     }
 
-    utterance.onstart = function() { setAvatarTalking(true); };
-    utterance.onend = function() { setAvatarTalking(false); };
-    utterance.onerror = function() { setAvatarTalking(false); };
+    utterance.onstart = function () { setAvatarTalking(true); };
+    utterance.onend = function () { setAvatarTalking(false); };
+    utterance.onerror = function () { setAvatarTalking(false); };
 
     window.speechSynthesis.speak(utterance);
 }
@@ -1566,7 +1566,7 @@ async function confirmAIOrder() {
     // Show status buttons
     var statusBtn = document.getElementById('statusToggleBtn');
     if (statusBtn) statusBtn.style.display = 'inline-block';
-    
+
     var activeBar = document.getElementById('activeOrderBar');
     if (activeBar) activeBar.style.display = 'flex';
 
@@ -1818,11 +1818,11 @@ async function placeManualOrder() {
     saveSession();
 
     closeCart();
-    
+
     // Return them to menu
     document.getElementById('mode-manual').style.display = 'block';
     document.getElementById('mode-ai').style.display = 'none';
-    document.querySelectorAll('.mode-tab').forEach(function(t) {
+    document.querySelectorAll('.mode-tab').forEach(function (t) {
         t.classList.toggle('active', t.getAttribute('data-mode') === 'manual');
     });
 
@@ -1979,7 +1979,7 @@ function resetForNextCustomer() {
     state.chatHistory = [];
     state.orderId = null;
     state.selectedRating = 0;
-    
+
     // Auto logout feature
     state.user = null;
 
@@ -2016,7 +2016,7 @@ function resetForNextCustomer() {
 
     document.getElementById('mainApp').style.display = 'none';
     document.getElementById('welcomeScreen').style.display = 'flex';
-    
+
     // Reset login form fields for next customer
     var phoneInput = document.getElementById('loginPhone');
     if (phoneInput) phoneInput.value = '';
@@ -2029,7 +2029,7 @@ function resetForNextCustomer() {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Login to Order';
     }
-    
+
     // Re-check auth to show overlay
     checkAuthStatus();
 }

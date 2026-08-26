@@ -254,7 +254,7 @@ echo  Opening browser in 3 seconds...
 echo.
 
 :: Open browser after 3 seconds (in background)
-start "" cmd /c "timeout /t 3 /nobreak >nul && start http://localhost:3000/"
+start "" cmd /c "timeout /t 3 /nobreak >nul && start http://localhost:3000/customer/"
 
 echo  +================================================================+
 echo  ^|              SERVER IS NOW RUNNING                             ^|
