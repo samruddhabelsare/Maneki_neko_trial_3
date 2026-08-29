@@ -11,8 +11,11 @@ window.supabaseClient = window.supabase.createClient(
 console.log('Maneki Neko — Supabase Helper — v2.1.0-manual-upsert loaded');
 
 // ── Menu ──────────────────────────────────────────────────────────────────────
-window.getMenu = async () =>
-    await window.supabaseClient.from('menu_items').select('*').order('category', { ascending: true });
+window.getMenu = async (restaurantId) => {
+    let query = window.supabaseClient.from('menu_items').select('*');
+    if (restaurantId) query = query.eq('restaurant_id', restaurantId);
+    return await query.order('category', { ascending: true });
+};
 
 // ── Orders ────────────────────────────────────────────────────────────────────
 window.getOrders = async (status) =>

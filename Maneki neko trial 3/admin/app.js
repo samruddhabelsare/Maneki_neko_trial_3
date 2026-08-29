@@ -14,14 +14,15 @@ document.addEventListener('DOMContentLoaded', () => {
         currentMenuFilter: 'all',
         currentFeedbackFilter: 'all',
         dateRange: 'all', // all, 1d, 7d, 1m, custom
-        customRange: { start: null, end: null }
+        customRange: { start: null, end: null },
+        restaurantId: null   // set after auth
     };
 
     // ── loadCategories() — standalone helper ────────────────────────────────
-    async function loadCategories() {
-        const { data, error } = await window.supabaseClient
-            .from('menu_items')
-            .select('category');
+    async function loadCategories(restaurantId) {
+        let query = window.supabaseClient.from('menu_items').select('category');
+        if (restaurantId) query = query.eq('restaurant_id', restaurantId);
+        const { data, error } = await query;
         if (error || !data) return [];
         return [...new Set(data.map(item => item.category))].filter(Boolean).sort();
     }
@@ -46,6 +47,22 @@ document.addEventListener('DOMContentLoaded', () => {
         // ── Init ──────────────────────────────────────────────────────────
         async init() {
             console.log('🐱 Maneki Neko Admin OS Loaded');
+
+            // ── Auth guard: admin role only ────────────────────────────
+            const session = window.RestaurantAuth.requireAuth(['admin']);
+            if (!session) return; // redirecting
+
+            // Show restaurant name in sidebar
+            const nameEl = document.getElementById('sidebarRestaurantName');
+            if (nameEl) nameEl.textContent = session.restaurantName;
+
+            // Store restaurantId for use in queries
+            state.restaurantId = session.restaurantId;
+
+            // Logout button
+            document.getElementById('logoutBtn')
+                ?.addEventListener('click', () => window.RestaurantAuth.logout());
+
             this.bindStaticEvents();
             this.showSection('dashboard');
         },
@@ -215,9 +232,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // DASHBOARD
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         async loadDashboard() {
+            const rid = state.restaurantId;
             const [ordersRes, botsRes, feedbackRes] = await Promise.all([
-                this._getDateQuery(window.supabaseClient.from('orders').select('*')).order('created_at', { ascending: false }),
-                window.getBots(),
+                this._getDateQuery(window.supabaseClient.from('orders').select('*').eq('restaurant_id', rid)).order('created_at', { ascending: false }),
+                window.supabaseClient.from('bots').select('*').eq('restaurant_id', rid).order('table_number', { ascending: true }),
                 this._getDateQuery(window.supabaseClient.from('feedback').select('*')).order('created_at', { ascending: false })
             ]);
 
@@ -290,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // MENU MANAGER
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         async loadMenu() {
-            const categories = await loadCategories();
+            const categories = await loadCategories(state.restaurantId);
 
             // ── Rebuild category filter tabs dynamically ───────────────────
             const filterContainer = document.getElementById('menuFilters');
@@ -339,7 +357,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // ── Fetch and render menu items ───────────────────────────────
-            const { data } = await window.getMenu();
+            const { data } = await window.supabaseClient
+                .from('menu_items')
+                .select('*')
+                .eq('restaurant_id', state.restaurantId)
+                .order('category', { ascending: true });
             state.menu = data || [];
             state.currentMenuFilter = 'all';
             this.renderMenuTable('all');
@@ -511,7 +533,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // ORDERS
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         async loadOrdersPage() {
-            const { data } = await this._getDateQuery(window.supabaseClient.from('orders').select('*')).order('created_at', { ascending: false });
+            const { data } = await this._getDateQuery(window.supabaseClient.from('orders').select('*').eq('restaurant_id', state.restaurantId)).order('created_at', { ascending: false });
             state.orders = data || [];
             this.renderOrders('all');
         },
@@ -575,7 +597,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // CUSTOMERS
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         async loadCustomersPage() {
-            const { data } = await window.getCustomers();
+            const { data } = await window.supabaseClient
+                .from('customers')
+                .select('*')
+                .eq('restaurant_id', state.restaurantId)
+                .order('visit_count', { ascending: false });
             state.customers = data || [];
             this.renderCustomers('');
         },
@@ -669,8 +695,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // ANALYTICS
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         async loadAnalyticsPage() {
+            const rid = state.restaurantId;
             const [ordersRes, feedbackRes] = await Promise.all([
-                this._getDateQuery(window.supabaseClient.from('orders').select('*')).order('created_at', { ascending: false }),
+                this._getDateQuery(window.supabaseClient.from('orders').select('*').eq('restaurant_id', rid)).order('created_at', { ascending: false }),
                 this._getDateQuery(window.supabaseClient.from('feedback').select('*')).order('created_at', { ascending: false })
             ]);
             const orders   = ordersRes?.data   || [];

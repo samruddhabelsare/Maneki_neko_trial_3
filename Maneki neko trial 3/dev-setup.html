@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maneki Neko | Dev Setup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./shared/theme.css">
+<style>
+body { min-height:100vh; padding:2rem 1rem; }
+.dev-header { text-align:center; margin-bottom:2.5rem; }
+.dev-badge { display:inline-block; background:rgba(239,68,68,0.12); color:#f87171; border:1px solid rgba(239,68,68,0.25); border-radius:2rem; padding:.35rem 1rem; font-size:.75rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; margin-bottom:1rem; }
+.dev-title { font-size:2.2rem; font-weight:800; letter-spacing:-.02em; }
+.dev-subtitle { color:var(--text-secondary); margin-top:.5rem; font-size:.95rem; }
+.dev-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; max-width:1100px; margin:0 auto; }
+@media(max-width:768px){ .dev-grid { grid-template-columns:1fr; } }
+.panel { background:var(--glass-bg); backdrop-filter:var(--glass-blur); border:1px solid var(--glass-border); border-radius:var(--radius-xl); padding:1.75rem; }
+.panel-title { font-size:1.1rem; font-weight:800; margin-bottom:1.25rem; display:flex; align-items:center; gap:.5rem; }
+.form-group { margin-bottom:1rem; }
+.form-label { display:block; font-size:.78rem; font-weight:600; color:var(--text-secondary); margin-bottom:.4rem; text-transform:uppercase; letter-spacing:.05em; }
+.form-input, .form-select { width:100%; background:var(--bg-surface-variant); border:1px solid var(--border); color:var(--text-primary); border-radius:var(--radius-md); padding:.75rem 1rem; font-family:var(--font-sans); font-size:.95rem; outline:none; transition:border-color .15s; box-sizing:border-box; }
+.form-input:focus, .form-select:focus { border-color:rgba(99,102,241,.5); box-shadow:0 0 0 3px var(--primary-glow); }
+.btn { padding:.7rem 1.25rem; border-radius:var(--radius-md); font-weight:700; font-size:.875rem; cursor:pointer; border:none; transition:all .15s; width:100%; margin-top:.5rem; }
+.btn-primary { background:linear-gradient(135deg,var(--primary-raw),var(--primary-dim)); color:#fff; }
+.btn-primary:hover { box-shadow:var(--shadow-glow); transform:translateY(-1px); }
+.btn-danger { background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger-border); }
+.btn-danger:hover { background:rgba(239,68,68,.2); }
+.btn-sm { padding:.4rem .8rem; font-size:.78rem; width:auto; margin-top:0; border-radius:var(--radius-sm); }
+.list-area { margin-top:1.25rem; max-height:420px; overflow-y:auto; }
+.list-item { background:var(--bg-surface-variant); border:1px solid var(--border); border-radius:var(--radius-md); padding:1rem 1.1rem; margin-bottom:.6rem; }
+.list-item-top { display:flex; justify-content:space-between; align-items:flex-start; gap:.5rem; }
+.list-item-name { font-weight:700; font-size:.95rem; }
+.list-item-meta { font-size:.78rem; color:var(--text-muted); margin-top:.2rem; }
+.code-badge { display:inline-block; background:var(--primary-glow); color:var(--primary); border:1px solid rgba(99,102,241,.2); border-radius:.4rem; padding:.15rem .55rem; font-family:var(--font-mono); font-size:.8rem; font-weight:700; letter-spacing:.08em; }
+.role-badge { display:inline-block; padding:.15rem .5rem; border-radius:.3rem; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+.role-admin { background:rgba(99,102,241,.12); color:#a5b4fc; border:1px solid rgba(99,102,241,.2); }
+.role-kds { background:rgba(245,158,11,.12); color:#fbbf24; border:1px solid rgba(245,158,11,.2); }
+.role-bot { background:rgba(16,185,129,.12); color:#34d399; border:1px solid rgba(16,185,129,.2); }
+.msg { padding:.65rem 1rem; border-radius:var(--radius-md); font-size:.85rem; font-weight:600; margin-bottom:1rem; display:none; }
+.msg.success { background:var(--success-bg); color:var(--success); border:1px solid var(--success-border); }
+.msg.error { background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger-border); }
+.empty-state { text-align:center; color:var(--text-dimmed); padding:2rem; font-size:.875rem; }
+/* Gate */
+#devGate { position:fixed; inset:0; background:var(--bg-deep); display:flex; align-items:center; justify-content:center; z-index:100; }
+.gate-card { background:var(--glass-bg); backdrop-filter:var(--glass-blur); border:1px solid var(--glass-border); border-radius:var(--radius-xl); padding:2.5rem; width:100%; max-width:380px; text-align:center; }
+.gate-icon { font-size:3rem; margin-bottom:1rem; }
+.gate-title { font-size:1.4rem; font-weight:800; margin-bottom:.4rem; }
+.gate-sub { color:var(--text-muted); font-size:.875rem; margin-bottom:1.5rem; }
+</style>
+</head>
+<body>
+
+<!-- Dev Password Gate -->
+<div id="devGate">
+  <div class="gate-card">
+    <div class="gate-icon">🛠️</div>
+    <div class="gate-title">Developer Portal</div>
+    <div class="gate-sub">Enter the developer password to continue</div>
+    <div style="font-size:.75rem;color:var(--text-dimmed);margin-bottom:1rem;font-family:var(--font-mono);">Default: <strong style="color:var(--text-muted);">devmode123</strong></div>
+    <div class="msg error" id="gateError">Wrong password. Try again.</div>
+    <div class="form-group">
+      <input type="password" id="devPasswordInput" class="form-input" placeholder="Developer password" autocomplete="off">
+    </div>
+    <button class="btn btn-primary" id="gateBtn">🔓 Enter Portal</button>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div id="devMain" style="display:none; max-width:1100px; margin:0 auto;">
+
+  <div class="dev-header">
+    <div class="dev-badge">⚠️ Developer Only</div>
+    <h1 class="dev-title">🛠️ Maneki Neko Setup Portal</h1>
+    <p class="dev-subtitle">Create restaurants &amp; manage staff login credentials</p>
+  </div>
+
+  <div class="dev-grid">
+
+    <!-- LEFT: Create Restaurant -->
+    <div>
+      <div class="panel" style="margin-bottom:1.5rem;">
+        <div class="panel-title">🏮 Create New Restaurant</div>
+        <div class="msg success" id="restMsg"></div>
+        <div class="form-group">
+          <label class="form-label">Restaurant Name</label>
+          <input type="text" id="restName" class="form-input" placeholder="e.g. Maneki Neko Osaka">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Restaurant Code <small style="color:var(--text-dimmed)">(staff type this at login)</small></label>
+          <input type="text" id="restCode" class="form-input" placeholder="e.g. OSAKA" style="text-transform:uppercase;font-family:var(--font-mono);font-weight:700;letter-spacing:.1em;">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Address (optional)</label>
+          <input type="text" id="restAddress" class="form-input" placeholder="e.g. 5-10 Dotonbori, Osaka">
+        </div>
+        <button class="btn btn-primary" id="createRestBtn">➕ Create Restaurant</button>
+      </div>
+
+      <!-- Restaurant List -->
+      <div class="panel">
+        <div class="panel-title">🏪 All Restaurants</div>
+        <div class="list-area" id="restaurantList">
+          <div class="empty-state">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Create Credential -->
+    <div>
+      <div class="panel" style="margin-bottom:1.5rem;">
+        <div class="panel-title">🔑 Add Staff Login</div>
+        <div class="msg success" id="credMsg"></div>
+        <div class="form-group">
+          <label class="form-label">Restaurant</label>
+          <select id="credRestaurant" class="form-select">
+            <option value="">-- Select Restaurant --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" id="credUsername" class="form-input" placeholder="e.g. admin">
+        </div>
+        <div class="form-group">
+          <label class="form-label">PIN</label>
+          <input type="text" id="credPin" class="form-input" placeholder="e.g. 1234" inputmode="numeric" maxlength="8">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Role / Module</label>
+          <select id="credRole" class="form-select">
+            <option value="admin">📊 Admin Dashboard</option>
+            <option value="kds">🍳 Kitchen Display (KDS)</option>
+            <option value="bot_manager">🤖 Bot Management</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="createCredBtn">➕ Add Login</button>
+      </div>
+
+      <!-- Credentials List -->
+      <div class="panel" style="margin-bottom:1.5rem;">
+        <div class="panel-title">👥 Staff Credentials</div>
+        <div class="form-group" style="margin-bottom:.75rem;">
+          <select id="filterRestaurant" class="form-select">
+            <option value="">-- All Restaurants --</option>
+          </select>
+        </div>
+        <div class="list-area" id="credentialList">
+          <div class="empty-state">Select a restaurant to view credentials</div>
+        </div>
+      </div>
+
+      <!-- Table Management Panel -->
+      <div class="panel">
+        <div class="panel-title">🪑 Manage Restaurant Tables</div>
+        <div class="msg success" id="tableMsg"></div>
+        <div class="form-group">
+          <label class="form-label">Restaurant</label>
+          <select id="tableRestaurant" class="form-select">
+            <option value="">-- Select Restaurant --</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:.5rem;margin-bottom:1rem;">
+          <div style="flex:1;">
+            <label class="form-label">From Table #</label>
+            <input type="number" id="tableFrom" class="form-input" value="1" min="1" max="99">
+          </div>
+          <div style="flex:1;">
+            <label class="form-label">To Table #</label>
+            <input type="number" id="tableTo" class="form-input" value="10" min="1" max="99">
+          </div>
+        </div>
+        <button class="btn btn-primary" id="createTablesBtn">➕ Generate Table Range</button>
+
+        <div class="list-area" id="tablesList" style="margin-top:1rem;max-height:220px;">
+          <div class="empty-state">Select a restaurant to view &amp; manage tables</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./shared/supabase.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+// ── Dev password ─────────────────────────────────────────────────────────
+const DEV_PASSWORD = 'devmode123';
+
+// ── SHA-256 helper ────────────────────────────────────────────────────────
+async function sha256(text) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// ── Gate logic ────────────────────────────────────────────────────────────
+const gate       = document.getElementById('devGate');
+const gateBtn    = document.getElementById('gateBtn');
+const gateError  = document.getElementById('gateError');
+const devPwdInput = document.getElementById('devPasswordInput');
+
+function tryUnlock() {
+    if (devPwdInput.value === DEV_PASSWORD) {
+        gate.style.display = 'none';
+        document.getElementById('devMain').style.display = 'block';
+        loadAll();
+    } else {
+        gateError.style.display = 'block';
+        devPwdInput.value = '';
+        devPwdInput.focus();
+    }
+}
+gateBtn.addEventListener('click', tryUnlock);
+devPwdInput.addEventListener('keydown', e => { if(e.key === 'Enter') tryUnlock(); });
+devPwdInput.focus();
+
+// Guard: ensure supabaseClient is available before queries
+function assertClient() {
+    if (!window.supabaseClient) {
+        alert('Supabase client not ready. Please refresh the page.');
+        return false;
+    }
+    return true;
+}
+
+// ── Auto-uppercase restaurant code ────────────────────────────────────────
+document.getElementById('restCode').addEventListener('input', e => {
+    const p = e.target.selectionStart;
+    e.target.value = e.target.value.toUpperCase();
+    e.target.setSelectionRange(p,p);
+});
+
+// ── Flash message helper ──────────────────────────────────────────────────
+function flash(elId, msg, isError = false) {
+    const el = document.getElementById(elId);
+    el.textContent = msg;
+    el.className = `msg ${isError ? 'error' : 'success'}`;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+// ── Load everything ───────────────────────────────────────────────────────
+async function loadAll() {
+    if (!assertClient()) return;
+    await loadRestaurants();
+}
+
+let allRestaurants = [];
+
+async function loadRestaurants() {
+    if (!assertClient()) return;
+    const { data, error } = await window.supabaseClient
+        .from('restaurants')
+        .select('id, name, code, address')
+        .order('name');
+    if (error) {
+        console.error('loadRestaurants error:', error);
+        document.getElementById('restaurantList').innerHTML =
+            `<div class="empty-state" style="color:var(--danger)">DB error: ${error.message}</div>`;
+        return;
+    }
+    allRestaurants = data || [];
+    renderRestaurantList();
+    populateRestaurantDropdowns();
+}
+
+function renderRestaurantList() {
+    const el = document.getElementById('restaurantList');
+    if (!allRestaurants.length) {
+        el.innerHTML = '<div class="empty-state">No restaurants yet. Create one!</div>';
+        return;
+    }
+    el.innerHTML = allRestaurants.map(r => `
+        <div class="list-item">
+            <div class="list-item-top">
+                <div>
+                    <div class="list-item-name">${r.name}</div>
+                    <div class="list-item-meta">
+                        Login Code: <span class="code-badge">${r.code || '<em>no code</em>'}</span>
+                        ${r.address ? '&nbsp;· ' + r.address : ''}
+                    </div>
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="deleteRestaurant('${r.id}','${r.name}')">🗑</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function populateRestaurantDropdowns() {
+    const opts = allRestaurants.map(r =>
+        `<option value="${r.id}">${r.name} (${r.code || 'no code'})</option>`
+    ).join('');
+    document.getElementById('credRestaurant').innerHTML = '<option value="">-- Select Restaurant --</option>' + opts;
+    document.getElementById('filterRestaurant').innerHTML = '<option value="">-- All Restaurants --</option>' + opts;
+    document.getElementById('tableRestaurant').innerHTML = '<option value="">-- Select Restaurant --</option>' + opts;
+}
+
+// ── Table Management ──────────────────────────────────────────────────────
+document.getElementById('tableRestaurant').addEventListener('change', async (e) => {
+    if (e.target.value) await loadDevTables(e.target.value);
+    else renderTablesList([]);
+});
+
+async function loadDevTables(restaurantId) {
+    const { data, error } = await window.supabaseClient
+        .from('restaurant_tables')
+        .select('id, table_number, label, is_active')
+        .eq('restaurant_id', restaurantId)
+        .order('table_number');
+    if (error) { console.error(error); return; }
+    renderTablesList(data || [], restaurantId);
+}
+
+function renderTablesList(tables, restaurantId) {
+    const el = document.getElementById('tablesList');
+    if (!tables.length) {
+        el.innerHTML = '<div class="empty-state">No tables created for this restaurant yet.</div>';
+        return;
+    }
+    el.innerHTML = tables.map(t => `
+        <div class="list-item" style="padding:.6rem .8rem;">
+            <div class="list-item-top">
+                <div>
+                    <span class="code-badge" style="font-size:.9rem;">Table ${t.table_number}</span>
+                    <span style="font-size:.8rem;color:var(--text-muted);margin-left:.4rem;">${t.label || ''}</span>
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="deleteTable('${t.id}','${restaurantId}')">🗑</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+document.getElementById('createTablesBtn').addEventListener('click', async () => {
+    const restaurantId = document.getElementById('tableRestaurant').value;
+    const fromNum = parseInt(document.getElementById('tableFrom').value, 10);
+    const toNum = parseInt(document.getElementById('tableTo').value, 10);
+
+    if (!restaurantId) { flash('tableMsg', '⚠️ Select a restaurant first.', true); return; }
+    if (isNaN(fromNum) || isNaN(toNum) || fromNum < 1 || toNum < fromNum) {
+        flash('tableMsg', '⚠️ Enter a valid table range (e.g. 1 to 10).', true);
+        return;
+    }
+
+    const rows = [];
+    for (let n = fromNum; n <= toNum; n++) {
+        rows.push({ restaurant_id: restaurantId, table_number: n, label: 'Table ' + n });
+    }
+
+    const { error } = await window.supabaseClient.from('restaurant_tables').upsert(rows, { onConflict: 'restaurant_id,table_number' });
+
+    if (error) {
+        flash('tableMsg', '❌ Error: ' + error.message, true);
+        return;
+    }
+
+    flash('tableMsg', `✅ Tables ${fromNum} to ${toNum} created/updated!`);
+    await loadDevTables(restaurantId);
+});
+
+async function deleteTable(id, restaurantId) {
+    const { error } = await window.supabaseClient.from('restaurant_tables').delete().eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    await loadDevTables(restaurantId);
+}
+
+// Make deleteTable available globally for inline onclick
+window.deleteTable = deleteTable;
+
+// ── Create Restaurant ─────────────────────────────────────────────────────
+document.getElementById('createRestBtn').addEventListener('click', async () => {
+    const name    = document.getElementById('restName').value.trim();
+    const code    = document.getElementById('restCode').value.trim().toUpperCase();
+    const address = document.getElementById('restAddress').value.trim();
+
+    if (!name || !code) {
+        flash('restMsg', '⚠️ Name and Code are required.', true);
+        return;
+    }
+    if (!/^[A-Z0-9]{2,20}$/.test(code)) {
+        flash('restMsg', '⚠️ Code must be 2-20 uppercase letters/numbers only.', true);
+        return;
+    }
+
+    const { error } = await window.supabaseClient
+        .from('restaurants')
+        .insert({ name, code, address: address || null });
+
+    if (error) {
+        flash('restMsg', '❌ ' + (error.message.includes('unique') ? `Code "${code}" is already taken.` : error.message), true);
+        return;
+    }
+
+    flash('restMsg', `✅ Restaurant "${name}" created with code ${code}`);
+    document.getElementById('restName').value = '';
+    document.getElementById('restCode').value = '';
+    document.getElementById('restAddress').value = '';
+    await loadRestaurants();
+});
+
+// ── Delete Restaurant ─────────────────────────────────────────────────────
+async function deleteRestaurant(id, name) {
+    if (!confirm(`Delete "${name}" and ALL its staff credentials? This cannot be undone.`)) return;
+    const { error } = await window.supabaseClient.from('restaurants').delete().eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    await loadRestaurants();
+    renderCredentialList([]);
+}
+
+// ── Create Credential ─────────────────────────────────────────────────────
+document.getElementById('createCredBtn').addEventListener('click', async () => {
+    const restaurantId = document.getElementById('credRestaurant').value;
+    const username     = document.getElementById('credUsername').value.trim().toLowerCase();
+    const pin          = document.getElementById('credPin').value.trim();
+    const role         = document.getElementById('credRole').value;
+
+    if (!restaurantId || !username || !pin || !role) {
+        flash('credMsg', '⚠️ All fields are required.', true);
+        return;
+    }
+    if (!/^\d{4,8}$/.test(pin)) {
+        flash('credMsg', '⚠️ PIN must be 4-8 digits.', true);
+        return;
+    }
+
+    const pin_hash = await sha256(pin);
+
+    const { error } = await window.supabaseClient
+        .from('restaurant_credentials')
+        .insert({ restaurant_id: restaurantId, username, pin_hash, role });
+
+    if (error) {
+        flash('credMsg', '❌ ' + (error.message.includes('unique') ? `Username "${username}" already exists in this restaurant.` : error.message), true);
+        return;
+    }
+
+    flash('credMsg', `✅ Login created: ${username} (${role})`);
+    document.getElementById('credUsername').value = '';
+    document.getElementById('credPin').value = '';
+
+    // Refresh list if this restaurant is currently filtered
+    const filterVal = document.getElementById('filterRestaurant').value;
+    if (!filterVal || filterVal === restaurantId) {
+        await loadCredentials(restaurantId);
+    }
+});
+
+// ── Load & Render Credentials ─────────────────────────────────────────────
+document.getElementById('filterRestaurant').addEventListener('change', async (e) => {
+    if (e.target.value) await loadCredentials(e.target.value);
+    else renderCredentialList([]);
+});
+
+async function loadCredentials(restaurantId) {
+    const { data, error } = await window.supabaseClient
+        .from('restaurant_credentials')
+        .select('id, username, role, created_at')
+        .eq('restaurant_id', restaurantId)
+        .order('role');
+    if (error) { console.error(error); return; }
+    renderCredentialList(data || [], restaurantId);
+}
+
+function renderCredentialList(creds, restaurantId) {
+    const el = document.getElementById('credentialList');
+    if (!creds.length) {
+        el.innerHTML = '<div class="empty-state">No credentials found. Add one!</div>';
+        return;
+    }
+    const roleBadge = r => {
+        if (r === 'admin')       return `<span class="role-badge role-admin">Admin</span>`;
+        if (r === 'kds')         return `<span class="role-badge role-kds">Kitchen</span>`;
+        if (r === 'bot_manager') return `<span class="role-badge role-bot">Bots</span>`;
+        return r;
+    };
+    el.innerHTML = creds.map(c => `
+        <div class="list-item">
+            <div class="list-item-top">
+                <div>
+                    <div class="list-item-name" style="font-family:var(--font-mono);">${c.username}</div>
+                    <div class="list-item-meta">${roleBadge(c.role)}&nbsp; Added: ${new Date(c.created_at).toLocaleDateString()}</div>
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="deleteCredential('${c.id}','${c.username}','${restaurantId}')">🗑</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function deleteCredential(id, username, restaurantId) {
+    if (!confirm(`Remove login for "${username}"?`)) return;
+    const { error } = await window.supabaseClient.from('restaurant_credentials').delete().eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    await loadCredentials(restaurantId);
+}
+
+}); // end DOMContentLoaded
+</script>
+</body>
+</html>

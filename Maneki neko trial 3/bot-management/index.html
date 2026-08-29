@@ -610,7 +610,7 @@
     <nav class="bot-navbar">
         <div class="navbar-brand">
             <span>🤖</span>
-            <span class="navbar-brand-text">Bot Control Center</span>
+            <span class="navbar-brand-text" id="botNavRestaurantName">Bot Control Center</span>
         </div>
         <div class="navbar-center">
             <span id="liveClock">00:00:00</span>
@@ -618,6 +618,7 @@
         <div class="navbar-actions">
             <span id="botCountDisplay">Loading...</span>
             <span id="alertBell" title="Bot Alerts">🔔</span>
+            <button id="botLogoutBtn" style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border);border-radius:var(--radius-pill);padding:0.375rem 0.875rem;font-weight:700;font-size:0.8rem;cursor:pointer;transition:all var(--duration-fast) var(--ease-out);">🚪 Logout</button>
         </div>
     </nav>
 
@@ -773,6 +774,7 @@
     <!-- ── Scripts ──────────────────────────────────── -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../shared/supabase.js"></script>
+    <script src="../shared/auth.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

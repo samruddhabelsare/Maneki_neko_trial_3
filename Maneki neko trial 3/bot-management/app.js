@@ -12,13 +12,16 @@ document.addEventListener('DOMContentLoaded', () => {
         healthInterval: null
     };
 
+    // ── Restaurant context (set after auth) ────────────────────────────────
+    let restaurantId = null;
+
     // ── Character definitions ──────────────────────────────────────────────
     const CHARACTERS = [
-        { value: 'Naruto',   label: 'Naruto 🍥',   css: 'char-naruto' },
-        { value: 'Goku',     label: 'Goku 🐉',     css: 'char-goku' },
-        { value: 'Doraemon', label: 'Doraemon 🔔', css: 'char-doraemon' },
-        { value: 'Shinchan', label: 'Shinchan 😜', css: 'char-shinchan' },
-        { value: 'Luffy',    label: 'Luffy ☠️',    css: 'char-luffy' }
+        { value: 'Naruto',   label: 'Naruto \uD83C\uDF65',   css: 'char-naruto' },
+        { value: 'Goku',     label: 'Goku \uD83D\uDC09',     css: 'char-goku' },
+        { value: 'Doraemon', label: 'Doraemon \uD83D\uDD14', css: 'char-doraemon' },
+        { value: 'Shinchan', label: 'Shinchan \uD83D\uDE1C', css: 'char-shinchan' },
+        { value: 'Luffy',    label: 'Luffy \u2620\uFE0F',    css: 'char-luffy' }
     ];
 
     const CHARACTER_OPTIONS_HTML = CHARACTERS.map(c =>
@@ -33,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getCharLabel(mode) {
         const c = CHARACTERS.find(c => c.value === mode);
-        return c ? c.label : (mode || '—');
+        return c ? c.label : (mode || '\u2014');
     }
 
     function getBatteryColor(pct) {
@@ -50,12 +53,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function formatTime(iso) {
-        if (!iso) return '—';
+        if (!iso) return '\u2014';
         return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
     function formatDateTime(iso) {
-        if (!iso) return '—';
+        if (!iso) return '\u2014';
         return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
 
@@ -99,13 +102,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (tabId === 'character-control') renderCharacterTable();
         if (tabId === 'health-monitor')    renderHealthTable();
-        if (tabId !== 'health-monitor')    {} // health auto-refresh runs globally always
     }
 
-    // ── Load Bots ──────────────────────────────────────────────────────────
+    // ── Load Bots — filtered by restaurant ────────────────────────────────
     async function loadBots() {
-        const { data, error } = await window.getBots();
-        if (error) { console.error('getBots error:', error.message); return; }
+        if (!restaurantId) return;
+        const { data, error } = await window.supabaseClient
+            .from('bots')
+            .select('*')
+            .eq('restaurant_id', restaurantId)
+            .order('table_number', { ascending: true });
+        if (error) { console.error('loadBots error:', error.message); return; }
         state.bots = data || [];
         renderBotCards();
         updateBotCount();
@@ -136,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
         grid.innerHTML = '';
 
         if (state.bots.length === 0) {
-            grid.innerHTML = `<div style="color:rgba(255,255,255,0.3);padding:3rem;text-align:center;grid-column:1/-1">No bots found 🤖</div>`;
+            grid.innerHTML = `<div style="color:rgba(255,255,255,0.3);padding:3rem;text-align:center;grid-column:1/-1">No bots found \uD83E\uDD16</div>`;
             return;
         }
 
@@ -156,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const charLabel   = getCharLabel(bot.character_mode);
         const charCss     = getCharCss(bot.character_mode);
         const tempHot     = temp > 70;
-        const lastSeen    = formatTime(bot.created_at); // use created_at as fallback
+        const lastSeen    = formatTime(bot.created_at);
 
         card.className   = `bot-card ${cardStatus}`;
         card.id          = `botcard-${bot.id}`;
@@ -172,22 +179,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="status-dot ${dotClass}"></span>
             </div>
             <div class="character-badge ${charCss}">${charLabel}</div>
-            <div class="bot-table">Table ${bot.table_number || '—'}</div>
+            <div class="bot-table">Table ${bot.table_number || '\u2014'}</div>
             <div class="battery-bar-wrap">
                 <div class="battery-bar-track">
                     <div class="battery-bar" style="width:${battery}%; background:${batColor};"></div>
                 </div>
                 <span>${battery}%</span>
             </div>
-            <div class="temp-reading ${tempHot ? 'temp-hot' : ''}">🌡️ ${temp}°C${tempHot ? ' ⚠️' : ''}</div>
+            <div class="temp-reading ${tempHot ? 'temp-hot' : ''}">\uD83C\uDF21\uFE0F ${temp}\u00B0C${tempHot ? ' \u26A0\uFE0F' : ''}</div>
             <div class="last-seen">Last seen: ${lastSeen}</div>
             <div class="bot-actions">
                 <select class="character-select" data-bot-id="${bot.id}">
                     ${charOpts}
                 </select>
                 <div class="bot-btn-row">
-                    <button class="btn-restart" data-bot-id="${bot.id}">🔄 Restart</button>
-                    <button class="btn-view-logs" data-bot-id="${bot.id}" data-bot-name="${bot.name}">📋 Logs</button>
+                    <button class="btn-restart" data-bot-id="${bot.id}">\uD83D\uDD04 Restart</button>
+                    <button class="btn-view-logs" data-bot-id="${bot.id}" data-bot-name="${bot.name}">\uD83D\uDCCB Logs</button>
                 </div>
             </div>
         `;
@@ -203,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.querySelector('.btn-restart').addEventListener('click', async () => {
             const btn = card.querySelector('.btn-restart');
             btn.classList.add('restarting');
-            btn.textContent = '⏳ Restarting...';
+            btn.textContent = '\u23F3 Restarting...';
             await window.updateBotStatus(bot.id, { status: 'offline' });
             await loadBots();
             setTimeout(async () => {
@@ -239,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const feed = document.getElementById('logFeed');
         if (!feed) return;
         if (!botId) {
-            feed.innerHTML = `<div class="log-placeholder">Select a bot to view logs 📋</div>`;
+            feed.innerHTML = `<div class="log-placeholder">Select a bot to view logs \uD83D\uDCCB</div>`;
             return;
         }
 
@@ -255,13 +262,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const logs = (data || []).reverse(); // show oldest first
 
         if (logs.length === 0) {
-            feed.innerHTML = `<div class="log-placeholder">No logs yet for this bot 🤖</div>`;
+            feed.innerHTML = `<div class="log-placeholder">No logs yet for this bot \uD83E\uDD16</div>`;
             return;
         }
 
         feed.innerHTML = logs.map(log => {
             const role    = log.role || 'user';
-            const prefix  = role === 'bot' ? '🐱 ' : '';
+            const prefix  = role === 'bot' ? '\uD83D\uDC31 ' : '';
             return `
                 <div class="log-entry ${role}">
                     <span class="log-time">${formatDateTime(log.created_at)}</span>
@@ -311,8 +318,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const charLabel = getCharLabel(bot.character_mode);
 
             row.innerHTML = `
-                <td><strong>${bot.name || '—'}</strong></td>
-                <td>T-${bot.table_number || '—'}</td>
+                <td><strong>${bot.name || '\u2014'}</strong></td>
+                <td>T-${bot.table_number || '\u2014'}</td>
                 <td><span class="character-badge ${charCss}" style="font-size:0.78rem;">${charLabel}</span></td>
                 <td><select class="char-row-select">${charOpts}</select></td>
                 <td><button class="btn-row-apply">Apply</button></td>
@@ -321,11 +328,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const applyBtn = row.querySelector('.btn-row-apply');
             applyBtn.addEventListener('click', async () => {
                 const newMode = row.querySelector('.char-row-select').value;
-                applyBtn.textContent = '⏳...';
+                applyBtn.textContent = '\u23F3...';
                 applyBtn.disabled = true;
                 await window.updateBotStatus(bot.id, { character_mode: newMode });
                 applyBtn.classList.add('success');
-                applyBtn.textContent = '✅ Done';
+                applyBtn.textContent = '\u2705 Done';
                 applyBtn.disabled = false;
                 await loadBots();
                 setTimeout(() => {
@@ -341,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function applyCharacterToAll(mode) {
         const msgEl = document.getElementById('applyAllMsg');
         const btn   = document.getElementById('applyAllBtn');
-        if (btn) { btn.disabled = true; btn.textContent = '⏳ Applying...'; }
+        if (btn) { btn.disabled = true; btn.textContent = '\u23F3 Applying...'; }
 
         await Promise.all(state.bots.map(b =>
             window.updateBotStatus(b.id, { character_mode: mode })
@@ -352,10 +359,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (msgEl) {
             msgEl.style.display = 'block';
-            msgEl.textContent   = `✅ Applied ${getCharLabel(mode)} to all ${state.bots.length} bots!`;
+            msgEl.textContent   = `\u2705 Applied ${getCharLabel(mode)} to all ${state.bots.length} bots!`;
             setTimeout(() => { msgEl.style.display = 'none'; }, 3000);
         }
-        if (btn) { btn.disabled = false; btn.textContent = '🎭 Apply to All'; }
+        if (btn) { btn.disabled = false; btn.textContent = '\uD83C\uDFAD Apply to All'; }
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -391,13 +398,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (crit) row.classList.add('health-critical');
 
             row.innerHTML = `
-                <td><strong>${bot.name || '—'}</strong></td>
-                <td>T-${bot.table_number || '—'}</td>
+                <td><strong>${bot.name || '\u2014'}</strong></td>
+                <td>T-${bot.table_number || '\u2014'}</td>
                 <td><span class="badge-status ${bot.status || 'offline'}">${bot.status || 'unknown'}</span></td>
-                <td><span class="${battery < 20 ? 'text-danger' : ''}">🔋${battery}%</span></td>
-                <td><span class="${temp > 70 ? 'text-danger' : temp > 55 ? 'text-warn' : ''}">🌡️${temp}°C</span></td>
+                <td><span class="${battery < 20 ? 'text-danger' : ''}">\uD83D\uDD0B${battery}%</span></td>
+                <td><span class="${temp > 70 ? 'text-danger' : temp > 55 ? 'text-warn' : ''}">\uD83C\uDF21\uFE0F${temp}\u00B0C</span></td>
                 <td>${formatTime(bot.created_at)}</td>
-                <td>${crit ? '<span class="text-danger">⚠️ Critical</span>' : '<span style="color:var(--success)">✅ Normal</span>'}</td>
+                <td>${crit ? '<span class="text-danger">\u26A0\uFE0F Critical</span>' : '<span style="color:var(--success)">\u2705 Normal</span>'}</td>
             `;
             body.appendChild(row);
         });
@@ -438,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Live Logs — auto-refresh toggle
         document.getElementById('autoRefreshToggle')?.addEventListener('click', (e) => {
             state.autoRefresh = !state.autoRefresh;
-            e.target.textContent = state.autoRefresh ? '⏱ Auto ON' : '⏱ Auto OFF';
+            e.target.textContent = state.autoRefresh ? '\u23F1 Auto ON' : '\u23F1 Auto OFF';
             e.target.classList.toggle('active-ctrl', state.autoRefresh);
         });
 
@@ -449,9 +456,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ─── Init ────────────────────────────────────────────────────────────
+    // ── Init ───────────────────────────────────────────────────────────────
     async function init() {
-        console.log('🐱 Bot Control Center Loaded');
+        console.log('\uD83D\uDC31 Bot Control Center Loaded');
+
+        // ── Auth guard: bot_manager role only ─────────────────────────────
+        const session = window.RestaurantAuth.requireAuth(['bot_manager']);
+        if (!session) return; // redirecting — RestaurantAuth handles navigation
+
+        // Store restaurant context
+        restaurantId = session.restaurantId;
+
+        // Update navbar brand with restaurant name
+        const brandEl = document.getElementById('botNavRestaurantName');
+        if (brandEl) brandEl.textContent = `Bot Control \u2014 ${session.restaurantName}`;
+
+        // Wire logout button
+        document.getElementById('botLogoutBtn')
+            ?.addEventListener('click', () => window.RestaurantAuth.logout());
+
         startClock();
         bindEvents();
         await loadBots();

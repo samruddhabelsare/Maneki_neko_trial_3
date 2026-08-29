@@ -434,8 +434,9 @@
             <span id="liveClock">00:00:00</span>
         </div>
         <div class="kds-status">
-            <span class="kds-status-text">Maneki Neko Tokyo</span>
+            <span class="kds-status-text" id="kdsRestaurantName">Maneki Neko</span>
             <div class="kds-status-dot"></div>
+            <button id="kdsLogoutBtn" style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border);border-radius:var(--radius-pill);padding:0.35rem 0.85rem;font-weight:700;font-size:0.75rem;cursor:pointer;display:none;" class="kds-status-text">🚪 Logout</button>
         </div>
     </header>
 
@@ -491,6 +492,7 @@
     <!-- ── Scripts ──────────────────────────────────── -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../shared/supabase.js"></script>
+    <script src="../shared/auth.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

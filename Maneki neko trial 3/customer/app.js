@@ -15,7 +15,7 @@ const CORS_PROXIES = [
 ];
 // Will be set to the working proxy index after first successful call
 var workingProxyIndex = 0;
-const RESTAURANT_ID = 'aaaaaaaa-0000-0000-0000-000000000001';
+const RESTAURANT_ID = 'aaaaaaaa-0000-0000-0000-000000000001'; // fallback; overridden by CustomerAuth session
 
 // ── TOAST NOTIFICATIONS ──────────────────────────────────────────────────────
 function showToast(message, type = 'info') {
@@ -191,13 +191,31 @@ const characterConfig = {
 // ——— DOM CONTENT LOADED ————————————————————————————————————————————————————————
 document.addEventListener('DOMContentLoaded', function () {
 
-    // --- URL Params ---
+    // --- Customer Session (multi-tenant) ---
+    var customerSession = null;
+    if (window.CustomerAuth) {
+        customerSession = window.CustomerAuth.getSession();
+        if (customerSession) {
+            // Override restaurant and table from session
+            window._activeRestaurantId = customerSession.restaurantId;
+            if (customerSession.tableNumber) state.table = customerSession.tableNumber;
+        } else {
+            // No session — redirect to customer login
+            window.location.href = '../customer-login.html';
+            return;
+        }
+    } else {
+        // customer-auth.js not loaded, use fallback restaurant
+        window._activeRestaurantId = RESTAURANT_ID;
+    }
+
+    // --- URL Params (override session table if explicitly set) ---
     var params = new URLSearchParams(window.location.search);
     var tableParam = params.get('table');
     var botParam = params.get('bot');
     var charParam = params.get('character');
 
-    if (tableParam) state.table = parseInt(tableParam, 10) || 1;
+    if (tableParam) state.table = parseInt(tableParam, 10) || state.table;
     if (botParam) state.botId = botParam;
     if (charParam && characterConfig[charParam]) state.character = charParam;
 
@@ -217,7 +235,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- Fetch menu from Supabase (graceful fallback) ---
     if (typeof window.getMenu === 'function') {
-        window.getMenu().then(function (res) {
+        window.getMenu(window._activeRestaurantId || RESTAURANT_ID).then(function (res) {
             if (res && res.data) state.menu = res.data;
         }).catch(function (err) {
             console.warn('Menu fetch error:', err);
@@ -309,7 +327,7 @@ async function handleLogin(e) {
                 name,
                 visit_count: 1,
                 preferences: prefs,
-                restaurant_id: RESTAURANT_ID
+                restaurant_id: window._activeRestaurantId || RESTAURANT_ID
             });
             if (upsertError) throw upsertError;
             state.user = created ? (created[0] || created) : null;
@@ -1532,7 +1550,7 @@ async function confirmAIOrder() {
     }, 0);
 
     var orderData = {
-        restaurant_id: RESTAURANT_ID,
+        restaurant_id: window._activeRestaurantId || RESTAURANT_ID,
         table_number: state.table,
         customer_id: state.user ? state.user.id : null,
         customer_phone: state.user ? state.user.phone : null,
@@ -1787,7 +1805,7 @@ async function placeManualOrder() {
     });
 
     var orderData = {
-        restaurant_id: RESTAURANT_ID,
+        restaurant_id: window._activeRestaurantId || RESTAURANT_ID,
         table_number: state.table,
         customer_id: state.user ? state.user.id : null,
         customer_phone: state.user ? state.user.phone : null,

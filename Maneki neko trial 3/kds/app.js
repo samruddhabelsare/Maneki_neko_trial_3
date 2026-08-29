@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
         knownOrderIds: new Set()
     };
 
+    // ── Restaurant context (set after auth) ────────────────────────────────
+    let restaurantId = null;
+
     // ── Constants ──────────────────────────────────────────────────────────
     const COLUMNS = ['pending', 'preparing', 'ready'];
     const REFRESH_INTERVAL_MS  = 10000; // 10 s auto-refresh
@@ -35,13 +38,13 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(tick, 1000);
     }
 
-    // ── Fetch Orders (pending / preparing / ready) ─────────────────────────
+    // ── Fetch Orders (pending / preparing / ready) — filtered by restaurant ─
     async function fetchActiveOrders() {
-        // Fetch all 3 statuses in parallel
+        if (!restaurantId) return [];
         const [pendingRes, preparingRes, readyRes] = await Promise.all([
-            window.getOrders('pending'),
-            window.getOrders('preparing'),
-            window.getOrders('ready')
+            window.supabaseClient.from('orders').select('*').eq('restaurant_id', restaurantId).eq('status', 'pending').order('created_at', { ascending: true }),
+            window.supabaseClient.from('orders').select('*').eq('restaurant_id', restaurantId).eq('status', 'preparing').order('created_at', { ascending: true }),
+            window.supabaseClient.from('orders').select('*').eq('restaurant_id', restaurantId).eq('status', 'ready').order('created_at', { ascending: true })
         ]);
         const pending   = pendingRes?.data   || [];
         const preparing = preparingRes?.data || [];
@@ -51,6 +54,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Initial Load ───────────────────────────────────────────────────────
     async function init() {
+        // ── Auth guard: kds role only ──────────────────────────────────────
+        const session = window.RestaurantAuth.requireAuth(['kds']);
+        if (!session) return; // redirecting
+
+        restaurantId = session.restaurantId;
+
+        // Show restaurant name in header
+        const nameEl = document.getElementById('kdsRestaurantName');
+        if (nameEl) nameEl.textContent = session.restaurantName;
+
+        // Show + wire logout button
+        const logoutBtn = document.getElementById('kdsLogoutBtn');
+        if (logoutBtn) {
+            logoutBtn.style.display = '';
+            logoutBtn.addEventListener('click', () => window.RestaurantAuth.logout());
+        }
+
         startClock();
 
         const orders = await fetchActiveOrders();

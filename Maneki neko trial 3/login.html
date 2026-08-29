@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maneki Neko | Staff Login</title>
+    <meta name="description" content="Maneki Neko Smart Restaurant — Staff Portal Login">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./shared/theme.css">
+    <style>
+        /* ── Login Page Layout ───────────────────────────────────────── */
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated background orbs */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            filter: blur(80px);
+            opacity: 0.18;
+            z-index: 0;
+        }
+
+        .bg-orb-1 {
+            width: 600px;
+            height: 600px;
+            background: var(--primary-raw);
+            top: -200px;
+            left: -200px;
+            animation: orbFloat1 12s ease-in-out infinite;
+        }
+
+        .bg-orb-2 {
+            width: 500px;
+            height: 500px;
+            background: #a855f7;
+            bottom: -150px;
+            right: -150px;
+            animation: orbFloat2 15s ease-in-out infinite;
+        }
+
+        @keyframes orbFloat1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(60px, 40px) scale(1.1); }
+        }
+
+        @keyframes orbFloat2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-50px, -30px) scale(1.08); }
+        }
+
+        /* ── Login Card ──────────────────────────────────────────────── */
+        .login-card {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 420px;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            padding: 2.5rem;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.04);
+            animation: fadeInUp 0.6s var(--ease-out) both;
+        }
+
+        /* ── Brand ───────────────────────────────────────────────────── */
+        .login-brand {
+            text-align: center;
+            margin-bottom: 2.25rem;
+        }
+
+        .login-cat {
+            font-size: 3.5rem;
+            animation: wave 1.8s ease-in-out infinite;
+            filter: drop-shadow(0 0 18px var(--primary-glow));
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        .login-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            letter-spacing: var(--tracking-tight);
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.375rem;
+        }
+
+        .login-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* ── Role Selector Tabs ──────────────────────────────────────── */
+        .role-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1.75rem;
+            background: var(--bg-surface-variant);
+            border-radius: var(--radius-md);
+            padding: 0.375rem;
+            border: 1px solid var(--border);
+        }
+
+        .role-tab {
+            padding: 0.5rem 0.25rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-align: center;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all var(--duration-fast) var(--ease-out);
+            border: none;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.2rem;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+
+        .role-tab .role-icon {
+            font-size: 1.125rem;
+        }
+
+        .role-tab:hover {
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .role-tab.active {
+            background: var(--primary-raw);
+            color: #fff;
+            box-shadow: 0 0 14px var(--primary-glow-strong);
+        }
+
+        /* ── Form Fields ─────────────────────────────────────────────── */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .form-input {
+            width: 100%;
+            background: var(--bg-surface-highest);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: var(--radius-md);
+            padding: 0.875rem 1rem 0.875rem 2.75rem;
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            font-weight: 500;
+            outline: none;
+            transition: all var(--duration-fast) var(--ease-out);
+            box-sizing: border-box;
+        }
+
+        .form-input::placeholder {
+            color: var(--text-dimmed);
+            font-weight: 400;
+        }
+
+        .form-input:focus {
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+            background: var(--bg-surface-bright);
+        }
+
+        /* PIN input — monospace for visual clarity */
+        #pinInput {
+            font-family: var(--font-mono);
+            font-size: 1.25rem;
+            letter-spacing: 0.3em;
+        }
+
+        /* Toggle PIN visibility button */
+        .toggle-pin {
+            position: absolute;
+            right: 0.875rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.25rem;
+            font-size: 1rem;
+            transition: color var(--duration-fast);
+            z-index: 1;
+        }
+
+        .toggle-pin:hover {
+            color: var(--text-secondary);
+        }
+
+        /* ── Error Banner ────────────────────────────────────────────── */
+        .error-banner {
+            display: none;
+            background: var(--danger-bg);
+            border: 1px solid var(--danger-border);
+            color: var(--danger);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            animation: shakeX 0.4s var(--ease-out);
+        }
+
+        .error-banner.visible {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        @keyframes shakeX {
+            0%, 100% { transform: translateX(0); }
+            20%       { transform: translateX(-8px); }
+            40%       { transform: translateX(8px); }
+            60%       { transform: translateX(-5px); }
+            80%       { transform: translateX(5px); }
+        }
+
+        /* ── Submit Button ───────────────────────────────────────────── */
+        .login-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            padding: 1rem;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-out);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .login-btn:hover:not(:disabled) {
+            box-shadow: var(--shadow-glow), 0 8px 24px rgba(99, 102, 241, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .login-btn:active:not(:disabled) {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* Loading spinner */
+        .btn-spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2.5px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .login-btn.loading .btn-text { display: none; }
+        .login-btn.loading .btn-spinner { display: block; }
+
+        /* ── Divider & Back Link ─────────────────────────────────────── */
+        .login-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .back-link {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color var(--duration-fast);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        /* ── Hint tooltip ────────────────────────────────────────────── */
+        .role-hint {
+            font-size: 0.75rem;
+            color: var(--text-dimmed);
+            text-align: center;
+            margin-top: -0.75rem;
+            margin-bottom: 1.25rem;
+            font-style: italic;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Background orbs -->
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+
+    <!-- ── Login Card ───────────────────────────────────────────────── -->
+    <div class="login-card">
+
+        <!-- Brand -->
+        <div class="login-brand">
+            <span class="login-cat">🐱</span>
+            <h1 class="login-title">Staff Portal</h1>
+            <p class="login-subtitle">Maneki Neko Smart Restaurant</p>
+        </div>
+
+        <!-- Role Selector -->
+        <div class="role-tabs" role="tablist" aria-label="Select your module">
+            <button class="role-tab active" id="tab-admin" data-role="admin"
+                    role="tab" aria-selected="true" aria-controls="login-form">
+                <span class="role-icon">📊</span>
+                Admin
+            </button>
+            <button class="role-tab" id="tab-kds" data-role="kds"
+                    role="tab" aria-selected="false" aria-controls="login-form">
+                <span class="role-icon">🍳</span>
+                Kitchen
+            </button>
+            <button class="role-tab" id="tab-bot" data-role="bot_manager"
+                    role="tab" aria-selected="false" aria-controls="login-form">
+                <span class="role-icon">🤖</span>
+                Bots
+            </button>
+        </div>
+
+        <p class="role-hint" id="roleHint">Admin Dashboard access</p>
+
+        <!-- Error Banner -->
+        <div class="error-banner" id="errorBanner" role="alert">
+            <span>⚠️</span>
+            <span id="errorMsg">Invalid username or PIN.</span>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm" novalidate>
+
+            <div class="form-group">
+                <label class="form-label" for="restaurantCodeInput">Restaurant Code</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">🏮</span>
+                    <input
+                        type="text"
+                        id="restaurantCodeInput"
+                        class="form-input"
+                        placeholder="e.g. TOKYO"
+                        autocomplete="organization"
+                        autocapitalize="characters"
+                        maxlength="20"
+                        required
+                        style="text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700;"
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="usernameInput">Username</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">👤</span>
+                    <input
+                        type="text"
+                        id="usernameInput"
+                        class="form-input"
+                        placeholder="Enter your username"
+                        autocomplete="username"
+                        autocapitalize="none"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="pinInput">PIN</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">🔑</span>
+                    <input
+                        type="password"
+                        id="pinInput"
+                        class="form-input"
+                        placeholder="••••"
+                        autocomplete="current-password"
+                        inputmode="numeric"
+                        maxlength="8"
+                        required
+                    >
+                    <button type="button" class="toggle-pin" id="togglePin" aria-label="Show/hide PIN">
+                        👁️
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="login-btn" id="loginBtn">
+                <span class="btn-text">🔓 Sign In</span>
+                <span class="btn-spinner"></span>
+            </button>
+
+        </form>
+
+        <!-- Back to Home -->
+        <div class="login-footer">
+            <a href="./index.html" class="back-link">← Back to Home</a>
+        </div>
+
+    </div>
+
+    <!-- ── Scripts ──────────────────────────────────── -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./shared/supabase.js"></script>
+    <script src="./shared/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // ── Role config ─────────────────────────────────────────────
+            const ROLE_CONFIG = {
+                admin:       { hint: 'Admin Dashboard access',      redirect: './admin/index.html' },
+                kds:         { hint: 'Kitchen Display System access', redirect: './kds/index.html' },
+                bot_manager: { hint: 'Bot Management Panel access',  redirect: './bot-management/index.html' }
+            };
+
+            let selectedRole = 'admin';
+
+            // ── If already logged in, redirect immediately ───────────────
+            const existingSession = window.RestaurantAuth.getSession();
+            if (existingSession) {
+                const cfg = ROLE_CONFIG[existingSession.role];
+                if (cfg) {
+                    window.location.href = cfg.redirect;
+                    return;
+                }
+            }
+
+            // ── DOM refs ────────────────────────────────────────────────
+            const roleTabs       = document.querySelectorAll('.role-tab');
+            const roleHint       = document.getElementById('roleHint');
+            const loginForm      = document.getElementById('loginForm');
+            const restaurantEl   = document.getElementById('restaurantCodeInput');
+            const usernameEl     = document.getElementById('usernameInput');
+            const pinEl          = document.getElementById('pinInput');
+            const loginBtn       = document.getElementById('loginBtn');
+            const togglePin      = document.getElementById('togglePin');
+            const errorBanner    = document.getElementById('errorBanner');
+            const errorMsg       = document.getElementById('errorMsg');
+
+            // ── Role tab switching ───────────────────────────────────────
+            roleTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    roleTabs.forEach(t => {
+                        t.classList.remove('active');
+                        t.setAttribute('aria-selected', 'false');
+                    });
+                    tab.classList.add('active');
+                    tab.setAttribute('aria-selected', 'true');
+                    selectedRole = tab.dataset.role;
+                    roleHint.textContent = ROLE_CONFIG[selectedRole]?.hint || '';
+                    hideError();
+                });
+            });
+
+            // ── Auto-uppercase restaurant code as user types ─────────────
+            restaurantEl.addEventListener('input', () => {
+                const pos = restaurantEl.selectionStart;
+                restaurantEl.value = restaurantEl.value.toUpperCase();
+                restaurantEl.setSelectionRange(pos, pos);
+            });
+
+            // ── Show / hide PIN ─────────────────────────────────────────
+            togglePin.addEventListener('click', () => {
+                const isPassword = pinEl.type === 'password';
+                pinEl.type = isPassword ? 'text' : 'password';
+                togglePin.textContent = isPassword ? '🙈' : '👁️';
+            });
+
+            // ── Error helpers ────────────────────────────────────────────
+            function showError(msg) {
+                errorMsg.textContent = msg;
+                errorBanner.classList.add('visible');
+                errorBanner.style.animation = 'none';
+                errorBanner.offsetHeight;
+                errorBanner.style.animation = '';
+            }
+
+            function hideError() {
+                errorBanner.classList.remove('visible');
+            }
+
+            // ── Form submission ──────────────────────────────────────────
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                hideError();
+
+                const restaurantCode = restaurantEl.value.trim().toUpperCase();
+                const username       = usernameEl.value.trim().toLowerCase();
+                const pin            = pinEl.value.trim();
+
+                if (!restaurantCode || !username || !pin) {
+                    showError('Please fill in all fields: Restaurant Code, Username, and PIN.');
+                    return;
+                }
+
+                // Loading state
+                loginBtn.classList.add('loading');
+                loginBtn.disabled = true;
+
+                // Multi-tenant login: pass restaurantCode as first argument
+                const result = await window.RestaurantAuth.login(restaurantCode, username, pin);
+
+                if (!result.success) {
+                    showError(result.error || 'Invalid credentials.');
+                    loginBtn.classList.remove('loading');
+                    loginBtn.disabled = false;
+                    pinEl.value = '';
+                    pinEl.focus();
+                    return;
+                }
+
+                // Role isolation check — ensure role matches selected module tab
+                const session = result.session;
+                if (session.role !== selectedRole) {
+                    showError(`This account gives access to the ${session.role.replace('_', ' ')} module. Redirecting...`);
+                    setTimeout(() => {
+                        const cfg = ROLE_CONFIG[session.role];
+                        if (cfg) window.location.href = cfg.redirect;
+                    }, 1800);
+                    loginBtn.classList.remove('loading');
+                    loginBtn.disabled = false;
+                    return;
+                }
+
+                // Success — redirect to ?redirect= param or default module
+                const params   = new URLSearchParams(window.location.search);
+                const redirect = params.get('redirect');
+                const target   = ROLE_CONFIG[session.role]?.redirect || './index.html';
+
+                window.location.href = redirect || target;
+            });
+
+            // ── Auto-focus restaurant code field ─────────────────────────
+            restaurantEl.focus();
+        });
+    </script>
+</body>
+</html>

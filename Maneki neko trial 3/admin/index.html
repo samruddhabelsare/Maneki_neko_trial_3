@@ -969,7 +969,10 @@
     <aside id="sidebar">
         <div class="sidebar-brand">
             <span>🐱</span>
-            <span class="sidebar-brand-name">Maneki Neko</span>
+            <div>
+                <div class="sidebar-brand-name">Maneki Neko</div>
+                <div id="sidebarRestaurantName" style="font-size:0.7rem;color:var(--text-muted);font-weight:600;letter-spacing:0.05em;text-transform:uppercase;margin-top:1px;">Admin</div>
+            </div>
         </div>
 
         <nav class="sidebar-nav">
@@ -998,6 +1001,7 @@
                 <div class="status-dot green"></div>
                 <span>Server Online</span>
             </div>
+            <button id="logoutBtn" style="margin-top:0.75rem;width:100%;background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border);border-radius:var(--radius-md);padding:0.625rem 1rem;font-weight:700;font-size:0.85rem;cursor:pointer;transition:all var(--duration-fast) var(--ease-out);display:flex;align-items:center;justify-content:center;gap:0.5rem;">🚪 Logout</button>
         </div>
     </aside>
 
@@ -1358,6 +1362,7 @@
     <!-- ── Scripts ──────────────────────────────────── -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../shared/supabase.js"></script>
+    <script src="../shared/auth.js"></script>
     <script src="app.js"></script>
 
 </body>
