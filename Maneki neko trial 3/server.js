@@ -9,9 +9,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ── NVIDIA NIM Client (OpenAI-compatible) ────────────────────────────────────
+const nvidiaApiKey = process.env.NVIDIA_API_KEY;
+if (!nvidiaApiKey || nvidiaApiKey.includes('YOUR_NVIDIA')) {
+    console.error('\n⚠️  WARNING: NVIDIA_API_KEY is not set in your .env file!');
+    console.error('   Get a free key at https://build.nvidia.com and add it to .env\n');
+}
+
 const nvidiaNimClient = new OpenAI({
     baseURL: 'https://integrate.api.nvidia.com/v1',
-    apiKey: process.env.NVIDIA_API_KEY || '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'
+    apiKey: nvidiaApiKey || ''
 });
 
 const NVIDIA_MODEL = process.env.NVIDIA_MODEL || 'nvidia/nemotron-3.5-lightning-30b-a3b';
