@@ -4,185 +4,457 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maneki Neko | Dev Setup</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Kosugi+Maru&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./shared/theme.css">
 <style>
-body { min-height:100vh; padding:2rem 1rem; }
-.dev-header { text-align:center; margin-bottom:2.5rem; }
-.dev-badge { display:inline-block; background:rgba(239,68,68,0.12); color:#f87171; border:1px solid rgba(239,68,68,0.25); border-radius:2rem; padding:.35rem 1rem; font-size:.75rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; margin-bottom:1rem; }
-.dev-title { font-size:2.2rem; font-weight:800; letter-spacing:-.02em; }
-.dev-subtitle { color:var(--text-secondary); margin-top:.5rem; font-size:.95rem; }
-.dev-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; max-width:1100px; margin:0 auto; }
-@media(max-width:768px){ .dev-grid { grid-template-columns:1fr; } }
-.panel { background:var(--glass-bg); backdrop-filter:var(--glass-blur); border:1px solid var(--glass-border); border-radius:var(--radius-xl); padding:1.75rem; }
-.panel-title { font-size:1.1rem; font-weight:800; margin-bottom:1.25rem; display:flex; align-items:center; gap:.5rem; }
-.form-group { margin-bottom:1rem; }
-.form-label { display:block; font-size:.78rem; font-weight:600; color:var(--text-secondary); margin-bottom:.4rem; text-transform:uppercase; letter-spacing:.05em; }
-.form-input, .form-select { width:100%; background:var(--bg-surface-variant); border:1px solid var(--border); color:var(--text-primary); border-radius:var(--radius-md); padding:.75rem 1rem; font-family:var(--font-sans); font-size:.95rem; outline:none; transition:border-color .15s; box-sizing:border-box; }
-.form-input:focus, .form-select:focus { border-color:rgba(99,102,241,.5); box-shadow:0 0 0 3px var(--primary-glow); }
-.btn { padding:.7rem 1.25rem; border-radius:var(--radius-md); font-weight:700; font-size:.875rem; cursor:pointer; border:none; transition:all .15s; width:100%; margin-top:.5rem; }
-.btn-primary { background:linear-gradient(135deg,var(--primary-raw),var(--primary-dim)); color:#fff; }
-.btn-primary:hover { box-shadow:var(--shadow-glow); transform:translateY(-1px); }
-.btn-danger { background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger-border); }
-.btn-danger:hover { background:rgba(239,68,68,.2); }
-.btn-sm { padding:.4rem .8rem; font-size:.78rem; width:auto; margin-top:0; border-radius:var(--radius-sm); }
-.list-area { margin-top:1.25rem; max-height:420px; overflow-y:auto; }
-.list-item { background:var(--bg-surface-variant); border:1px solid var(--border); border-radius:var(--radius-md); padding:1rem 1.1rem; margin-bottom:.6rem; }
-.list-item-top { display:flex; justify-content:space-between; align-items:flex-start; gap:.5rem; }
-.list-item-name { font-weight:700; font-size:.95rem; }
-.list-item-meta { font-size:.78rem; color:var(--text-muted); margin-top:.2rem; }
-.code-badge { display:inline-block; background:var(--primary-glow); color:var(--primary); border:1px solid rgba(99,102,241,.2); border-radius:.4rem; padding:.15rem .55rem; font-family:var(--font-mono); font-size:.8rem; font-weight:700; letter-spacing:.08em; }
-.role-badge { display:inline-block; padding:.15rem .5rem; border-radius:.3rem; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
-.role-admin { background:rgba(99,102,241,.12); color:#a5b4fc; border:1px solid rgba(99,102,241,.2); }
-.role-kds { background:rgba(245,158,11,.12); color:#fbbf24; border:1px solid rgba(245,158,11,.2); }
-.role-bot { background:rgba(16,185,129,.12); color:#34d399; border:1px solid rgba(16,185,129,.2); }
-.msg { padding:.65rem 1rem; border-radius:var(--radius-md); font-size:.85rem; font-weight:600; margin-bottom:1rem; display:none; }
-.msg.success { background:var(--success-bg); color:var(--success); border:1px solid var(--success-border); }
-.msg.error { background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger-border); }
-.empty-state { text-align:center; color:var(--text-dimmed); padding:2rem; font-size:.875rem; }
-/* Gate */
-#devGate { position:fixed; inset:0; background:var(--bg-deep); display:flex; align-items:center; justify-content:center; z-index:100; }
-.gate-card { background:var(--glass-bg); backdrop-filter:var(--glass-blur); border:1px solid var(--glass-border); border-radius:var(--radius-xl); padding:2.5rem; width:100%; max-width:380px; text-align:center; }
-.gate-icon { font-size:3rem; margin-bottom:1rem; }
-.gate-title { font-size:1.4rem; font-weight:800; margin-bottom:.4rem; }
-.gate-sub { color:var(--text-muted); font-size:.875rem; margin-bottom:1.5rem; }
+  :root{
+    --ink:#f5f4f9; --ink-soft:#b7b4c8; --ink-mute:#84819a; --ink-faint:#524e69;
+    --void:#08060e; --panel:rgba(255,255,255,.035); --panel-solid:#151220;
+    --field:#1b1728; --line:rgba(255,255,255,.09); --line-soft:rgba(255,255,255,.05);
+
+    --violet:#9a9bf7; --violet-dim:#6d6ef0; --violet-glow:rgba(129,140,248,.16); --violet-deep:#4338ca;
+    --gold:#f0bb56; --gold-glow:rgba(240,187,86,.16); --gold-deep:#8a611f;
+    --sakura:#f591c2; --sakura-glow:rgba(245,145,194,.15);
+
+    --danger:#fb7185; --danger-bg:rgba(251,113,133,.12); --danger-border:rgba(251,113,133,.3);
+    --success:#4ade80; --success-bg:rgba(74,222,128,.12); --success-border:rgba(74,222,128,.3);
+    --amber:#fbbf24; --emerald:#34d399;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ background:var(--void); }
+  body{
+    min-height:100vh; padding:0 0 5rem; color:var(--ink);
+    font-family:'Inter',sans-serif;
+    position:relative; overflow-x:hidden;
+  }
+  body::before{
+    content:''; position:fixed; inset:0; z-index:-2;
+    background-image:radial-gradient(rgba(255,255,255,.045) 1px, transparent 1px);
+    background-size:26px 26px; opacity:.5;
+  }
+  .bg-glow{ position:fixed; z-index:-1; border-radius:50%; filter:blur(90px); pointer-events:none; }
+  .bg-glow-a{ width:520px; height:520px; top:-180px; left:-120px; background:radial-gradient(circle, rgba(129,140,248,.28), transparent 70%); }
+  .bg-glow-b{ width:460px; height:460px; bottom:-160px; right:-100px; background:radial-gradient(circle, rgba(240,187,86,.18), transparent 70%); }
+
+  /* ── Shell ─────────────────────────────────────────────────────── */
+  .portal{ max-width:1180px; margin:0 auto; padding:0 1.5rem; }
+
+  .portal-header{
+    position:relative;
+    display:flex; align-items:flex-end; justify-content:space-between; gap:1.5rem;
+    flex-wrap:wrap; padding:3rem 0 2.25rem; border-bottom:1px solid var(--line);
+    margin-bottom:2.25rem;
+  }
+  .hanko{
+    position:absolute; top:1.6rem; right:0; width:50px; height:50px;
+    border:2px solid var(--danger); color:var(--danger); border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Kosugi Maru',sans-serif; font-size:1.15rem; letter-spacing:-.05em;
+    transform:rotate(-7deg); opacity:.8;
+  }
+  .portal-eyebrow{
+    display:inline-flex; align-items:center; gap:.45rem;
+    color:var(--danger); font-size:.72rem; font-weight:600; letter-spacing:.03em;
+    margin-bottom:.7rem;
+  }
+  .portal-eyebrow .dot{ width:6px; height:6px; border-radius:50%; background:var(--danger); box-shadow:0 0 0 3px var(--danger-bg); }
+  .portal-title{
+    font-size:2rem; font-weight:700; letter-spacing:-.01em; line-height:1.1;
+    font-family:'Kosugi Maru',sans-serif;
+    background:linear-gradient(100deg, var(--ink) 30%, var(--gold) 75%, var(--violet) 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .portal-sub{ color:var(--ink-soft); margin-top:.5rem; font-size:.95rem; max-width:48ch; }
+
+  .stat-row{ display:flex; gap:.6rem; }
+  .stat-coin{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.05rem;
+    width:74px; height:74px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, rgba(240,187,86,.18), var(--panel-solid) 70%);
+    border:1.5px solid var(--gold-deep); box-shadow:0 0 0 4px rgba(240,187,86,.06);
+  }
+  .stat-coin b{ font-size:1.3rem; font-weight:800; font-family:'JetBrains Mono',monospace; line-height:1; color:var(--gold); }
+  .stat-coin span{ font-size:.6rem; color:var(--ink-mute); text-transform:uppercase; letter-spacing:.05em; }
+
+  /* ── Layout grid ───────────────────────────────────────────────── */
+  .portal-grid{ display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; align-items:start; }
+  @media(max-width:860px){ .portal-grid{ grid-template-columns:1fr; } }
+  .col{ display:flex; flex-direction:column; gap:1.25rem; }
+
+  /* ── Module card ───────────────────────────────────────────────── */
+  .module{
+    background:var(--panel); backdrop-filter:blur(20px);
+    border:1px solid var(--line); border-top:2px solid var(--accent, var(--line));
+    border-radius:1.1rem; overflow:hidden;
+  }
+  .module.mod-violet{ --accent:var(--violet); --accent-glow:var(--violet-glow); }
+  .module.mod-sakura{ --accent:var(--sakura); --accent-glow:var(--sakura-glow); }
+  .module.mod-gold{ --accent:var(--gold); --accent-glow:var(--gold-glow); }
+
+  .module-head{
+    display:flex; align-items:center; justify-content:space-between; gap:.75rem;
+    padding:1.1rem 1.4rem; border-bottom:1px solid var(--line-soft);
+  }
+  .module-head-left{ display:flex; align-items:center; gap:.65rem; }
+  .module-icon{
+    width:32px; height:32px; border-radius:.6rem; display:flex; align-items:center; justify-content:center;
+    background:var(--accent-glow); color:var(--accent); flex-shrink:0;
+  }
+  .module-title{ font-size:.96rem; font-weight:700; letter-spacing:-.01em; }
+  .module-body{ padding:1.4rem; }
+
+  /* ── Forms ─────────────────────────────────────────────────────── */
+  .form-group{ margin-bottom:1rem; }
+  .form-group:last-of-type{ margin-bottom:0; }
+  .form-label{
+    display:flex; align-items:baseline; gap:.4rem;
+    font-size:.77rem; font-weight:600; color:var(--ink-soft); margin-bottom:.4rem;
+  }
+  .form-label small{ font-weight:400; color:var(--ink-faint); font-size:.72rem; }
+  .form-input, .form-select{
+    width:100%; background:var(--field); border:1px solid var(--line);
+    color:var(--ink); border-radius:.65rem; padding:.7rem .85rem;
+    font-family:'Inter',sans-serif; font-size:.92rem; outline:none; transition:border-color .15s, box-shadow .15s;
+  }
+  .form-input:focus, .form-select:focus{ border-color:var(--accent, var(--violet)); box-shadow:0 0 0 3px var(--accent-glow, var(--violet-glow)); }
+  .form-input.mono{ font-family:'JetBrains Mono',monospace; font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
+  .form-row{ display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:.45rem;
+    padding:.72rem 1.1rem; border-radius:.65rem; font-weight:700; font-size:.85rem;
+    cursor:pointer; border:none; transition:filter .15s, transform .1s; width:100%; margin-top:.85rem;
+    font-family:'Inter',sans-serif;
+  }
+  .btn:active{ transform:translateY(1px); }
+  .btn-primary{ background:linear-gradient(135deg, var(--accent, var(--violet)), var(--violet-deep)); color:#100e1c; font-weight:800; }
+  .btn-primary:hover{ filter:brightness(1.12); }
+  .btn-danger{ background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger-border); }
+  .btn-danger:hover{ background:rgba(251,113,133,.22); }
+  .btn-icon{ width:30px; height:30px; padding:0; margin-top:0; flex-shrink:0; border-radius:.5rem; }
+
+  /* ── Flash message ─────────────────────────────────────────────── */
+  .msg{
+    display:none; align-items:center; gap:.5rem;
+    padding:.65rem .85rem; border-radius:.65rem; font-size:.83rem; font-weight:600; margin-bottom:1rem;
+  }
+  .msg.success{ background:var(--success-bg); color:var(--success); border:1px solid var(--success-border); }
+  .msg.error{ background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger-border); }
+  .msg svg{ flex-shrink:0; }
+
+  /* ── Lists ─────────────────────────────────────────────────────── */
+  .list-area{ margin-top:1.25rem; max-height:400px; overflow-y:auto; display:flex; flex-direction:column; gap:.55rem; }
+  .list-area:empty{ margin-top:0; }
+  .row-item{
+    display:flex; align-items:center; justify-content:space-between; gap:.75rem;
+    background:var(--field); border:1px solid var(--line-soft);
+    border-radius:.75rem; padding:.8rem .95rem; transition:border-color .15s, transform .15s;
+  }
+  .row-item:hover{ border-color:var(--accent, var(--violet)); transform:translateY(-1px); }
+  .row-main{ min-width:0; }
+  .row-name{ font-weight:700; font-size:.92rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .row-meta{
+    font-size:.77rem; color:var(--ink-mute); margin-top:.3rem;
+    display:flex; align-items:center; gap:.4rem; flex-wrap:wrap;
+  }
+  .row-meta .sep{ opacity:.4; }
+
+  .code-badge{
+    display:inline-flex; align-items:center; gap:.3rem;
+    background:var(--accent-glow, var(--violet-glow)); color:var(--accent, var(--violet)); border:1px solid var(--line);
+    border-radius:.4rem; padding:.15rem .55rem; font-family:'JetBrains Mono',monospace; font-size:.78rem; font-weight:700; letter-spacing:.06em;
+  }
+  .role-badge{
+    display:inline-flex; align-items:center; gap:.3rem;
+    padding:.2rem .55rem; border-radius:.4rem; font-size:.72rem; font-weight:700;
+  }
+  .role-admin{ background:rgba(154,155,247,.14); color:var(--violet); border:1px solid rgba(154,155,247,.25); }
+  .role-kds{ background:rgba(251,191,36,.14); color:var(--amber); border:1px solid rgba(251,191,36,.25); }
+  .role-bot{ background:rgba(52,211,153,.14); color:var(--emerald); border:1px solid rgba(52,211,153,.25); }
+
+  .empty-state{
+    display:flex; flex-direction:column; align-items:center; gap:.6rem;
+    text-align:center; color:var(--ink-faint); padding:2.25rem 1rem; font-size:.85rem;
+  }
+  .empty-state svg{ opacity:.55; }
+
+  .table-chip{
+    display:flex; align-items:center; justify-content:space-between; gap:.5rem;
+    background:var(--field); border:1px solid var(--line-soft);
+    border-radius:.6rem; padding:.5rem .55rem .5rem .8rem; transition:border-color .15s;
+  }
+  .table-chip:hover{ border-color:var(--accent, var(--gold)); }
+  .table-chip .row-meta{ margin-top:.15rem; }
+
+  /* ── Developer gate ────────────────────────────────────────────── */
+  #devGate{
+    position:fixed; inset:0; background:var(--void); display:flex; align-items:center; justify-content:center;
+    z-index:100; padding:1.5rem;
+  }
+  .gate-card{
+    position:relative;
+    background:var(--panel-solid); border:1px solid var(--line);
+    border-radius:1.25rem; padding:2.3rem 2rem 2rem; width:100%; max-width:370px; text-align:center;
+    box-shadow:0 30px 80px -25px rgba(0,0,0,.7);
+  }
+  .gate-seal{
+    position:absolute; top:-14px; right:18px; width:44px; height:44px;
+    border:2px solid var(--danger); color:var(--danger); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; background:var(--void);
+    font-family:'Kosugi Maru',sans-serif; font-size:.7rem; font-weight:700; transform:rotate(8deg);
+  }
+  .maneki{ margin:0 auto .9rem; display:block; }
+  .maneki .paw{ transform-origin:74px 66px; animation:pawWave 1.7s ease-in-out infinite; }
+  @keyframes pawWave{ 0%,100%{ transform:rotate(-8deg); } 50%{ transform:rotate(14deg); } }
+
+  .gate-title{ font-size:1.3rem; font-weight:700; letter-spacing:-.01em; font-family:'Kosugi Maru',sans-serif; }
+  .gate-sub{ color:var(--ink-mute); font-size:.85rem; margin-top:.4rem; margin-bottom:1.4rem; }
+  .gate-hint{ font-size:.72rem; color:var(--ink-faint); margin-top:1rem; font-family:'JetBrains Mono',monospace; }
+  .gate-hint code{ color:var(--ink-mute); background:var(--field); padding:.1rem .4rem; border-radius:.3rem; }
+
+  #devMain{ opacity:0; animation:portalIn .5s ease-out forwards; }
+  @keyframes portalIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
+
+  @media (prefers-reduced-motion: reduce){
+    #devMain{ animation:none; opacity:1; }
+    .maneki .paw{ animation:none; }
+  }
 </style>
 </head>
 <body>
 
+<div class="bg-glow bg-glow-a"></div>
+<div class="bg-glow bg-glow-b"></div>
+
 <!-- Dev Password Gate -->
 <div id="devGate">
   <div class="gate-card">
-    <div class="gate-icon">🛠️</div>
-    <div class="gate-title">Developer Portal</div>
-    <div class="gate-sub">Enter the developer password to continue</div>
-    <div style="font-size:.75rem;color:var(--text-dimmed);margin-bottom:1rem;font-family:var(--font-mono);">Default: <strong style="color:var(--text-muted);">devmode123</strong></div>
-    <div class="msg error" id="gateError">Wrong password. Try again.</div>
+    <div class="gate-seal">DEV</div>
+    <svg class="maneki" width="72" height="72" viewBox="0 0 100 100" fill="none">
+      <path d="M30 38 L25 18 L44 31 Z" stroke="var(--gold)" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M70 38 L75 18 L56 31 Z" stroke="var(--gold)" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="50" cy="56" r="27" stroke="var(--gold)" stroke-width="3"/>
+      <circle cx="41" cy="54" r="2.3" fill="var(--gold)"/>
+      <circle cx="59" cy="54" r="2.3" fill="var(--gold)"/>
+      <path d="M46 61 q4 3.5 8 0" stroke="var(--gold)" stroke-width="2.4" stroke-linecap="round"/>
+      <g class="paw"><ellipse cx="76" cy="58" rx="9.5" ry="13" stroke="var(--gold)" stroke-width="3"/></g>
+    </svg>
+    <div class="gate-title">The portal is asleep</div>
+    <div class="gate-sub">Enter the developer password to wake it up</div>
+    <div class="msg error" id="gateError">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      <span>Wrong password. Try again.</span>
+    </div>
     <div class="form-group">
       <input type="password" id="devPasswordInput" class="form-input" placeholder="Developer password" autocomplete="off">
     </div>
-    <button class="btn btn-primary" id="gateBtn">🔓 Enter Portal</button>
+    <button class="btn btn-primary" id="gateBtn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+      Enter portal
+    </button>
+    <div class="gate-hint">Default password: <code>devmode123</code></div>
   </div>
 </div>
 
 <!-- Main Content -->
-<div id="devMain" style="display:none; max-width:1100px; margin:0 auto;">
+<div id="devMain" style="display:none;">
+<div class="portal">
 
-  <div class="dev-header">
-    <div class="dev-badge">⚠️ Developer Only</div>
-    <h1 class="dev-title">🛠️ Maneki Neko Setup Portal</h1>
-    <p class="dev-subtitle">Create restaurants &amp; manage staff login credentials</p>
+  <div class="portal-header">
+    <div class="hanko">開発</div>
+    <div>
+      <div class="portal-eyebrow"><span class="dot"></span>Developer access only</div>
+      <h1 class="portal-title">Maneki Neko setup portal</h1>
+      <p class="portal-sub">Create restaurants, manage staff logins, and configure tables.</p>
+    </div>
+    <div class="stat-row">
+      <div class="stat-coin"><b id="restStatCount">0</b><span>spots</span></div>
+    </div>
   </div>
 
-  <div class="dev-grid">
+  <div class="portal-grid">
 
     <!-- LEFT: Create Restaurant -->
-    <div>
-      <div class="panel" style="margin-bottom:1.5rem;">
-        <div class="panel-title">🏮 Create New Restaurant</div>
-        <div class="msg success" id="restMsg"></div>
-        <div class="form-group">
-          <label class="form-label">Restaurant Name</label>
-          <input type="text" id="restName" class="form-input" placeholder="e.g. Maneki Neko Osaka">
+    <div class="col">
+      <div class="module mod-violet">
+        <div class="module-head">
+          <div class="module-head-left">
+            <div class="module-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M9 21V12h6v9"/></svg>
+            </div>
+            <div class="module-title">New restaurant</div>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Restaurant Code <small style="color:var(--text-dimmed)">(staff type this at login)</small></label>
-          <input type="text" id="restCode" class="form-input" placeholder="e.g. OSAKA" style="text-transform:uppercase;font-family:var(--font-mono);font-weight:700;letter-spacing:.1em;">
+        <div class="module-body">
+          <div class="msg success" id="restMsg"></div>
+          <div class="form-group">
+            <label class="form-label">Restaurant name</label>
+            <input type="text" id="restName" class="form-input" placeholder="e.g. Maneki Neko Osaka">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Login code <small>staff type this at login</small></label>
+            <input type="text" id="restCode" class="form-input mono" placeholder="e.g. OSAKA">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Address <small>optional</small></label>
+            <input type="text" id="restAddress" class="form-input" placeholder="e.g. 5-10 Dotonbori, Osaka">
+          </div>
+          <button class="btn btn-primary" id="createRestBtn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Create restaurant
+          </button>
         </div>
-        <div class="form-group">
-          <label class="form-label">Address (optional)</label>
-          <input type="text" id="restAddress" class="form-input" placeholder="e.g. 5-10 Dotonbori, Osaka">
-        </div>
-        <button class="btn btn-primary" id="createRestBtn">➕ Create Restaurant</button>
       </div>
 
       <!-- Restaurant List -->
-      <div class="panel">
-        <div class="panel-title">🏪 All Restaurants</div>
-        <div class="list-area" id="restaurantList">
-          <div class="empty-state">Loading...</div>
+      <div class="module mod-violet">
+        <div class="module-head">
+          <div class="module-head-left">
+            <div class="module-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+            </div>
+            <div class="module-title">All restaurants</div>
+          </div>
+        </div>
+        <div class="module-body" style="padding-top:1.1rem;">
+          <div class="list-area" id="restaurantList">
+            <div class="empty-state">Loading…</div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- RIGHT: Create Credential -->
-    <div>
-      <div class="panel" style="margin-bottom:1.5rem;">
-        <div class="panel-title">🔑 Add Staff Login</div>
-        <div class="msg success" id="credMsg"></div>
-        <div class="form-group">
-          <label class="form-label">Restaurant</label>
-          <select id="credRestaurant" class="form-select">
-            <option value="">-- Select Restaurant --</option>
-          </select>
+    <div class="col">
+      <div class="module mod-sakura">
+        <div class="module-head">
+          <div class="module-head-left">
+            <div class="module-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.5 12.5 19 4l2 2-2 2 2 2-3 3-2-2-2.5 2.5"/></svg>
+            </div>
+            <div class="module-title">Add staff login</div>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Username</label>
-          <input type="text" id="credUsername" class="form-input" placeholder="e.g. admin">
+        <div class="module-body">
+          <div class="msg success" id="credMsg"></div>
+          <div class="form-group">
+            <label class="form-label">Restaurant</label>
+            <select id="credRestaurant" class="form-select">
+              <option value="">Select restaurant</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Username</label>
+              <input type="text" id="credUsername" class="form-input" placeholder="e.g. admin">
+            </div>
+            <div class="form-group">
+              <label class="form-label">PIN</label>
+              <input type="text" id="credPin" class="form-input mono" placeholder="1234" inputmode="numeric" maxlength="8">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Role / module</label>
+            <select id="credRole" class="form-select">
+              <option value="admin">Admin dashboard</option>
+              <option value="kds">Kitchen display (KDS)</option>
+              <option value="bot_manager">Bot management</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" id="createCredBtn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add login
+          </button>
         </div>
-        <div class="form-group">
-          <label class="form-label">PIN</label>
-          <input type="text" id="credPin" class="form-input" placeholder="e.g. 1234" inputmode="numeric" maxlength="8">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Role / Module</label>
-          <select id="credRole" class="form-select">
-            <option value="admin">📊 Admin Dashboard</option>
-            <option value="kds">🍳 Kitchen Display (KDS)</option>
-            <option value="bot_manager">🤖 Bot Management</option>
-          </select>
-        </div>
-        <button class="btn btn-primary" id="createCredBtn">➕ Add Login</button>
       </div>
 
       <!-- Credentials List -->
-      <div class="panel" style="margin-bottom:1.5rem;">
-        <div class="panel-title">👥 Staff Credentials</div>
-        <div class="form-group" style="margin-bottom:.75rem;">
-          <select id="filterRestaurant" class="form-select">
-            <option value="">-- All Restaurants --</option>
-          </select>
+      <div class="module mod-sakura">
+        <div class="module-head">
+          <div class="module-head-left">
+            <div class="module-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="module-title">Staff credentials</div>
+          </div>
         </div>
-        <div class="list-area" id="credentialList">
-          <div class="empty-state">Select a restaurant to view credentials</div>
+        <div class="module-body">
+          <div class="form-group" style="margin-bottom:.25rem;">
+            <select id="filterRestaurant" class="form-select">
+              <option value="">All restaurants</option>
+            </select>
+          </div>
+          <div class="list-area" id="credentialList">
+            <div class="empty-state">Pick a restaurant to see its staff</div>
+          </div>
         </div>
       </div>
 
       <!-- Table Management Panel -->
-      <div class="panel">
-        <div class="panel-title">🪑 Manage Restaurant Tables</div>
-        <div class="msg success" id="tableMsg"></div>
-        <div class="form-group">
-          <label class="form-label">Restaurant</label>
-          <select id="tableRestaurant" class="form-select">
-            <option value="">-- Select Restaurant --</option>
-          </select>
-        </div>
-        <div style="display:flex;gap:.5rem;margin-bottom:1rem;">
-          <div style="flex:1;">
-            <label class="form-label">From Table #</label>
-            <input type="number" id="tableFrom" class="form-input" value="1" min="1" max="99">
-          </div>
-          <div style="flex:1;">
-            <label class="form-label">To Table #</label>
-            <input type="number" id="tableTo" class="form-input" value="10" min="1" max="99">
+      <div class="module mod-gold">
+        <div class="module-head">
+          <div class="module-head-left">
+            <div class="module-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+            </div>
+            <div class="module-title">Restaurant tables</div>
           </div>
         </div>
-        <button class="btn btn-primary" id="createTablesBtn">➕ Generate Table Range</button>
+        <div class="module-body">
+          <div class="msg success" id="tableMsg"></div>
+          <div class="form-group">
+            <label class="form-label">Restaurant</label>
+            <select id="tableRestaurant" class="form-select">
+              <option value="">Select restaurant</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">From table #</label>
+              <input type="number" id="tableFrom" class="form-input" value="1" min="1" max="99">
+            </div>
+            <div class="form-group">
+              <label class="form-label">To table #</label>
+              <input type="number" id="tableTo" class="form-input" value="10" min="1" max="99">
+            </div>
+          </div>
+          <button class="btn btn-primary" id="createTablesBtn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Generate table range
+          </button>
 
-        <div class="list-area" id="tablesList" style="margin-top:1rem;max-height:220px;">
-          <div class="empty-state">Select a restaurant to view &amp; manage tables</div>
+          <div class="list-area" id="tablesList" style="margin-top:1.1rem;max-height:220px;">
+            <div class="empty-state">Select a restaurant to view &amp; manage tables</div>
+          </div>
         </div>
       </div>
     </div>
 
   </div>
+</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./shared/supabase.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+
+// ── Icon helper (presentation only) ────────────────────────────────────────
+const ICONS = {
+    trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>',
+    check: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+    alert: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    xcircle: '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
+    shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+    kanban: '<rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="10" rx="1"/>',
+    robot: '<rect x="5" y="8" width="14" height="10" rx="2"/><circle cx="9" cy="13" r="1.3"/><circle cx="15" cy="13" r="1.3"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1"/>',
+    hash: '<line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>',
+    pin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+    table: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>',
+};
+function icon(name, size = 14, cls = '') {
+    return `<svg class="i ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ''}</svg>`;
+}
 
 // ── Dev password ─────────────────────────────────────────────────────────
 const DEV_PASSWORD = 'devmode123';
@@ -205,7 +477,7 @@ function tryUnlock() {
         document.getElementById('devMain').style.display = 'block';
         loadAll();
     } else {
-        gateError.style.display = 'block';
+        gateError.style.display = 'flex';
         devPwdInput.value = '';
         devPwdInput.focus();
     }
@@ -233,9 +505,9 @@ document.getElementById('restCode').addEventListener('input', e => {
 // ── Flash message helper ──────────────────────────────────────────────────
 function flash(elId, msg, isError = false) {
     const el = document.getElementById(elId);
-    el.textContent = msg;
+    el.innerHTML = icon(isError ? 'xcircle' : 'check', 15) + `<span>${msg}</span>`;
     el.className = `msg ${isError ? 'error' : 'success'}`;
-    el.style.display = 'block';
+    el.style.display = 'flex';
     setTimeout(() => { el.style.display = 'none'; }, 4000);
 }
 
@@ -256,7 +528,7 @@ async function loadRestaurants() {
     if (error) {
         console.error('loadRestaurants error:', error);
         document.getElementById('restaurantList').innerHTML =
-            `<div class="empty-state" style="color:var(--danger)">DB error: ${error.message}</div>`;
+            `<div class="empty-state" style="color:var(--danger)">${icon('alert',20)}DB error: ${error.message}</div>`;
         return;
     }
     allRestaurants = data || [];
@@ -266,22 +538,21 @@ async function loadRestaurants() {
 
 function renderRestaurantList() {
     const el = document.getElementById('restaurantList');
+    document.getElementById('restStatCount').textContent = allRestaurants.length;
     if (!allRestaurants.length) {
-        el.innerHTML = '<div class="empty-state">No restaurants yet. Create one!</div>';
+        el.innerHTML = `<div class="empty-state">${icon('hash',22)}No restaurants yet — the cat is waiting to beckon one in.</div>`;
         return;
     }
     el.innerHTML = allRestaurants.map(r => `
-        <div class="list-item">
-            <div class="list-item-top">
-                <div>
-                    <div class="list-item-name">${r.name}</div>
-                    <div class="list-item-meta">
-                        Login Code: <span class="code-badge">${r.code || '<em>no code</em>'}</span>
-                        ${r.address ? '&nbsp;· ' + r.address : ''}
-                    </div>
+        <div class="row-item">
+            <div class="row-main">
+                <div class="row-name">${r.name}</div>
+                <div class="row-meta">
+                    <span class="code-badge">${icon('hash',11)}${r.code || 'no code'}</span>
+                    ${r.address ? `<span class="sep">·</span><span>${icon('pin',11)} ${r.address}</span>` : ''}
                 </div>
-                <button class="btn btn-danger btn-sm" onclick="deleteRestaurant('${r.id}','${r.name}')">🗑</button>
             </div>
+            <button class="btn btn-danger btn-icon" onclick="deleteRestaurant('${r.id}','${r.name}')">${icon('trash',14)}</button>
         </div>
     `).join('');
 }
@@ -290,9 +561,9 @@ function populateRestaurantDropdowns() {
     const opts = allRestaurants.map(r =>
         `<option value="${r.id}">${r.name} (${r.code || 'no code'})</option>`
     ).join('');
-    document.getElementById('credRestaurant').innerHTML = '<option value="">-- Select Restaurant --</option>' + opts;
-    document.getElementById('filterRestaurant').innerHTML = '<option value="">-- All Restaurants --</option>' + opts;
-    document.getElementById('tableRestaurant').innerHTML = '<option value="">-- Select Restaurant --</option>' + opts;
+    document.getElementById('credRestaurant').innerHTML = '<option value="">Select restaurant</option>' + opts;
+    document.getElementById('filterRestaurant').innerHTML = '<option value="">All restaurants</option>' + opts;
+    document.getElementById('tableRestaurant').innerHTML = '<option value="">Select restaurant</option>' + opts;
 }
 
 // ── Table Management ──────────────────────────────────────────────────────
@@ -314,18 +585,16 @@ async function loadDevTables(restaurantId) {
 function renderTablesList(tables, restaurantId) {
     const el = document.getElementById('tablesList');
     if (!tables.length) {
-        el.innerHTML = '<div class="empty-state">No tables created for this restaurant yet.</div>';
+        el.innerHTML = `<div class="empty-state">${icon('table',20)}No tables mapped out yet.</div>`;
         return;
     }
     el.innerHTML = tables.map(t => `
-        <div class="list-item" style="padding:.6rem .8rem;">
-            <div class="list-item-top">
-                <div>
-                    <span class="code-badge" style="font-size:.9rem;">Table ${t.table_number}</span>
-                    <span style="font-size:.8rem;color:var(--text-muted);margin-left:.4rem;">${t.label || ''}</span>
-                </div>
-                <button class="btn btn-danger btn-sm" onclick="deleteTable('${t.id}','${restaurantId}')">🗑</button>
+        <div class="table-chip">
+            <div class="row-main">
+                <span class="code-badge">Table ${t.table_number}</span>
+                <div class="row-meta">${t.label || ''}</div>
             </div>
+            <button class="btn btn-danger btn-icon" onclick="deleteTable('${t.id}','${restaurantId}')">${icon('trash',13)}</button>
         </div>
     `).join('');
 }
@@ -335,9 +604,9 @@ document.getElementById('createTablesBtn').addEventListener('click', async () =>
     const fromNum = parseInt(document.getElementById('tableFrom').value, 10);
     const toNum = parseInt(document.getElementById('tableTo').value, 10);
 
-    if (!restaurantId) { flash('tableMsg', '⚠️ Select a restaurant first.', true); return; }
+    if (!restaurantId) { flash('tableMsg', 'Select a restaurant first.', true); return; }
     if (isNaN(fromNum) || isNaN(toNum) || fromNum < 1 || toNum < fromNum) {
-        flash('tableMsg', '⚠️ Enter a valid table range (e.g. 1 to 10).', true);
+        flash('tableMsg', 'Enter a valid table range (e.g. 1 to 10).', true);
         return;
     }
 
@@ -349,11 +618,11 @@ document.getElementById('createTablesBtn').addEventListener('click', async () =>
     const { error } = await window.supabaseClient.from('restaurant_tables').upsert(rows, { onConflict: 'restaurant_id,table_number' });
 
     if (error) {
-        flash('tableMsg', '❌ Error: ' + error.message, true);
+        flash('tableMsg', 'Error: ' + error.message, true);
         return;
     }
 
-    flash('tableMsg', `✅ Tables ${fromNum} to ${toNum} created/updated!`);
+    flash('tableMsg', `Tables ${fromNum} to ${toNum} created/updated.`);
     await loadDevTables(restaurantId);
 });
 
@@ -373,11 +642,11 @@ document.getElementById('createRestBtn').addEventListener('click', async () => {
     const address = document.getElementById('restAddress').value.trim();
 
     if (!name || !code) {
-        flash('restMsg', '⚠️ Name and Code are required.', true);
+        flash('restMsg', 'Name and code are required.', true);
         return;
     }
     if (!/^[A-Z0-9]{2,20}$/.test(code)) {
-        flash('restMsg', '⚠️ Code must be 2-20 uppercase letters/numbers only.', true);
+        flash('restMsg', 'Code must be 2-20 uppercase letters/numbers only.', true);
         return;
     }
 
@@ -386,11 +655,11 @@ document.getElementById('createRestBtn').addEventListener('click', async () => {
         .insert({ name, code, address: address || null });
 
     if (error) {
-        flash('restMsg', '❌ ' + (error.message.includes('unique') ? `Code "${code}" is already taken.` : error.message), true);
+        flash('restMsg', error.message.includes('unique') ? `Code "${code}" is already taken.` : error.message, true);
         return;
     }
 
-    flash('restMsg', `✅ Restaurant "${name}" created with code ${code}`);
+    flash('restMsg', `Restaurant "${name}" created with code ${code}.`);
     document.getElementById('restName').value = '';
     document.getElementById('restCode').value = '';
     document.getElementById('restAddress').value = '';
@@ -414,11 +683,11 @@ document.getElementById('createCredBtn').addEventListener('click', async () => {
     const role         = document.getElementById('credRole').value;
 
     if (!restaurantId || !username || !pin || !role) {
-        flash('credMsg', '⚠️ All fields are required.', true);
+        flash('credMsg', 'All fields are required.', true);
         return;
     }
     if (!/^\d{4,8}$/.test(pin)) {
-        flash('credMsg', '⚠️ PIN must be 4-8 digits.', true);
+        flash('credMsg', 'PIN must be 4-8 digits.', true);
         return;
     }
 
@@ -429,11 +698,11 @@ document.getElementById('createCredBtn').addEventListener('click', async () => {
         .insert({ restaurant_id: restaurantId, username, pin_hash, role });
 
     if (error) {
-        flash('credMsg', '❌ ' + (error.message.includes('unique') ? `Username "${username}" already exists in this restaurant.` : error.message), true);
+        flash('credMsg', error.message.includes('unique') ? `Username "${username}" already exists in this restaurant.` : error.message, true);
         return;
     }
 
-    flash('credMsg', `✅ Login created: ${username} (${role})`);
+    flash('credMsg', `Login created: ${username} (${role}).`);
     document.getElementById('credUsername').value = '';
     document.getElementById('credPin').value = '';
 
@@ -463,24 +732,22 @@ async function loadCredentials(restaurantId) {
 function renderCredentialList(creds, restaurantId) {
     const el = document.getElementById('credentialList');
     if (!creds.length) {
-        el.innerHTML = '<div class="empty-state">No credentials found. Add one!</div>';
+        el.innerHTML = `<div class="empty-state">${icon('shield',20)}No staff logins here yet.</div>`;
         return;
     }
     const roleBadge = r => {
-        if (r === 'admin')       return `<span class="role-badge role-admin">Admin</span>`;
-        if (r === 'kds')         return `<span class="role-badge role-kds">Kitchen</span>`;
-        if (r === 'bot_manager') return `<span class="role-badge role-bot">Bots</span>`;
+        if (r === 'admin')       return `<span class="role-badge role-admin">${icon('shield',11)}Admin</span>`;
+        if (r === 'kds')         return `<span class="role-badge role-kds">${icon('kanban',11)}Kitchen</span>`;
+        if (r === 'bot_manager') return `<span class="role-badge role-bot">${icon('robot',11)}Bots</span>`;
         return r;
     };
     el.innerHTML = creds.map(c => `
-        <div class="list-item">
-            <div class="list-item-top">
-                <div>
-                    <div class="list-item-name" style="font-family:var(--font-mono);">${c.username}</div>
-                    <div class="list-item-meta">${roleBadge(c.role)}&nbsp; Added: ${new Date(c.created_at).toLocaleDateString()}</div>
-                </div>
-                <button class="btn btn-danger btn-sm" onclick="deleteCredential('${c.id}','${c.username}','${restaurantId}')">🗑</button>
+        <div class="row-item">
+            <div class="row-main">
+                <div class="row-name" style="font-family:'JetBrains Mono',monospace;">${c.username}</div>
+                <div class="row-meta">${roleBadge(c.role)}<span class="sep">·</span><span>Added ${new Date(c.created_at).toLocaleDateString()}</span></div>
             </div>
+            <button class="btn btn-danger btn-icon" onclick="deleteCredential('${c.id}','${c.username}','${restaurantId}')">${icon('trash',14)}</button>
         </div>
     `).join('');
 }
