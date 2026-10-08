@@ -101,6 +101,20 @@
             color: var(--text-primary);
         }
 
+        .btn-logout {
+            background: rgba(239, 68, 68, 0.1) !important;
+            border-color: rgba(239, 68, 68, 0.3) !important;
+            color: #ef4444 !important;
+        }
+        .btn-logout:hover {
+            background: rgba(239, 68, 68, 0.22) !important;
+            border-color: rgba(239, 68, 68, 0.6) !important;
+            color: #ff6b6b !important;
+        }
+        @media (max-width: 520px) {
+            .logout-label { display: none; }
+        }
+
         #cartCount {
             background: var(--primary-raw);
             color: #fff;
@@ -729,6 +743,55 @@
         .ai-item-remove:hover {
             color: var(--danger);
             background: var(--danger-bg);
+        }
+        .ai-qty-ctrl {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-sm, 6px);
+            padding: 2px 4px;
+            border: 1px solid var(--glass-border, rgba(255,255,255,0.08));
+        }
+        .ai-qty-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-primary, #fff);
+            font-size: 0.9rem;
+            font-weight: 700;
+            width: 22px;
+            height: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.15s ease;
+        }
+        .ai-qty-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--accent-orange, #ff7a18);
+        }
+        .ai-qty-val {
+            font-size: 0.85rem;
+            font-weight: 600;
+            min-width: 16px;
+            text-align: center;
+            color: var(--text-primary, #fff);
+        }
+        .latency-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #10b981;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: 9999px;
+            padding: 2px 8px;
+            margin-top: 4px;
+            margin-left: 8px;
+            transition: opacity 0.8s ease;
+            vertical-align: middle;
         }
         .empty-hint { color: var(--text-dimmed); font-style: italic; text-align: center; padding: 2rem 0; font-size: 0.95rem; }
 
@@ -1756,6 +1819,10 @@
             <button id="profileBtn" class="header-action-btn">
                 <span style="font-size: 1.1rem; line-height: 1;">👤</span>
             </button>
+            <button id="customerLogoutBtn" class="header-action-btn btn-logout" title="Leave Table / Logout">
+                <span style="font-size: 1.1rem; line-height: 1;">🚪</span>
+                <span class="logout-label">Exit</span>
+            </button>
         </div>
 </header>
 
@@ -1802,6 +1869,11 @@
             <!-- Populated via JS -->
             <p class="empty-hint">Loading your history...</p>
         </div>
+        <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
+            <button id="modalLogoutBtn" class="btn-secondary" style="border-color: rgba(239, 68, 68, 0.4); color: #ef4444; width: auto; padding: 0.6rem 1.25rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; font-weight: 700;">
+                <span>🚪</span> Leave Table / Logout
+            </button>
+        </div>
     </div>
 </div>
 
@@ -1838,8 +1910,8 @@
                         <div class="chat-input-wrapper">
                             <input type="text" id="chatInput" placeholder="Ask me anything about the menu…" autocomplete="off" />
                             <div class="chat-actions">
-                                <button id="voiceBtn" aria-label="Voice input">🎙️</button>
-                                <button id="sendBtn" aria-label="Send">📤</button>
+                                <button type="button" id="voiceBtn" aria-label="Voice input" title="Voice input (Click to speak)">🎙️</button>
+                                <button type="button" id="sendBtn" aria-label="Send" title="Send message">📤</button>
                             </div>
                         </div>
                     </div>
@@ -1876,8 +1948,8 @@
             <span>🧾 Active Order — <span id="activeOrderStatus">Pending</span></span>
         </div>
         <div class="bar-actions">
-            <button class="bar-btn" onclick="document.getElementById('orderStatusScreen').style.display='flex'; document.getElementById('mainApp').style.display='none';">📋 Status</button>
-            <button class="bar-btn bar-btn-pay" onclick="document.getElementById('qrPaymentScreen').style.display='flex'; document.getElementById('mainApp').style.display='none';">💳 Pay</button>
+            <button id="barStatusBtn" class="bar-btn" onclick="document.getElementById('orderStatusScreen').style.display='flex'; document.getElementById('mainApp').style.display='none';">📋 Status</button>
+            <button id="barPayBtn" class="bar-btn bar-btn-pay" onclick="document.getElementById('qrPaymentScreen').style.display='flex'; document.getElementById('mainApp').style.display='none';">💳 Pay</button>
         </div>
     </div>
 
@@ -1983,8 +2055,11 @@
                 <div style="font-size: 3.5rem; margin-bottom: 1.5rem; cursor: default;">🎉</div>
                 <h3 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.75rem;">Thank you for dining with us!</h3>
                 <p style="color: var(--text-secondary); font-weight: 500;">See you next time! 🐱</p>
-                <div style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1rem; width: 100%;">
-                    <p style="font-size: 0.75rem; color: var(--text-dimmed);">You may close this window.</p>
+                <div style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem; width: 100%;">
+                    <button onclick="handleCustomerLogout()" class="btn-primary" style="width: auto; padding: 0.75rem 1.75rem; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                        <span>🚪</span> Leave Table / Finish
+                    </button>
+                    <p style="font-size: 0.75rem; color: var(--text-dimmed);">You may close this window or leave table.</p>
                 </div>
             </div>
         </div>
@@ -1996,6 +2071,7 @@
     <!-- ═══════════════════════════ SCRIPTS ═══════════════════════════ -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../shared/supabase.js"></script>
+    <script src="../shared/customer-auth.js"></script>
     <script src="app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 

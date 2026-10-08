@@ -1,4 +1,5 @@
 // /kds/app.js — Maneki Neko Kitchen Display System
+// Resilient dual-source architecture: Supabase Realtime + Direct DB Query + MCP Server fallback.
 // Standard script (no import/export). All logic in DOMContentLoaded.
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -9,11 +10,17 @@ document.addEventListener('DOMContentLoaded', () => {
         knownOrderIds: new Set()
     };
 
+    let isRefreshing = false;
+    let realtimeChannel = null;
+
+    // ── Restaurant context (set after auth) ────────────────────────────────
+    let restaurantId = null;
+
     // ── Constants ──────────────────────────────────────────────────────────
     const COLUMNS = ['pending', 'preparing', 'ready'];
-    const REFRESH_INTERVAL_MS  = 10000; // 10 s auto-refresh
-    const TIMER_UPDATE_MS      = 60000; // 60 s timer label refresh
-    const WARN_THRESHOLD_MINS  = 15;
+    const REFRESH_INTERVAL_MS = 4000;  // Polling heartbeat (backup to Realtime)
+    const TIMER_UPDATE_MS     = 30000; // 30s timer label refresh
+    const WARN_THRESHOLD_MINS = 15;
 
     const EMPTY_MESSAGES = {
         pending:   { icon: '🎉', text: 'No new orders' },
@@ -35,56 +42,260 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(tick, 1000);
     }
 
-    // ── Fetch Orders (pending / preparing / ready) ─────────────────────────
+    // ── MCP Server Config ──────────────────────────────────────────────────
+    const MCP_BASE = 'https://mcp-server-for-maneki-neko.onrender.com';
+    const ADMIN_API_KEY = window.ADMIN_API_KEY || localStorage.getItem('mneko_admin_key') || 'maneki-admin-secret-2026';
+
+    // ── Audio Notification (Web Audio API chime, no external files) ─────────
+    function playNewOrderChime() {
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            const ctx = new AudioCtx();
+            const now = ctx.currentTime;
+
+            // Tone 1
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(587.33, now); // D5
+            gain1.gain.setValueAtTime(0.15, now);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+            osc1.connect(gain1);
+            gain1.connect(ctx.destination);
+            osc1.start(now);
+            osc1.stop(now + 0.35);
+
+            // Tone 2
+            const osc2 = ctx.createOscillator();
+            const gain2 = ctx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(880, now + 0.18); // A5
+            gain2.gain.setValueAtTime(0.18, now + 0.18);
+            gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+            osc2.connect(gain2);
+            gain2.connect(ctx.destination);
+            osc2.start(now + 0.18);
+            osc2.stop(now + 0.65);
+        } catch (e) {
+            // AudioContext might be blocked until user gesture, safely ignore
+        }
+    }
+
+    // ── Update Connection Status Indicator ──────────────────────────────────
+    function updateStatusIndicator(isOnline, label) {
+        const dot = document.querySelector('.kds-status-dot');
+        if (dot) {
+            dot.style.background = isOnline ? 'var(--success)' : 'var(--danger)';
+            dot.style.boxShadow = isOnline
+                ? '0 0 10px rgba(16, 185, 129, 0.6)'
+                : '0 0 10px rgba(239, 68, 68, 0.6)';
+        }
+    }
+
+    // ── Resilient Order Fetcher (Supabase Direct + MCP fallback/enrich) ──────
     async function fetchActiveOrders() {
-        // Fetch all 3 statuses in parallel
-        const [pendingRes, preparingRes, readyRes] = await Promise.all([
-            window.getOrders('pending'),
-            window.getOrders('preparing'),
-            window.getOrders('ready')
-        ]);
-        const pending   = pendingRes?.data   || [];
-        const preparing = preparingRes?.data || [];
-        const ready     = readyRes?.data     || [];
-        return [...pending, ...preparing, ...ready];
+        const targetRestId = restaurantId || 'aaaaaaaa-0000-0000-0000-000000000001';
+        let supaOrders = null;
+        let mcpOrders = null;
+
+        // 1. Primary Source: Direct Supabase query (fastest, guaranteed, real database)
+        if (window.supabaseClient) {
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('orders')
+                    .select('*')
+                    .eq('restaurant_id', targetRestId)
+                    .in('status', COLUMNS)
+                    .order('created_at', { ascending: true });
+
+                if (!error && Array.isArray(data)) {
+                    supaOrders = data;
+                } else if (error) {
+                    console.warn('[KDS] Supabase fetch error:', error.message);
+                }
+            } catch (err) {
+                console.warn('[KDS] Supabase client exception:', err);
+            }
+        }
+
+        // 2. Secondary Source: MCP Server (timeout 3.5s so slow Render cold-start never freezes KDS)
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+            const res = await fetch(`${MCP_BASE}/admin/orders/active?restaurant_id=${encodeURIComponent(targetRestId)}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Key': ADMIN_API_KEY
+                },
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data.orders)) {
+                    mcpOrders = data.orders;
+                }
+            }
+        } catch (err) {
+            // MCP timeout or offline — completely normal if Render is idling
+        }
+
+        // 3. Harmonize data
+        if (supaOrders && mcpOrders) {
+            // Union orders from both sources by ID so neither is dropped
+            const supaMap = new Map(supaOrders.map(o => [o.id, o]));
+            const mcpMap = new Map(mcpOrders.map(o => [o.id, o]));
+            const allIds = new Set([...supaMap.keys(), ...mcpMap.keys()]);
+            const merged = [];
+
+            for (const id of allIds) {
+                const so = supaMap.get(id);
+                const mo = mcpMap.get(id);
+                if (so && mo) {
+                    merged.push({ ...so, ...mo, status: mo.status || so.status });
+                } else if (so) {
+                    merged.push(so);
+                } else if (mo) {
+                    merged.push(mo);
+                }
+            }
+            return merged.filter(o => COLUMNS.includes(o.status));
+        }
+
+        if (supaOrders) return supaOrders;
+        if (mcpOrders) return mcpOrders;
+
+        // If both failed, return null (DO NOT return [] to avoid wiping out current state)
+        return null;
+    }
+
+    // ── Realtime Setup via Supabase ─────────────────────────────────────────
+    function initRealtime() {
+        if (!window.supabaseClient) return;
+
+        try {
+            const targetRestId = restaurantId || 'aaaaaaaa-0000-0000-0000-000000000001';
+
+            if (realtimeChannel) {
+                window.supabaseClient.removeChannel(realtimeChannel);
+            }
+
+            realtimeChannel = window.supabaseClient
+                .channel('kds-orders-realtime')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*',
+                        schema: 'public',
+                        table: 'orders'
+                    },
+                    (payload) => {
+                        const rec = payload.new || payload.old;
+                        if (!rec || !rec.restaurant_id || rec.restaurant_id === targetRestId) {
+                            console.log('[KDS Realtime] Order update detected:', payload.eventType);
+                            autoRefresh();
+                        }
+                    }
+                )
+                .subscribe((status) => {
+                    if (status === 'SUBSCRIBED') {
+                        console.log('[KDS Realtime] Subscribed to orders successfully');
+                        updateStatusIndicator(true);
+                    }
+                });
+        } catch (err) {
+            console.warn('[KDS Realtime] Setup error:', err);
+        }
     }
 
     // ── Initial Load ───────────────────────────────────────────────────────
     async function init() {
+        // ── Auth guard: kds and admin roles permitted ──────────────────────
+        const session = window.RestaurantAuth.requireAuth(['kds', 'admin']);
+        if (!session) return; // redirecting
+
+        restaurantId = session.restaurantId || 'aaaaaaaa-0000-0000-0000-000000000001';
+
+        // Show restaurant name in header
+        const nameEl = document.getElementById('kdsRestaurantName');
+        if (nameEl) nameEl.textContent = session.restaurantName || 'Kitchen Display';
+
+        // Show + wire logout button
+        const logoutBtn = document.getElementById('kdsLogoutBtn');
+        if (logoutBtn) {
+            logoutBtn.style.display = '';
+            logoutBtn.addEventListener('click', () => window.RestaurantAuth.logout());
+        }
+
         startClock();
 
+        // Initial fetch
         const orders = await fetchActiveOrders();
-        state.orders = orders;
-        orders.forEach(o => state.knownOrderIds.add(o.id));
-        renderAllColumns();
+        if (orders !== null) {
+            state.orders = orders;
+            orders.forEach(o => state.knownOrderIds.add(o.id));
+            renderAllColumns();
+            updateStatusIndicator(true);
+        }
 
-        // Auto-refresh every 10 seconds
+        // Initialize Supabase Realtime channel
+        initRealtime();
+
+        // Polling fallback every 4 seconds
         setInterval(autoRefresh, REFRESH_INTERVAL_MS);
 
-        // Update timer labels every 60 seconds
+        // Update timer labels every 30 seconds
         setInterval(updateAllTimers, TIMER_UPDATE_MS);
 
         // Manual refresh button
-        document.getElementById('refreshBtn')
-            ?.addEventListener('click', () => autoRefresh());
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => {
+                refreshBtn.style.opacity = '0.5';
+                autoRefresh().finally(() => {
+                    setTimeout(() => { refreshBtn.style.opacity = '1'; }, 300);
+                });
+            });
+        }
     }
 
     // ── Auto Refresh ───────────────────────────────────────────────────────
     async function autoRefresh() {
-        const freshOrders = await fetchActiveOrders();
+        if (isRefreshing) return;
+        isRefreshing = true;
 
-        // Detect brand-new order IDs
-        const newIds = freshOrders
-            .map(o => o.id)
-            .filter(id => !state.knownOrderIds.has(id));
+        try {
+            const freshOrders = await fetchActiveOrders();
 
-        state.orders = freshOrders;
-        freshOrders.forEach(o => state.knownOrderIds.add(o.id));
+            // If fetch failed completely, preserve current state and mark warning
+            if (freshOrders === null) {
+                updateStatusIndicator(false);
+                return;
+            }
 
-        renderAllColumns();
+            updateStatusIndicator(true);
 
-        // Flash newly arrived cards
-        newIds.forEach(id => flashNewCard(id));
+            // Detect brand-new order IDs
+            const newIds = freshOrders
+                .map(o => o.id)
+                .filter(id => !state.knownOrderIds.has(id));
+
+            state.orders = freshOrders;
+            freshOrders.forEach(o => state.knownOrderIds.add(o.id));
+
+            renderAllColumns();
+
+            // Flash newly arrived cards & play chime
+            if (newIds.length > 0) {
+                playNewOrderChime();
+                newIds.forEach(id => flashNewCard(id));
+            }
+        } finally {
+            isRefreshing = false;
+        }
     }
 
     // ── Render All Columns ─────────────────────────────────────────────────
@@ -125,7 +336,13 @@ document.addEventListener('DOMContentLoaded', () => {
         card.id = `card-${order.id}`;
 
         const shortId = (order.id || '').slice(0, 8);
-        const items   = Array.isArray(order.items) ? order.items : [];
+
+        // Safely parse items whether array or JSON string
+        let rawItems = order.items;
+        if (typeof rawItems === 'string') {
+            try { rawItems = JSON.parse(rawItems); } catch(e) { rawItems = []; }
+        }
+        const items = Array.isArray(rawItems) ? rawItems : [];
 
         // ── Timer ────────────────────────────────────────────────────────
         const elapsedMins = getElapsedMinutes(order.created_at);
@@ -136,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const itemsHtml = items.length === 0
             ? '<li><span class="item-name" style="color:rgba(255,255,255,0.3)">No items</span></li>'
             : items.map(i => {
-                const isVeg = i.is_veg !== undefined ? i.is_veg : true;
+                const isVeg = i.is_veg !== undefined ? Boolean(i.is_veg) : true;
                 const instructionsHtml = i.instructions ? `<div class="item-instructions">"${i.instructions}"</div>` : '';
                 return `
                   <li>
@@ -194,6 +411,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         moveOrder(order.id, 'cancelled');
                     }
                 } else if (action === 'next') {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.7';
                     moveOrder(order.id, nextStatus);
                 }
             });
@@ -202,32 +421,82 @@ document.addEventListener('DOMContentLoaded', () => {
         return card;
     }
 
-    // ── Move Order ─────────────────────────────────────────────────────────
+    // ── Move Order with Instant Optimistic UI + Dual Persistence ─────────────
     async function moveOrder(orderId, newStatus) {
-        // Optimistically remove from current column
-        const card = document.getElementById(`card-${orderId}`);
-        if (card) card.remove();
+        const orderIdx = state.orders.findIndex(o => o.id === orderId);
+        if (orderIdx === -1) return;
 
-        // Update state immediately
-        const idx = state.orders.findIndex(o => o.id === orderId);
-        if (idx !== -1) state.orders[idx].status = newStatus;
+        const previousStatus = state.orders[orderIdx].status;
 
-        // Update summary counts
-        updateSummaryCounts();
-
-        // Persist to Supabase
-        const result = await window.updateOrderStatus(orderId, newStatus);
-        if (result.error) {
-            console.error('Failed to update order status:', result.error.message);
+        // 1. Instant Optimistic UI: Immediately move or remove card
+        if (newStatus === 'delivered' || newStatus === 'cancelled') {
+            state.orders.splice(orderIdx, 1);
+        } else {
+            state.orders[orderIdx].status = newStatus;
         }
 
-        // Re-fetch and re-render to ensure consistency
-        await autoRefresh();
+        // Render changes immediately without waiting for server network responses
+        renderAllColumns();
+
+        // 2. Primary Persistence: Direct to Supabase (fast, guaranteed)
+        let supaSuccess = false;
+        if (window.supabaseClient) {
+            try {
+                const { error } = await window.supabaseClient
+                    .from('orders')
+                    .update({ status: newStatus })
+                    .eq('id', orderId);
+
+                if (!error) {
+                    supaSuccess = true;
+                } else {
+                    console.error('[KDS] Supabase status update error:', error.message);
+                }
+            } catch (err) {
+                console.error('[KDS] Supabase update exception:', err);
+            }
+        }
+
+        // 3. Secondary Persistence: MCP Server PATCH (runs non-blocking with 5s timeout)
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+            let res = await fetch(`${MCP_BASE}/orders/${orderId}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Key': ADMIN_API_KEY
+                },
+                body: JSON.stringify({ status: newStatus }),
+                signal: controller.signal
+            }).catch(() => null);
+
+            if (!res || !res.ok) {
+                await fetch(`${MCP_BASE}/admin/orders/${orderId}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Key': ADMIN_API_KEY
+                    },
+                    body: JSON.stringify({ status: newStatus }),
+                    signal: controller.signal
+                }).catch(() => null);
+            }
+            clearTimeout(timeoutId);
+        } catch (err) {
+            console.warn('[KDS] MCP status PATCH non-blocking notice:', err.message);
+        }
+
+        // 4. Fallback recovery if totally disconnected
+        if (!supaSuccess && !window.supabaseClient) {
+            alert('Failed to update status. Please check network connection.');
+            await autoRefresh();
+        }
     }
 
     // ── Flash New Card ─────────────────────────────────────────────────────
     function flashNewCard(orderId) {
-        // Card may not yet be in DOM immediately, wait one tick
         setTimeout(() => {
             const card = document.getElementById(`card-${orderId}`);
             if (!card) return;
