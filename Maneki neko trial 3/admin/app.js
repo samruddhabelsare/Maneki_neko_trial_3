@@ -18,13 +18,40 @@ document.addEventListener('DOMContentLoaded', () => {
         restaurantId: null   // set after auth
     };
 
+    // ── MCP Server Config ──────────────────────────────────────────────────
+    const MCP_BASE = 'https://mcp-server-for-maneki-neko.onrender.com';
+    const ADMIN_API_KEY = window.ADMIN_API_KEY || localStorage.getItem('mneko_admin_key') || 'maneki-admin-secret-2026';
+
+    async function mcpAdminFetch(path, options = {}) {
+        const headers = {
+            'X-Admin-Key': ADMIN_API_KEY,
+            ...(options.headers || {})
+        };
+        if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
+            headers['Content-Type'] = 'application/json';
+            options.body = JSON.stringify(options.body);
+        }
+        const res = await fetch(`${MCP_BASE}${path}`, { ...options, headers });
+        if (!res.ok) {
+            const err = await res.text().catch(() => '');
+            throw new Error(`MCP ${path} failed (${res.status}): ${err.slice(0, 150)}`);
+        }
+        return res.json();
+    }
+
     // ── loadCategories() — standalone helper ────────────────────────────────
     async function loadCategories(restaurantId) {
-        let query = window.supabaseClient.from('menu_items').select('category');
-        if (restaurantId) query = query.eq('restaurant_id', restaurantId);
-        const { data, error } = await query;
-        if (error || !data) return [];
-        return [...new Set(data.map(item => item.category))].filter(Boolean).sort();
+        try {
+            const data = await mcpAdminFetch(`/admin/menu?restaurant_id=${encodeURIComponent(restaurantId)}`);
+            const items = data.items || data || [];
+            return [...new Set(items.map(item => item.category))].filter(Boolean).sort();
+        } catch (e) {
+            console.warn('loadCategories MCP fallback to supabase:', e);
+            let query = window.supabaseClient.from('menu_items').select('category');
+            if (restaurantId) query = query.eq('restaurant_id', restaurantId);
+            const { data } = await query;
+            return [...new Set((data || []).map(item => item.category))].filter(Boolean).sort();
+        }
     }
 
     // ── formatPhoneNumber Helper ──────────────────────────────────────────
@@ -233,73 +260,85 @@ document.addEventListener('DOMContentLoaded', () => {
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         async loadDashboard() {
             const rid = state.restaurantId;
-            const [ordersRes, botsRes, feedbackRes] = await Promise.all([
-                this._getDateQuery(window.supabaseClient.from('orders').select('*').eq('restaurant_id', rid)).order('created_at', { ascending: false }),
-                window.supabaseClient.from('bots').select('*').eq('restaurant_id', rid).order('table_number', { ascending: true }),
-                this._getDateQuery(window.supabaseClient.from('feedback').select('*')).order('created_at', { ascending: false })
-            ]);
-
-            const orders   = ordersRes?.data   || [];
-            const bots     = botsRes?.data     || [];
-            const feedback = feedbackRes?.data || [];
-
-            // Stats
-            const totalOrders = orders.length;
-            const revenue     = orders.reduce((acc, o) => acc + parseFloat(o.total_amount || 0), 0);
-            const onlineBots  = bots.filter(b => b.status === 'online').length;
-            const avgRating   = feedback.length
-                ? (feedback.reduce((acc, f) => acc + (f.rating || 0), 0) / feedback.length)
-                : 0;
-
-            this._setText('stat-orders',  totalOrders);
-            this._setText('stat-revenue', `₹${revenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
-            this._setText('stat-bots',    onlineBots);
-            this._setText('stat-rating',  avgRating.toFixed(1));
-
-            // Recent Orders table (last 10)
-            const ordersBody = document.getElementById('recentOrdersBody');
-            if (ordersBody) {
-                ordersBody.innerHTML = '';
-                const recent = orders.slice(0, 10);
-                if (recent.length === 0) {
-                    ordersBody.innerHTML = `<tr><td colspan="5" class="empty-cell">No orders yet</td></tr>`;
-                } else {
-                    recent.forEach(o => {
-                        const tr = document.createElement('tr');
-                        const items = Array.isArray(o.items) ? o.items : [];
-                        tr.innerHTML = `
-                            <td>T-${o.table_number || '—'}</td>
-                            <td>${items.length} item${items.length !== 1 ? 's' : ''}</td>
-                            <td>₹${parseFloat(o.total_amount || 0).toFixed(2)}</td>
-                            <td><span class="badge badge-${o.status}">${o.status}</span></td>
-                            <td>${this._formatTime(o.created_at)}</td>
-                        `;
-                        ordersBody.appendChild(tr);
-                    });
+            let rangeQuery = 'range=all';
+            if (state.dateRange && state.dateRange !== 'all') {
+                rangeQuery = `range=${encodeURIComponent(state.dateRange)}`;
+                if (state.dateRange === 'custom' && state.customRange.start && state.customRange.end) {
+                    rangeQuery += `&start_date=${encodeURIComponent(state.customRange.start)}&end_date=${encodeURIComponent(state.customRange.end)}`;
                 }
             }
 
-            // Bot Fleet list
-            const botList = document.getElementById('botOverviewList');
-            if (botList) {
-                botList.innerHTML = '';
-                if (bots.length === 0) {
-                    botList.innerHTML = `<p class="text-secondary" style="padding:1rem;text-align:center">No bots connected</p>`;
-                } else {
-                    bots.forEach(b => {
-                        const isOnline = b.status === 'online';
-                        const div = document.createElement('div');
-                        div.className = 'bot-item';
-                        div.innerHTML = `
-                            <div class="status-dot ${isOnline ? 'green' : 'grey'}"></div>
-                            <div style="flex:1; overflow:hidden;">
-                                <div class="bot-name">${b.name || 'Bot'}</div>
-                                <div class="bot-meta">${b.character_mode || '—'} · 🔋${b.battery ?? '?'}%</div>
-                            </div>
-                            <div class="bot-table">T-${b.table_number || '—'}</div>
-                        `;
-                        botList.appendChild(div);
-                    });
+            try {
+                const [sales, feedbackData, botsRes, ordersRes] = await Promise.all([
+                    mcpAdminFetch(`/admin/analytics/sales?restaurant_id=${encodeURIComponent(rid)}&${rangeQuery}`),
+                    mcpAdminFetch(`/admin/analytics/feedback?restaurant_id=${encodeURIComponent(rid)}&${rangeQuery}`),
+                    window.supabaseClient.from('bots').select('*').eq('restaurant_id', rid).order('table_number', { ascending: true }),
+                    this._getDateQuery(window.supabaseClient.from('orders').select('*').eq('restaurant_id', rid)).order('created_at', { ascending: false }).limit(10)
+                ]);
+
+                const onlineBots = (botsRes?.data || []).filter(b => b.status === 'online').length;
+                this._setText('stat-orders', sales.total_orders || 0);
+                this._setText('stat-revenue', `₹${parseFloat(sales.total_revenue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                this._setText('stat-bots', onlineBots);
+                this._setText('stat-rating', parseFloat(feedbackData.average_rating || 0).toFixed(1));
+
+                const orders = ordersRes?.data || [];
+                const ordersBody = document.getElementById('recentOrdersBody');
+                if (ordersBody) {
+                    ordersBody.innerHTML = '';
+                    if (orders.length === 0) {
+                        ordersBody.innerHTML = `<tr><td colspan="5" class="empty-cell">No orders yet</td></tr>`;
+                    } else {
+                        orders.forEach(order => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td class="order-id-cell">#${(order.id || '').slice(0, 8)}</td>
+                                <td>Table ${order.table_number || '—'}</td>
+                                <td>₹${parseFloat(order.total_amount || 0).toFixed(2)}</td>
+                                <td><span class="badge badge-${order.status}">${order.status}</span></td>
+                                <td>${this._formatTime(order.created_at)}</td>
+                            `;
+                            ordersBody.appendChild(tr);
+                        });
+                    }
+                }
+                return;
+            } catch (err) {
+                console.warn('MCP Dashboard fetch fallback:', err);
+                const [ordersRes, botsRes, feedbackRes] = await Promise.all([
+                    this._getDateQuery(window.supabaseClient.from('orders').select('*').eq('restaurant_id', rid)).order('created_at', { ascending: false }),
+                    window.supabaseClient.from('bots').select('*').eq('restaurant_id', rid).order('table_number', { ascending: true }),
+                    this._getDateQuery(window.supabaseClient.from('feedback').select('*')).order('created_at', { ascending: false })
+                ]);
+
+                const orders   = ordersRes?.data   || [];
+                const bots     = botsRes?.data     || [];
+                const feedback = feedbackRes?.data || [];
+
+                this._setText('stat-orders',  orders.length);
+                this._setText('stat-revenue', `₹${orders.reduce((acc, o) => acc + parseFloat(o.total_amount || 0), 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                this._setText('stat-bots',    bots.filter(b => b.status === 'online').length);
+                this._setText('stat-rating',  feedback.length ? (feedback.reduce((acc, f) => acc + (f.rating || 0), 0) / feedback.length).toFixed(1) : '0.0');
+
+                const ordersBody = document.getElementById('recentOrdersBody');
+                if (ordersBody) {
+                    ordersBody.innerHTML = '';
+                    const recent = orders.slice(0, 10);
+                    if (recent.length === 0) {
+                        ordersBody.innerHTML = `<tr><td colspan="5" class="empty-cell">No orders yet</td></tr>`;
+                    } else {
+                        recent.forEach(order => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td class="order-id-cell">#${(order.id || '').slice(0, 8)}</td>
+                                <td>Table ${order.table_number || '—'}</td>
+                                <td>₹${parseFloat(order.total_amount || 0).toFixed(2)}</td>
+                                <td><span class="badge badge-${order.status}">${order.status}</span></td>
+                                <td>${this._formatTime(order.created_at)}</td>
+                            `;
+                            ordersBody.appendChild(tr);
+                        });
+                    }
                 }
             }
         },
@@ -356,13 +395,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            // ── Fetch and render menu items ───────────────────────────────
-            const { data } = await window.supabaseClient
-                .from('menu_items')
-                .select('*')
-                .eq('restaurant_id', state.restaurantId)
-                .order('category', { ascending: true });
-            state.menu = data || [];
+            // ── Fetch and render menu items via MCP ───────────────────────
+            try {
+                const data = await mcpAdminFetch(`/admin/menu?restaurant_id=${encodeURIComponent(state.restaurantId)}`);
+                state.menu = data.items || data || [];
+            } catch (err) {
+                console.warn('MCP Menu fetch failed, falling back:', err);
+                const { data } = await window.supabaseClient
+                    .from('menu_items')
+                    .select('*')
+                    .eq('restaurant_id', state.restaurantId)
+                    .order('category', { ascending: true });
+                state.menu = data || [];
+            }
             state.currentMenuFilter = 'all';
             this.renderMenuTable('all');
         },
@@ -471,7 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const item = {
-                restaurant_id: 'aaaaaaaa-0000-0000-0000-000000000001',
+                restaurant_id: state.restaurantId || 'aaaaaaaa-0000-0000-0000-000000000001',
                 name:          document.getElementById('itemName').value.trim(),
                 category:      category,
                 price:         parseFloat(document.getElementById('itemPrice').value),
@@ -512,13 +557,36 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         async toggleAvailability(id, val) {
-            const { error } = await window.supabaseClient
-                .from('menu_items')
-                .update({ is_available: val })
-                .eq('id', id);
-            if (error) {
-                console.error('Toggle error:', error.message);
-                alert('Could not update availability: ' + error.message);
+            try {
+                await mcpAdminFetch(`/admin/menu/${id}/availability`, {
+                    method: 'PATCH',
+                    body: { is_available: val }
+                });
+            } catch (err) {
+                console.error('MCP Toggle error, falling back:', err);
+                const { error } = await window.supabaseClient
+                    .from('menu_items')
+                    .update({ is_available: val })
+                    .eq('id', id);
+                if (error) {
+                    console.error('Toggle error:', error.message);
+                    alert('Could not update availability: ' + error.message);
+                }
+            }
+        },
+
+        async updateItemPrice(id, newPrice) {
+            try {
+                await mcpAdminFetch(`/admin/menu/${id}/price`, {
+                    method: 'PATCH',
+                    body: { price: parseFloat(newPrice) }
+                });
+            } catch (err) {
+                console.error('MCP Update price error:', err);
+                await window.supabaseClient
+                    .from('menu_items')
+                    .update({ price: parseFloat(newPrice) })
+                    .eq('id', id);
             }
         },
 
@@ -533,9 +601,56 @@ document.addEventListener('DOMContentLoaded', () => {
         // ORDERS
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         async loadOrdersPage() {
-            const { data } = await this._getDateQuery(window.supabaseClient.from('orders').select('*').eq('restaurant_id', state.restaurantId)).order('created_at', { ascending: false });
-            state.orders = data || [];
+            const rid = state.restaurantId;
+
+            // Fetch all historical orders from Supabase
+            const { data: supaOrders } = await this._getDateQuery(
+                window.supabaseClient.from('orders').select('*').eq('restaurant_id', rid)
+            ).order('created_at', { ascending: false });
+
+            // Also fetch live active orders (pending/preparing/ready) from MCP
+            let activeOrders = [];
+            try {
+                const res = await mcpAdminFetch(`/admin/orders/active?restaurant_id=${encodeURIComponent(rid)}`);
+                activeOrders = res.orders || [];
+            } catch (e) {
+                console.warn('Could not fetch active orders from MCP:', e.message);
+            }
+
+            // Merge: active orders take priority (they have is_veg resolved)
+            const activeIds = new Set(activeOrders.map(o => o.id));
+            const historical = (supaOrders || []).filter(o => !activeIds.has(o.id));
+            state.orders = [...activeOrders, ...historical];
+
             this.renderOrders('all');
+
+            // Start polling active orders every 5 seconds while on this page
+            if (this._ordersPoller) clearInterval(this._ordersPoller);
+            this._ordersPoller = setInterval(async () => {
+                if (state.currentSection !== 'orders') {
+                    clearInterval(this._ordersPoller);
+                    this._ordersPoller = null;
+                    return;
+                }
+                try {
+                    const res2 = await mcpAdminFetch(`/admin/orders/active?restaurant_id=${encodeURIComponent(rid)}`);
+                    const fresh = res2.orders || [];
+                    const freshIds = new Set(fresh.map(o => o.id));
+                    // Update active order statuses in state
+                    state.orders = state.orders.map(o => {
+                        const updated = fresh.find(f => f.id === o.id);
+                        return updated ? { ...o, ...updated } : o;
+                    });
+                    // Add any brand new active orders
+                    const existing = new Set(state.orders.map(o => o.id));
+                    fresh.filter(o => !existing.has(o.id)).forEach(o => state.orders.unshift(o));
+                    // Re-render only active filter to avoid disrupting table scroll
+                    const currentFilter = document.querySelector('#orderFilters .filter-btn.active')?.dataset?.status || 'all';
+                    this.renderOrders(currentFilter);
+                } catch(e) {
+                    // silently ignore polling errors
+                }
+            }, 5000);
         },
 
         renderOrders(status) {
@@ -696,6 +811,43 @@ document.addEventListener('DOMContentLoaded', () => {
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         async loadAnalyticsPage() {
             const rid = state.restaurantId;
+            let rangeParam = state.dateRange || '7d';
+            let salesUrl = `/admin/analytics/sales?restaurant_id=${encodeURIComponent(rid)}&range=${encodeURIComponent(rangeParam)}`;
+            if (state.dateRange === 'custom' && state.customRange.start && state.customRange.end) {
+                salesUrl += `&start_date=${encodeURIComponent(state.customRange.start)}&end_date=${encodeURIComponent(state.customRange.end)}`;
+            }
+
+            try {
+                const [sales, feedbackData] = await Promise.all([
+                    mcpAdminFetch(salesUrl),
+                    mcpAdminFetch(`/admin/analytics/feedback?restaurant_id=${encodeURIComponent(rid)}&range=${encodeURIComponent(rangeParam)}`)
+                ]);
+
+                if (sales.top_items && sales.top_items.length > 0) {
+                    const topList = document.getElementById('topDishesList');
+                    if (topList) {
+                        const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+                        topList.innerHTML = sales.top_items.slice(0, 5).map((dish, idx) => `
+                            <div class="dish-row">
+                                <span class="dish-rank">${medals[idx] || idx + 1}</span>
+                                <span style="flex:1">${dish.name}</span>
+                                <span class="dish-count">${dish.sold || 0} sold (₹${parseFloat(dish.revenue || 0).toFixed(0)})</span>
+                            </div>
+                        `).join('');
+                    }
+                }
+
+                if (feedbackData.average_rating !== undefined) {
+                    const el = document.getElementById('satisfactionScore');
+                    if (el) {
+                        const pct = Math.round((parseFloat(feedbackData.average_rating) / 5) * 100);
+                        el.innerText = `${pct}%`;
+                    }
+                }
+            } catch (err) {
+                console.warn('MCP Analytics fetch fallback:', err);
+            }
+
             const [ordersRes, feedbackRes] = await Promise.all([
                 this._getDateQuery(window.supabaseClient.from('orders').select('*').eq('restaurant_id', rid)).order('created_at', { ascending: false }),
                 this._getDateQuery(window.supabaseClient.from('feedback').select('*')).order('created_at', { ascending: false })
@@ -704,9 +856,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const feedback = feedbackRes?.data || [];
 
             this.renderPeakHours(orders);
-            this.renderTopDishes(orders);
+            if (!document.getElementById('topDishesList')?.children?.length) {
+                this.renderTopDishes(orders);
+            }
             this.renderRevenueWeek(orders);
-            this.renderSatisfactionScore(feedback);
+            if (!document.getElementById('satisfactionScore')?.innerText || document.getElementById('satisfactionScore')?.innerText === '—') {
+                this.renderSatisfactionScore(feedback);
+            }
         },
 
         renderPeakHours(orders) {

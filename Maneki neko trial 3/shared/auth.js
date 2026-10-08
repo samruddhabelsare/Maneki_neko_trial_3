@@ -31,6 +31,12 @@
             return { success: false, error: 'Restaurant code, username, and PIN are all required.' };
         }
 
+        // Guard: supabaseClient must be initialised (supabase.js loaded correctly)
+        if (!window.supabaseClient) {
+            console.error('[Auth] window.supabaseClient is null — Supabase CDN may have failed to load.');
+            return { success: false, error: 'Authentication service unavailable. Please refresh the page.' };
+        }
+
         const code = restaurantCode.trim().toUpperCase();
         const user = username.trim().toLowerCase();
         const hash = await sha256(pin.toString());

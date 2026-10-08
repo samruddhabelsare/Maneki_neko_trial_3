@@ -408,6 +408,36 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             body.appendChild(row);
         });
+
+        checkMcpHealth();
+    }
+
+    async function checkMcpHealth() {
+        const el = document.getElementById('mcpServerStatus');
+        const pill = document.getElementById('mcpServerPill');
+        if (!el) return;
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
+            const res = await fetch('https://mcp-server-for-maneki-neko.onrender.com/healthz', {
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (res.ok) {
+                const data = await res.json();
+                el.textContent = `Online (${Math.round(data.uptime_seconds || 0)}s)`;
+                el.style.color = '#00e676';
+                if (pill) pill.style.borderColor = 'rgba(0, 230, 118, 0.4)';
+            } else {
+                el.textContent = `Degraded (${res.status})`;
+                el.style.color = '#ffa600';
+            }
+        } catch (e) {
+            el.textContent = 'Unreachable';
+            el.style.color = '#ff4444';
+            if (pill) pill.style.borderColor = 'rgba(255, 68, 68, 0.4)';
+        }
     }
 
     function startHealthPolling() {

@@ -3,24 +3,13 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const path = require('path');
-const OpenAI = require('openai');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ── NVIDIA NIM Client (OpenAI-compatible) ────────────────────────────────────
-const nvidiaApiKey = process.env.NVIDIA_API_KEY;
-if (!nvidiaApiKey || nvidiaApiKey.includes('YOUR_NVIDIA')) {
-    console.error('\n⚠️  WARNING: NVIDIA_API_KEY is not set in your .env file!');
-    console.error('   Get a free key at https://build.nvidia.com and add it to .env\n');
-}
-
-const nvidiaNimClient = new OpenAI({
-    baseURL: 'https://integrate.api.nvidia.com/v1',
-    apiKey: nvidiaApiKey || ''
-});
-
+const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY || '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';
 const NVIDIA_MODEL = process.env.NVIDIA_MODEL || 'nvidia/nemotron-3.5-lightning-30b-a3b';
+const NVIDIA_RAW_ENDPOINT = 'https://integrate.api.nvidia.com/v1/chat/completions';
 
 // Enable CORS for all routes
 app.use(cors());
@@ -30,102 +19,98 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.static(__dirname));
 
 /**
- * NVIDIA NIM AI Proxy Endpoint
- * Uses the OpenAI-compatible SDK to call NVIDIA's NIM endpoint.
- * Supports streaming SSE, reasoning_content (chain-of-thought), and tool_calls.
+ * AI Proxy Endpoint
+ * Proxies requests to NVIDIA NIM endpoint.
+ * Supports streaming SSE, non-streaming, and legacy { url, data, stream } format.
  */
 app.post('/api/proxy', async (req, res) => {
-    // Accept either a raw OpenAI-style body OR the legacy { url, data, stream } wrapper
     let body = req.body;
+    let targetUrl = NVIDIA_RAW_ENDPOINT;
+    let headers = {
+        'Content-Type': 'application/json'
+    };
+    let data = body;
 
-    // Legacy wrapper support: { url, method, headers, data, stream }
+    // Support legacy wrapper { url, method, headers, data, stream }
     if (body.url && body.data) {
-        body = { ...body.data, stream: body.stream !== undefined ? body.stream : body.data.stream };
+        targetUrl = body.url || targetUrl;
+        data = body.data;
     }
 
-    const {
-        messages,
-        temperature = 1,
-        top_p = 0.95,
-        max_tokens = 16384,
-        stream = true,
-        tools,
-        tool_choice = 'auto',
-        model
-    } = body;
+    let apiKey = NVIDIA_API_KEY;
+    if (body.headers && body.headers.Authorization && !body.headers.Authorization.includes('YOUR_NVIDIA')) {
+        const clientKey = body.headers.Authorization.replace('Bearer ', '').trim();
+        if (clientKey) apiKey = clientKey;
+    }
+    headers['Authorization'] = 'Bearer ' + apiKey;
 
-    if (!messages || !Array.isArray(messages)) {
-        return res.status(400).json({ error: '"messages" array is required.' });
+    if (!data.model || data.model.includes('llama-3.3-70b')) {
+        data.model = NVIDIA_MODEL;
     }
 
-    const selectedModel = model || NVIDIA_MODEL;
-    console.log(`[NVIDIA NIM] ${stream ? 'Streaming' : 'Non-streaming'} request → model: ${selectedModel}`);
+    // Ensure thinking traces are turned off so response is direct dialogue
+    if (!data.chat_template_kwargs) {
+        data.chat_template_kwargs = { enable_thinking: false };
+    }
+
+    const isStream = data.stream === true || body.stream === true;
 
     try {
-        const completionParams = {
-            model: selectedModel,
-            messages,
-            temperature,
-            top_p,
-            max_tokens,
-            stream,
-            chat_template_kwargs: { enable_thinking: true },
-            reasoning_budget: 16384
-        };
+        console.log(`[AI Proxy] ${isStream ? 'Streaming' : 'Non-streaming'} request -> model: ${data.model}`);
 
-        if (tools && Array.isArray(tools) && tools.length > 0) {
-            completionParams.tools = tools;
-            completionParams.tool_choice = tool_choice;
-        }
-
-        if (stream) {
-            // ── Streaming path: forward SSE chunks to client ─────────────────
+        if (isStream) {
             res.setHeader('Content-Type', 'text/event-stream');
             res.setHeader('Cache-Control', 'no-cache');
             res.setHeader('Connection', 'keep-alive');
-            res.flushHeaders();
 
-            const completion = await nvidiaNimClient.chat.completions.create(completionParams);
+            const response = await axios({
+                url: targetUrl,
+                method: 'POST',
+                headers: headers,
+                data: data,
+                responseType: 'stream',
+                timeout: 60000
+            });
 
-            for await (const chunk of completion) {
-                if (!chunk.choices || chunk.choices.length === 0) continue;
+            response.data.on('data', chunk => {
+                res.write(chunk);
+            });
 
-                const delta = chunk.choices[0].delta;
+            response.data.on('end', () => {
+                res.end();
+            });
 
-                // Forward reasoning/thinking tokens
-                const reasoningContent = delta.reasoning_content;
-                if (reasoningContent) {
-                    res.write(`data: ${JSON.stringify({ choices: [{ delta: { reasoning_content: reasoningContent, content: null } }] })}\n\n`);
+            response.data.on('error', err => {
+                console.error('[AI Proxy Stream Error]:', err.message);
+                if (!res.headersSent) {
+                    res.status(500).json({ error: err.message });
+                } else {
+                    res.end();
                 }
-
-                // Forward normal content tokens
-                if (delta.content != null) {
-                    res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: delta.content } }] })}\n\n`);
-                }
-
-                // Forward tool_calls
-                if (delta.tool_calls) {
-                    res.write(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: delta.tool_calls } }] })}\n\n`);
-                }
-            }
-
-            res.write('data: [DONE]\n\n');
-            res.end();
-
+            });
         } else {
-            // ── Non-streaming path: return full JSON response ─────────────────
-            const completion = await nvidiaNimClient.chat.completions.create(completionParams);
-            res.json(completion);
+            const response = await axios({
+                url: targetUrl,
+                method: 'POST',
+                headers: headers,
+                data: data,
+                timeout: 60000
+            });
+            res.json(response.data);
         }
-
     } catch (error) {
-        const status = error.status || (error.response ? error.response.status : 500);
-        const message = error.message || 'Unknown NVIDIA NIM error';
-        console.error(`[NVIDIA NIM Error] ${status}:`, message);
+        const status = error.response ? error.response.status : 500;
+        let errMsg = error.message;
+        if (error.response && error.response.data) {
+            try {
+                if (typeof error.response.data === 'string') errMsg = error.response.data;
+                else errMsg = JSON.stringify(error.response.data);
+            } catch (e) { }
+        }
+        console.error(`[AI Proxy Error] ${status}: ${errMsg}`);
         if (!res.headersSent) {
-            res.status(status).json({ error: message });
+            res.status(status).json({ error: errMsg });
         } else {
-            res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
             res.end();
         }
     }
@@ -133,15 +118,18 @@ app.post('/api/proxy', async (req, res) => {
 
 /**
  * Dedicated ElevenLabs TTS Proxy
- * Properly handles binary audio/mpeg streaming back to the browser.
- * The client POSTs the voice params here and gets raw audio back.
+ * The local server proxies ElevenLabs audio (binary streaming)
+ * to avoid CORS and API key exposure in browser.
  */
 app.post('/api/elevenlabs', async (req, res) => {
     let { voiceId, apiKey, text, modelId, voiceSettings } = req.body;
 
-    // Inject server-side API key if client has placeholder
+    // Inject server-side API key and voice ID if client has placeholder or missing
     if (!apiKey || apiKey.includes('YOUR_ELEVENLABS')) {
         apiKey = process.env.ELEVENLABS_API_KEY || apiKey;
+    }
+    if (!voiceId || voiceId.includes('YOUR_')) {
+        voiceId = process.env.ELEVENLABS_VOICE_ID || voiceId || '7ddqsJSJmhrKwkSMqFJq';
     }
 
     if (!apiKey || apiKey.includes('YOUR_ELEVENLABS')) {
@@ -176,13 +164,12 @@ app.post('/api/elevenlabs', async (req, res) => {
                     use_speaker_boost: true
                 }
             },
-            responseType: 'arraybuffer',  // Critical: get raw binary
+            responseType: 'arraybuffer',
             timeout: 30000
         });
 
         console.log(`[ElevenLabs] Success! Audio size: ${response.data.byteLength} bytes`);
 
-        // Set correct headers for audio playback
         res.status(200);
         res.setHeader('Content-Type', 'audio/mpeg');
         res.setHeader('Content-Length', response.data.byteLength);
@@ -194,7 +181,7 @@ app.post('/api/elevenlabs', async (req, res) => {
         if (error.response && error.response.data) {
             try {
                 errorMsg = Buffer.from(error.response.data).toString('utf-8');
-            } catch(e) {}
+            } catch (e) { }
         }
         console.error(`[ElevenLabs Error] ${status}: ${errorMsg}`);
         if (!res.headersSent) {
@@ -203,14 +190,23 @@ app.post('/api/elevenlabs', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log('\n' + '='.repeat(50));
     console.log('       MANEKI NEKO — SMART RESTAURANT');
-    console.log('       Local Server & AI Proxy');
+    console.log('       Local Server (AI Proxy + Static + TTS)');
     console.log('='.repeat(50));
-    console.log(`\n🚀 Server running at: http://localhost:${PORT}`);
-    console.log(`📂 Static files:      ${__dirname}`);
+    console.log(`\n🚀 Server running at:  http://localhost:${PORT}`);
+    console.log(`📂 Static files:       ${__dirname}`);
     console.log(`🤖 AI Proxy:          http://localhost:${PORT}/api/proxy`);
-    console.log(`🎙️ Voice Proxy:       http://localhost:${PORT}/api/elevenlabs`);
+    console.log(`🎙️ Voice Proxy:        http://localhost:${PORT}/api/elevenlabs`);
     console.log('\nUse "npm start" to keep this server running.\n');
+});
+
+server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.error(`\n⚠️ Port ${PORT} is already in use by another running process.`);
+        process.exit(1);
+    } else {
+        console.error('Server error:', err);
+    }
 });
