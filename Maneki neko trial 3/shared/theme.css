@@ -1,502 +1,2014 @@
+@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
 /* ═══════════════════════════════════════════════════════════════════════════════
-   MANEKI NOIR — Stitch Design System
-   "The Digital Sommelier" · Linear × Apple · Dark-Mode-First
+   MANEKI NEKO — KAMI TO SUMI (紙と墨 · Paper & Ink, lit by lanterns)
+   Shared design system. Eight page implementers read this file: selectors are
+   named exactly as in design-spec.md §2 / §5.3 / §6 / §8 / §9.
+   ─────────────────────────────────────────────────────────────────────────────
+   GOVERNING RULE:
+   paper = document · lacquer = container · red = seal or commit · gold = seam ·
+   ≤ 40 % of any viewport is paper.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 /* ── 1. Design Tokens ─────────────────────────────────────────────────────────── */
+/* KAMI TO SUMI — paper = document · lacquer = container · red = seal/commit · gold = seam · ≤40% paper per viewport */
 :root {
-    /* Background Surfaces */
-    --bg-deep:              #0e0e10;
-    --bg-surface:           #18181b;
-    --bg-surface-low:       #131315;
-    --bg-surface-container:  #19191c;
-    --bg-surface-high:      #1f1f22;
-    --bg-surface-highest:   #262528;
-    --bg-surface-bright:    #2c2c2f;
-    --bg-surface-variant:   #262528;
+  /* Surfaces — sumi lacquer */
+  --bg-deep: #100d0c;  --bg-surface: #1a1614;  --bg-surface-low: #141110;
+  --bg-surface-container: #1c1816;  --bg-surface-high: #231e1b;
+  --bg-surface-highest: #2b2521;  --bg-surface-bright: #352e29;  --bg-surface-variant: #2b2521;
+  --lintel: #2a1f19;                                  /* app header / sidebar brand band */
 
-    /* Glass */
-    --glass-bg:             rgba(24, 24, 27, 0.55);
-    --glass-bg-strong:      rgba(38, 37, 40, 0.6);
-    --glass-blur:           blur(20px);
-    --glass-border:         rgba(255, 255, 255, 0.06);
-    --glass-border-hover:   rgba(255, 255, 255, 0.14);
+  /* Glass (kept for compatibility; only modal/drawer backdrops still blur) */
+  --glass-bg: rgba(30,25,22,0.62);  --glass-bg-strong: rgba(43,37,33,0.7);
+  --glass-blur: blur(12px);
+  --glass-border: rgba(240,220,190,0.09);  --glass-border-hover: rgba(240,190,120,0.28);
 
-    /* Primary — Electric Indigo */
-    --primary:              #a3a6ff;
-    --primary-container:    #9396ff;
-    --primary-dim:          #6063ee;
-    --primary-fixed:        #9396ff;
-    --primary-fixed-dim:    #8387ff;
-    --primary-raw:          #6366f1;
-    --primary-glow:         rgba(99, 102, 241, 0.15);
-    --primary-glow-strong:  rgba(99, 102, 241, 0.30);
-    --on-primary:           #0f00a4;
+  /* Primary — vermilion (shu) */
+  --primary: #ff7a5c;  --primary-container: #ff6a47;  --primary-dim: #b32a14;
+  --primary-fixed: #ff6a47;  --primary-fixed-dim: #e8512f;  --primary-raw: #d63a1f;
+  --primary-glow: rgba(214,58,31,0.18);  --primary-glow-strong: rgba(214,58,31,0.34);
+  --on-primary: #ffffff;
+  --shu: #d63a1f;  --shu-ink: #b3301a;  --shu-deep: #8f2211;   /* fill / text-on-paper / pressed */
 
-    /* Secondary */
-    --secondary:            #a28efc;
-    --secondary-container:  #49339d;
-    --on-secondary:         #21006d;
+  /* Secondary — gold (kin) */
+  --secondary: #e3b55a;  --secondary-container: #6b4e12;  --on-secondary: #2a1d00;
+  --kin: #e3b55a;  --kin-bright: #f3d58a;  --kin-dim: #a8832f;  --kin-ink: #6b4e12;
+  --lantern: #ffb347;  --lantern-glow: rgba(255,179,71,0.22);  --lantern-glow-strong: rgba(255,179,71,0.48);
 
-    /* Tertiary */
-    --tertiary:             #ffa5d9;
-    --tertiary-container:   #ff8ed2;
-    --on-tertiary:          #701455;
+  /* Tertiary — sakura */
+  --tertiary: #f3b9c8;  --tertiary-container: #e99bb0;  --on-tertiary: #4a1426;
+  --sakura: #f3b9c8;  --momo: #e99bb0;
 
-    /* Text */
-    --text-primary:         #f9f5f8;
-    --text-secondary:       #adaaad;
-    --text-muted:           #767577;
-    --text-dimmed:          #48474a;
+  /* Traditional supporting hues (nihon no iro) */
+  --ai: #2b4a6f;        --ai-text: #7fa3c8;
+  --matcha: #7a9a3c;    --matcha-bright: #9fbf5a;  --matcha-ink: #4a6420;
+  --ume: #b84a5c;       --ume-light: #e07a8a;      --ume-ink: #8f3140;
+  --kuchiba: #c8923e;   --kuchiba-ink: #7a5418;
+  --nezumi: #8a8580;    --nezumi-text: #a39e97;    --nezumi-ink: #6a5f55;
+  --daidai: #e0772b;
 
-    /* Semantic Colors */
-    --success:              #10b981;
-    --success-bg:           rgba(16, 185, 129, 0.12);
-    --success-border:       rgba(16, 185, 129, 0.25);
-    --warning:              #f59e0b;
-    --warning-bg:           rgba(245, 158, 11, 0.12);
-    --warning-border:       rgba(245, 158, 11, 0.25);
-    --danger:               #ef4444;
-    --danger-bg:            rgba(239, 68, 68, 0.12);
-    --danger-border:        rgba(239, 68, 68, 0.25);
-    --info:                 #3b82f6;
-    --info-bg:              rgba(59, 130, 246, 0.12);
-    --info-border:          rgba(59, 130, 246, 0.25);
+  /* Washi paper surfaces + sumi ink */
+  --washi: #efe6d6;  --washi-bright: #f6efe2;  --washi-2: #e4d9c4;
+  --washi-line: rgba(28,24,22,0.14);  --washi-line-strong: rgba(28,24,22,0.32);
+  --sumi-ink: #1c1816;  --sumi-ink-2: #3a332e;  --sumi-ink-3: #6a5f55;
 
-    /* Border & Outline */
-    --border:               rgba(255, 255, 255, 0.06);
-    --border-hover:         rgba(255, 255, 255, 0.12);
-    --outline:              #767577;
-    --outline-variant:      #48474a;
+  /* Veg / non-veg (FSSAI marks) — dark-surface and paper variants */
+  --veg: #3fae5a;  --nonveg: #e04a3a;  --veg-ink: #2e7d32;  --nonveg-ink: #c62828;  --spicy: #e0772b;
 
-    /* Shapes */
-    --radius-xs:            6px;
-    --radius-sm:            8px;
-    --radius-md:            12px;
-    --radius-lg:            16px;
-    --radius-xl:            20px;
-    --radius-2xl:           24px;
-    --radius-pill:          9999px;
+  /* Character crests (kamon); Shinchan on sakura, never danger red */
+  --c-naruto: #e0772b;  --c-goku: #e3b55a;  --c-doraemon: #2b4a6f;  --c-doraemon-text: #7fa3c8;
+  --c-shinchan: #e99bb0;  --c-luffy: #d63a1f;  --c-luffy-text: #ff7a5c;
 
-    /* Shadows */
-    --shadow-ambient:       0 4px 12px rgba(0, 0, 0, 0.5), 0 20px 40px rgba(0, 0, 0, 0.3);
-    --shadow-soft:          0 1px 3px rgba(0, 0, 0, 0.4);
-    --shadow-glow:          0 0 24px var(--primary-glow);
-    --shadow-glow-strong:   0 0 32px var(--primary-glow-strong);
-    --shadow-card:          0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-card-hover:    0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--glass-border-hover);
+  /* Order-status seals: colour on dark · colour on paper · kanji */
+  --st-pending: #c8923e;    --st-pending-ink: #7a5418;    --st-pending-ja: none;
+  --st-preparing: #ff7a5c;  --st-preparing-ink: #b3301a;  --st-preparing-ja: none;
+  --st-ready: #9fbf5a;      --st-ready-ink: #4a6420;      --st-ready-ja: none;
+  --st-delivered: #a39e97;  --st-delivered-ink: #6a5f55;  --st-delivered-ja: none;
+  --st-billed: #e3b55a;     --st-billed-ink: #6b4e12;     --st-billed-ja: none;
+  --st-cancelled: #e07a8a;  --st-cancelled-ink: #8f3140;  --st-cancelled-ja: none;
+  --st-online: #9fbf5a;  --st-online-ja: none;  --st-offline: #a39e97;  --st-offline-ja: none;  --st-charging: #c8923e;  --st-charging-ja: none;
 
-    /* Transitions */
-    --ease-out:             cubic-bezier(0.4, 0, 0.2, 1);
-    --ease-spring:          cubic-bezier(0.34, 1.56, 0.64, 1);
-    --duration-fast:        0.15s;
-    --duration-normal:      0.25s;
-    --duration-slow:        0.4s;
+  /* Text — washi tones */
+  --text-primary: #f7efe4;  --text-secondary: #cbbfb0;  --text-muted: #9d9183;
+  --text-dimmed: #8a7f72;
+  --text-ghost: #5a5047;                               /* decorative watermarks only */
 
-    /* Typography */
-    --font-sans:            'Inter', system-ui, -apple-system, sans-serif;
-    --font-mono:            'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
-    --tracking-tight:       -0.02em;
-    --tracking-normal:      0;
-    --tracking-wide:        0.05em;
+  /* Semantic (kept; values mapped to the Japanese hues) */
+  --success: #4fb98a;  --success-bg: rgba(79,185,138,0.13);  --success-border: rgba(79,185,138,0.3);
+  --warning: #e8a838;  --warning-bg: rgba(232,168,56,0.13);  --warning-border: rgba(232,168,56,0.3);
+  --danger: #ef5350;   --danger-bg: rgba(239,83,80,0.13);    --danger-border: rgba(239,83,80,0.3);
+  --info: #5b9bd5;     --info-bg: rgba(91,155,213,0.13);     --info-border: rgba(91,155,213,0.3);
+
+  /* Border & outline */
+  --border: rgba(240,220,190,0.08);  --border-hover: rgba(240,220,190,0.16);
+  --outline: #9d9183;  --outline-variant: #5a5047;
+  --kin-hair: rgba(227,181,90,0.32);  --kin-hair-soft: rgba(227,181,90,0.14);
+
+  /* Shapes */
+  --radius-xs: 6px;  --radius-sm: 8px;  --radius-md: 12px;  --radius-lg: 16px;
+  --radius-xl: 20px;  --radius-2xl: 24px;  --radius-pill: 9999px;
+  --radius-paper: 4px;  --radius-seal: 3px;                 /* paper is cut, seals are square */
+
+  /* Shadows */
+  --shadow-ambient: 0 4px 12px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.35);
+  --shadow-soft: 0 1px 3px rgba(0,0,0,0.45);
+  --shadow-glow: 0 0 24px var(--primary-glow);  --shadow-glow-strong: 0 0 32px var(--primary-glow-strong);
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,235,205,0.04);
+  --shadow-card-hover: 0 10px 34px rgba(0,0,0,0.45), 0 0 0 1px var(--glass-border-hover);
+  --shadow-2xl: var(--shadow-ambient);
+  --shadow-paper: inset 0 1px 0 rgba(255,250,240,0.45), 0 1px 2px rgba(0,0,0,0.35), 0 10px 26px rgba(0,0,0,0.30);
+  --shadow-paper-lift: inset 0 1px 0 rgba(255,250,240,0.45), 0 2px 4px rgba(0,0,0,0.35), 0 18px 40px rgba(0,0,0,0.38);
+  --shadow-seal: 0 2px 0 var(--shu-deep), 0 6px 16px rgba(214,58,31,0.28);
+  --shadow-lantern: 0 0 18px var(--lantern-glow), 0 0 42px var(--lantern-glow);
+  --ring-kin: 0 0 0 2px var(--bg-deep), 0 0 0 4px var(--kin);
+  --ring-shu: 0 0 0 2px var(--washi), 0 0 0 4px var(--shu-ink);
+
+  /* Z plan (grain stays at 9999) */
+  --z-room: 0;  --z-header: 30;  --z-sheet: 50;  --z-modal: 70;  --z-overlay: 9000;  --z-toast: 10000;
+  --header-h: 56px;  --chat-input-h: 72px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.4,0,0.2,1);  --ease-spring: cubic-bezier(0.34,1.56,0.64,1);
+  --duration-fast: 0.15s;  --duration-normal: 0.25s;  --duration-slow: 0.4s;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Shippori Mincho', 'Noto Serif JP', 'Hiragino Mincho ProN', Georgia, serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  --font-jp: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+  --tracking-tight: -0.01em;  --tracking-normal: 0;  --tracking-wide: 0.06em;
+  --tracking-display: 0.01em;  --tracking-eyebrow: 0.16em;
+
+  /* Textures — data-URI SVG tiles (≤ 2 KB each) */
+  --seigaiha: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='28' viewBox='0 0 56 28'%3E%3Cg fill='none' stroke='%23e3b55a' stroke-opacity='0.14' stroke-width='1'%3E%3Ccircle cx='14' cy='28' r='6'/%3E%3Ccircle cx='14' cy='28' r='11'/%3E%3Ccircle cx='14' cy='28' r='16'/%3E%3Ccircle cx='42' cy='28' r='6'/%3E%3Ccircle cx='42' cy='28' r='11'/%3E%3Ccircle cx='42' cy='28' r='16'/%3E%3Ccircle cx='0' cy='14' r='6'/%3E%3Ccircle cx='0' cy='14' r='11'/%3E%3Ccircle cx='28' cy='14' r='6'/%3E%3Ccircle cx='28' cy='14' r='11'/%3E%3Ccircle cx='56' cy='14' r='6'/%3E%3Ccircle cx='56' cy='14' r='11'/%3E%3C/g%3E%3C/svg%3E");
+  --asanoha: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cg fill='none' stroke='%23e3b55a' stroke-opacity='.07' stroke-width='1'%3E%3Cpath d='M28 0v97M0 24.25l56 48.5M56 24.25L0 72.75M0 24.25h56M0 72.75h56M28 0L0 24.25M28 0l28 24.25M28 97L0 72.75M28 97l28-24.25M28 48.5L0 24.25M28 48.5l28-24.25M28 48.5L0 72.75M28 48.5l28 24.25'/%3E%3C/g%3E%3C/svg%3E");
+  --washi-fibre: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.29 0 0 0 0 0.21 0 0 0 0.18 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
+  --brush-rule-sumi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 8' preserveAspectRatio='none'%3E%3Cpath d='M2 5C40 1 90 7 140 4S260 2 330 5 390 6 398 3' fill='none' stroke='%231c1816' stroke-width='2.2' stroke-linecap='round' opacity='.85'/%3E%3C/svg%3E");
+  --brush-rule-kin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 8' preserveAspectRatio='none'%3E%3Cpath d='M2 5C40 1 90 7 140 4S260 2 330 5 390 6 398 3' fill='none' stroke='%23e3b55a' stroke-width='2.2' stroke-linecap='round' opacity='.7'/%3E%3C/svg%3E");
+  --enso-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 8a42 42 0 1 0 31 13' fill='none' stroke='%23e3b55a' stroke-width='5' stroke-linecap='round' opacity='.35'/%3E%3Cpath d='M50 8a42 42 0 1 0 31 13' fill='none' stroke='%23e3b55a' stroke-width='2' stroke-linecap='round' opacity='.5' transform='rotate(6 50 50)'/%3E%3C/svg%3E");
+  --petal: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1C11 4 15 6 14 10c-1 4-5 5-6 5s-5-1-6-5C1 6 5 4 8 1z' fill='%23f3b9c8' opacity='.85'/%3E%3C/svg%3E");
+  /* KDS empty-state line art — files drawn into shared/art/ (paths relative to this stylesheet) */
+  --mn-resting: url("art/empty-neko.svg");  --kama: url("art/empty-kama.svg");  --obon: url("art/empty-obon.svg");
+
+  /* Kintsugi hairline (noren rods, .lacquer-header, .rule-kin, .step-rail) */
+  --rule-kin: linear-gradient(90deg, transparent, var(--kin-dim) 15%, var(--kin-bright) 42%, var(--kin) 48%, var(--kin-dim) 85%, transparent);
+
+  /* Theme-internal mask glyphs (alpha only; same path data as the icons.svg sprite) */
+  --deckle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='7' viewBox='0 0 18 7'%3E%3Cpath d='M0 7V4L2 1l2 2 2-3 3 3 2-2 2 3 2-2 3 3v2z' fill='%23000'/%3E%3C/svg%3E");
+  --glyph-chevron-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  --glyph-chevron-right: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E");
+  --glyph-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E");
+  --glyph-warning: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3.5L2.5 20h19z'/%3E%3Cpath d='M12 9.5v5M12 17.4v.6'/%3E%3C/svg%3E");
+  --glyph-enso: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M12 3.2a8.8 8.8 0 1 0 6.4 2.7'/%3E%3C/svg%3E");
+  --glyph-koban: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8'%3E%3Cellipse cx='12' cy='12' rx='10' ry='7'/%3E%3Cellipse cx='12' cy='12' rx='6.5' ry='4'/%3E%3Ccircle cx='12' cy='12' r='1.2' fill='%23000'/%3E%3C/svg%3E");
+  --glyph-incense: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19.5V9.8'/%3E%3Cpath d='M12 8.4h.01'/%3E%3Cpath d='M12.2 6.4c-1.8-.9-1.8-2.2-.2-3.1 1.4-.8 1.5-1.7.4-2.6'/%3E%3Cellipse cx='12' cy='19.8' rx='4.6' ry='1.6'/%3E%3C/svg%3E");
 }
 
-/* ── 2. Reset & Base ──────────────────────────────────────────────────────────── */
-*, *::before, *::after {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+/* ── 2. Reset & Base (room: washes, seigaiha, lantern layers) ─────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 html {
-    scroll-behavior: smooth;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-    background-color: var(--bg-deep);
-    color: var(--text-primary);
-    font-family: var(--font-sans);
-    line-height: 1.6;
-    overflow-x: hidden;
+  background-color: var(--bg-deep);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(214,58,31,0.12), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(227,181,90,0.06), transparent 70%);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  overflow-x: hidden;
 }
 
-/* ── 3. Grain Texture Overlay ─────────────────────────────────────────────────── */
+/* Seigaiha wave texture; fades in toward the bottom of the viewport */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--seigaiha);
+  background-size: 56px 28px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 15%, #000 100%);
+  mask-image: linear-gradient(to bottom, transparent 15%, #000 100%);
+}
+body.unmasked::before { -webkit-mask-image: none; mask-image: none; }   /* landing: full-bleed waves */
+
+/* Lantern pools + asanoha lattice; <div class="room-layer" aria-hidden="true"> first child of body.
+   Landing, login.html, customer-login.html, customer #loginOverlay only — never admin / KDS / bots. */
+.room-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--z-room);
+  background-image:
+    var(--asanoha),
+    radial-gradient(220px 300px at 12% 8%, var(--lantern-glow), transparent),
+    radial-gradient(180px 260px at 88% 14%, var(--lantern-glow), transparent),
+    radial-gradient(40% 35% at 50% 110%, rgba(214,58,31,0.12), transparent 70%);
+  background-size: 56px 97px, auto, auto, auto;
+  -webkit-mask-image: radial-gradient(60% 60% at 50% 45%, transparent 30%, #000 100%);
+  mask-image: radial-gradient(60% 60% at 50% 45%, transparent 30%, #000 100%);
+}
+
+/* Ensō halo behind hero / login cards (pages position it) */
+.enso-halo {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--enso-bg) center / contain no-repeat;
+  opacity: 0.22;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Four falling petals: <div class="sakura-drift" aria-hidden="true"><i></i><i></i><i></i><i></i></div> */
+.sakura-drift {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+.sakura-drift > * {
+  position: absolute;
+  top: -18px;
+  width: 16px;
+  height: 16px;
+  background: var(--petal) center / contain no-repeat;
+  opacity: 0.8;
+  animation: sakura-fall 11s linear infinite;
+}
+.sakura-drift > :nth-child(1) { left: 12%; animation-duration: 10s;   animation-delay: 0s; }
+.sakura-drift > :nth-child(2) { left: 38%; animation-duration: 13s;   animation-delay: -4s; width: 12px; height: 12px; }
+.sakura-drift > :nth-child(3) { left: 64%; animation-duration: 9s;    animation-delay: -7s; }
+.sakura-drift > :nth-child(4) { left: 86%; animation-duration: 14s;   animation-delay: -2s; width: 13px; height: 13px; }
+
+/* ── 3. Grain Texture Overlay (paper tooth; modals sit under it on purpose) ──── */
 body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    pointer-events: none;
-    opacity: 0.025;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    background-repeat: repeat;
-    background-size: 128px 128px;
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px 128px;
 }
 
 /* ── 4. Typography System ─────────────────────────────────────────────────────── */
-h1, h2, h3, h4, h5, h6 {
-    font-weight: 700;
-    letter-spacing: var(--tracking-tight);
-    color: var(--text-primary);
-    line-height: 1.2;
-}
+h1, h2, h3, h4, h5, h6 { color: var(--text-primary); line-height: 1.2; }
+h1, h2, h3, .display-lg, .display-md, .display-sm { font-family: var(--font-display); }
+h1, h2, h3 { font-weight: 600; letter-spacing: var(--tracking-display); }   /* Mincho wants open tracking */
+h4, h5, h6 { font-weight: 700; letter-spacing: var(--tracking-tight); }       /* Inter keeps the tight set */
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.375rem; }
+h3 { font-size: 1.125rem; }
 
-.display-lg {
-    font-size: clamp(2.5rem, 6vw, 4.5rem);
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    line-height: 1.05;
-}
+.display-lg { font-size: clamp(2.75rem, 6vw, 4.5rem); font-weight: 600; letter-spacing: var(--tracking-display); line-height: 1.1; }
+.display-md { font-size: clamp(2rem, 4vw, 3rem);      font-weight: 600; letter-spacing: var(--tracking-display); }
+.display-sm { font-size: clamp(1.5rem, 3vw, 2rem);    font-weight: 600; letter-spacing: var(--tracking-display); }
 
-.display-md {
-    font-size: clamp(2rem, 4vw, 3rem);
-    font-weight: 800;
-    letter-spacing: -0.025em;
-}
-
-.display-sm {
-    font-size: clamp(1.5rem, 3vw, 2rem);
-    font-weight: 700;
-}
-
+/* Kept for compatibility — never apply to Mincho */
 .text-gradient {
-    background: linear-gradient(135deg, var(--primary), var(--primary-dim));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  background: linear-gradient(135deg, var(--secondary), var(--primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .text-secondary { color: var(--text-secondary); }
-.text-muted { color: var(--text-muted); }
+.text-muted     { color: var(--text-muted); }
+.text-ok        { color: var(--matcha-bright); }
+.text-warn      { color: var(--kuchiba); }
+.text-danger    { color: var(--ume-light); }
+
+/* Eyebrow: kin on dark, shu-ink on paper; kanji prefix via .jp */
+.eyebrow {
+  font: 600 0.6875rem/1.4 var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--kin);
+}
+.eyebrow .jp { font-size: inherit; color: inherit; text-transform: none; letter-spacing: 0.08em; }
+
+/* Kanji caption (always lang="ja"; aria-hidden when decorative) */
+.jp {
+  font-family: var(--font-jp);
+  font-weight: 500;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+/* Bilingual label — static markup */
+.lbl    { display: inline-flex; align-items: baseline; gap: 0.5rem; }
+.lbl-en { }
+.lbl-jp { font: 500 0.75rem var(--font-jp); color: var(--text-muted); }
+
+/* Bilingual label — JS-rewritten leaf nodes: data-ja="卓" survives textContent rewrites */
+.bi[data-ja]::before {
+  content: attr(data-ja);
+  font: 500 max(0.6875rem, 0.72em) var(--font-jp);
+  color: var(--kin);
+  margin-right: 0.5em;
+  letter-spacing: 0.08em;
+}
+.bi-stack[data-ja]::before { display: block; margin: 0 0 0.15rem; }
+
+/* Single kanji suffix inside buttons: <span class="btn-kanji" lang="ja">入</span> */
+.btn-kanji { font: 700 0.875rem/1 var(--font-display); opacity: 0.85; letter-spacing: 0; }
+
+/* Vertical kanji (decorative, aria-hidden) */
+.tategaki {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: var(--font-display);
+  letter-spacing: 0.22em;
+}
+
+/* Section header + brush divider */
+.page-header { display: grid; gap: 0.35rem; margin-bottom: 1.5rem; position: relative; }
+.page-header::after {
+  content: "";
+  display: block;
+  width: 120px;
+  height: 8px;
+  margin-top: 0.75rem;
+  background: var(--brush-rule-kin) left / 100% 100% no-repeat;
+}
+.page-title    { font: 600 1.75rem/1.2 var(--font-display); letter-spacing: var(--tracking-display); color: var(--text-primary); }
+.page-subtitle { color: var(--text-muted); font-size: 0.9375rem; }
+/* §3 H2 / H3 roles on non-heading elements (admin .panel-title may be a div; customer .order-summary-title) */
+.section-title { font: 600 1.375rem/1.25 var(--font-display); letter-spacing: var(--tracking-display); }
+.panel-title, .order-summary-title { font: 600 1.125rem/1.3 var(--font-display); letter-spacing: var(--tracking-display); }
+
+/* Tanzaku label: 28×56 vermilion strip with tategaki kanji at the far left (≥1280 only) */
+.tanzaku-label {
+  display: none;
+  position: absolute;
+  left: -44px;
+  top: 0;
+  width: 28px;
+  min-height: 56px;
+  padding: 0.5rem 0;
+  background: var(--shu);
+  color: #fff;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font: 700 0.875rem/1 var(--font-display);
+  letter-spacing: 0.2em;
+  place-items: center;
+  border-radius: 0 0 2px 2px;
+  box-shadow: var(--shadow-seal);
+}
+@media (min-width: 1280px) { .tanzaku-label { display: grid; } }
+
+/* Dividers */
+.rule-kin  { display: block; height: 1px; border: 0; background: var(--rule-kin); }
+.rule-sumi { display: block; width: 120px; height: 8px; border: 0; background: var(--brush-rule-sumi) center / 100% 100% no-repeat; margin: 0.5rem 0 1rem; }
+.rule-perf { display: block; height: 0; border: 0; border-top: 2px dashed var(--washi-line); }
+
+/* Note strip (備考) on paper: item instructions, cart notes */
+.tanzaku-note,
+:where(.item-instructions, .ai-item-instructions) {
+  display: block;
+  background: var(--washi-bright);
+  border-left: 3px solid var(--kin);
+  border-radius: 0 3px 3px 0;
+  padding: 0.35rem 0.6rem;
+  color: var(--sumi-ink-2);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+.tanzaku-note::before,
+:where(.item-instructions, .ai-item-instructions)::before {
+  content: "Note ";
+  font: 500 0.6875rem var(--font-jp);
+  color: var(--sumi-ink-3);
+  letter-spacing: 0.08em;
+}
 
 /* ── 5. Custom Scrollbar ──────────────────────────────────────────────────────── */
-::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-::-webkit-scrollbar-thumb {
-    background: var(--outline-variant);
-    border-radius: var(--radius-pill);
-}
-::-webkit-scrollbar-thumb:hover {
-    background: var(--text-muted);
-}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--outline-variant); border-radius: var(--radius-pill); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
-/* ── 6. Glassmorphism Card ────────────────────────────────────────────────────── */
-.glass-card {
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-card);
-    transition: all var(--duration-normal) var(--ease-out);
-}
-
-.glass-card:hover {
-    border-color: var(--glass-border-hover);
-    box-shadow: var(--shadow-card-hover);
-    transform: translateY(-4px);
-}
-
+/* ── 6. Glass Card (compat) → lacquer recipe; see §18 for .lacquer / .paper ──── */
+.glass-card,
 .glass-card-static {
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-card);
+  background: var(--bg-surface-container);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: inset 0 1px 0 rgba(255,235,205,0.04), 0 2px 8px rgba(0,0,0,0.35);
 }
+.glass-card {
+  transition: border-color var(--duration-normal) var(--ease-out),
+              box-shadow   var(--duration-normal) var(--ease-out),
+              transform    var(--duration-normal) var(--ease-out);
+}
+.glass-card:hover {
+  border-color: var(--kin-hair);
+  box-shadow: inset 0 1px 0 rgba(255,235,205,0.04), 0 10px 34px rgba(0,0,0,0.45);
+  transform: translateY(-2px);
+}
+.glass-card-static,
+.glass-card-static:hover,
+#historyModal .modal-content { transform: none; }
 
 /* ── 7. Buttons ───────────────────────────────────────────────────────────────── */
-button {
-    cursor: pointer;
-    border: none;
-    outline: none;
-    font-family: var(--font-sans);
+:where(button) {
+  cursor: pointer;
+  border: none;
+  font-family: var(--font-sans);
+}
+button:focus:not(:focus-visible) { outline: none; }
+button:disabled { cursor: not-allowed; }
+
+/* Shared chassis for every themed button (zero specificity so page classes win cleanly) */
+:where(.btn-seal, .btn-paper, .btn-ghost, .btn-danger, .btn-sumi, .btn-kin, .btn-matcha,
+       .btn-primary, .login-btn, #addItemBtn, .btn-save, #applyAllBtn, #aiConfirmOrder, #placeOrderBtn,
+       #paymentDoneBtn, #startOrderingBtn, #step1Btn, #step2Btn, .btn-start, .module-card-cta,
+       .btn-secondary, .btn-cancel, #guestBtn, .bar-btn, #aiClearOrder, .btn-view-logs, .btn-control,
+       .btn-delete, #modalLogoutBtn, .btn-ready, .btn-serve) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.7rem 1.4rem;
+  font: 600 0.9375rem/1.2 var(--font-sans);
+  border-radius: var(--radius-paper);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  position: relative;
+  transition: background-color var(--duration-fast) var(--ease-out),
+              border-color     var(--duration-fast) var(--ease-out),
+              color            var(--duration-fast) var(--ease-out),
+              box-shadow       var(--duration-fast) var(--ease-out),
+              transform        var(--duration-fast) var(--ease-out);
 }
 
-.btn-primary {
-    background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
-    color: #fff;
-    padding: 0.75rem 1.5rem;
-    border-radius: var(--radius-md);
-    font-weight: 600;
-    font-size: 0.95rem;
-    border: none;
-    transition: all var(--duration-normal) var(--ease-out);
-    box-shadow: var(--shadow-soft);
+/* .btn-seal — the ONE committing action per view (also applied to the aliases below) */
+.btn-seal,
+:where(.btn-primary, .login-btn, #addItemBtn, .btn-save, #applyAllBtn, #aiConfirmOrder, #placeOrderBtn,
+       #paymentDoneBtn, #startOrderingBtn, #step1Btn, #step2Btn, .btn-start, .module-card-cta) {
+  background: linear-gradient(170deg, #e0432a, var(--shu) 55%, var(--primary-dim));
+  color: var(--on-primary);
+  border: 1px solid var(--shu-deep);
+  border-radius: var(--radius-seal);
+  box-shadow: var(--shadow-seal);
+  isolation: isolate;
 }
-
-.btn-primary:hover {
-    box-shadow: var(--shadow-glow), var(--shadow-soft);
-    transform: scale(1.02);
+.btn-seal:not(.mi-after-arrow)::after,
+:where(.btn-primary, .login-btn, #addItemBtn, .btn-save, #applyAllBtn, #aiConfirmOrder, #placeOrderBtn,
+       #paymentDoneBtn, #startOrderingBtn, #step1Btn, #step2Btn, .btn-start, .module-card-cta):not(.mi-after-arrow)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--washi-fibre);
+  background-size: 240px 240px;
+  opacity: 0.3;
+  mix-blend-mode: multiply;
+  pointer-events: none;
 }
-
-.btn-primary:active {
-    transform: scale(0.97);
+.btn-seal:hover,
+:where(.btn-primary, .login-btn, #addItemBtn, .btn-save, #applyAllBtn, #aiConfirmOrder, #placeOrderBtn,
+       #paymentDoneBtn, #startOrderingBtn, #step1Btn, #step2Btn, .btn-start, .module-card-cta):hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
 }
-
-.btn-secondary {
-    background: var(--bg-surface-variant);
-    color: var(--text-primary);
-    padding: 0.75rem 1.5rem;
-    border-radius: var(--radius-md);
-    font-weight: 600;
-    font-size: 0.95rem;
-    border: 1px solid var(--glass-border);
-    transition: all var(--duration-normal) var(--ease-out);
+.btn-seal:active,
+:where(.btn-primary, .login-btn, #addItemBtn, .btn-save, #applyAllBtn, #aiConfirmOrder, #placeOrderBtn,
+       #paymentDoneBtn, #startOrderingBtn, #step1Btn, #step2Btn, .btn-start, .module-card-cta):active {
+  transform: translateY(1px);
+  box-shadow: 0 0 0 var(--shu-deep), 0 2px 6px rgba(0,0,0,0.4);
 }
-
-.btn-secondary:hover {
-    border-color: var(--glass-border-hover);
-    background: var(--bg-surface-bright);
+.btn-seal:focus-visible,
+:where(.btn-primary, .login-btn, #addItemBtn, .btn-save, #applyAllBtn, #aiConfirmOrder, #placeOrderBtn,
+       #paymentDoneBtn, #startOrderingBtn, #step1Btn, #step2Btn, .btn-start, .module-card-cta):focus-visible {
+  box-shadow: var(--ring-kin);
 }
+.paper .btn-seal:focus-visible,
+.paper :where(.btn-primary, .login-btn, #step1Btn, #step2Btn, #startOrderingBtn, #paymentDoneBtn, #aiConfirmOrder, .btn-save):focus-visible {
+  box-shadow: var(--ring-shu);
+}
+.btn-seal:disabled, .btn-seal[disabled], .btn-seal[aria-disabled="true"],
+:where(.btn-primary, .login-btn, #addItemBtn, .btn-save, #applyAllBtn, #aiConfirmOrder, #placeOrderBtn,
+       #paymentDoneBtn, #startOrderingBtn, #step1Btn, #step2Btn, .btn-start, .module-card-cta):disabled {
+  background: var(--bg-surface-bright);
+  color: var(--text-dimmed);
+  border-color: transparent;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+.btn-seal:disabled::after,
+:where(.btn-primary, .login-btn, #addItemBtn, .btn-save, #applyAllBtn, #aiConfirmOrder, #placeOrderBtn,
+       #paymentDoneBtn, #startOrderingBtn, #step1Btn, #step2Btn, .btn-start, .module-card-cta):disabled::after,
+.action-btn::after { content: none; }   /* KDS .action-btn is rebuilt every 4 s — no texture layer */
 
+/* .btn-paper — secondary (flips to sumi on a paper parent) */
+.btn-paper,
+:where(.btn-secondary, #guestBtn, .bar-btn, #aiClearOrder, .btn-view-logs, .btn-control),
+:where(.btn-cancel:not(.action-btn)) {
+  background: var(--washi);
+  background-image: none;
+  color: var(--sumi-ink);
+  border: 1px solid rgba(28,24,22,0.22);
+  border-radius: var(--radius-paper);
+  box-shadow: var(--shadow-paper);
+  font-weight: 600;
+}
+.btn-paper:hover,
+:where(.btn-secondary, #guestBtn, .bar-btn, #aiClearOrder, .btn-view-logs, .btn-control):hover,
+:where(.btn-cancel:not(.action-btn)):hover { background: var(--washi-bright); }
+.btn-paper:active,
+:where(.btn-secondary, #guestBtn, .bar-btn, #aiClearOrder, .btn-view-logs, .btn-control):active,
+:where(.btn-cancel:not(.action-btn)):active { transform: translateY(1px); box-shadow: var(--shadow-soft); }
+
+/* .btn-sumi — ink block; what .btn-paper becomes on paper */
+.btn-sumi,
+.paper .btn-paper,
+.paper :where(.btn-secondary, #guestBtn, .bar-btn, #aiClearOrder, .btn-view-logs, .btn-control),
+.paper :where(.btn-cancel:not(.action-btn)) {
+  background: var(--sumi-ink);
+  background-image: none;
+  color: var(--washi);
+  border: 1px solid var(--sumi-ink);
+  border-radius: var(--radius-paper);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.35);
+}
+.btn-sumi:hover,
+.paper .btn-paper:hover,
+.paper :where(.btn-secondary, #guestBtn, .bar-btn, #aiClearOrder, .btn-view-logs, .btn-control):hover { background: var(--sumi-ink-2); }
+.btn-sumi:active { transform: translateY(1px); }
+
+/* .btn-ghost — outline */
 .btn-ghost {
-    background: transparent;
-    color: var(--primary);
-    padding: 0.75rem 1.5rem;
-    border-radius: var(--radius-md);
-    font-weight: 600;
-    font-size: 0.95rem;
-    border: none;
-    transition: all var(--duration-normal) var(--ease-out);
+  background: transparent;
+  background-image: none;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  box-shadow: none;
 }
+.btn-ghost:hover { color: var(--text-primary); border-color: var(--kin-dim); background: rgba(240,220,190,0.06); }
+.paper .btn-ghost { color: var(--sumi-ink-2); border-color: var(--washi-line-strong); }
+.paper .btn-ghost:hover { color: var(--sumi-ink); background: rgba(28,24,22,0.05); border-color: var(--sumi-ink-3); }
 
-.btn-ghost:hover {
-    color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.05);
+/* .btn-danger — ghost outline in ume. Never a filled red block. */
+.btn-danger,
+:where(.btn-delete, #modalLogoutBtn, .action-btn.btn-cancel) {
+  background: transparent;
+  background-image: none;
+  color: var(--ume-light);
+  border: 1px solid currentColor;
+  box-shadow: none;
 }
+.btn-danger:hover,
+:where(.btn-delete, #modalLogoutBtn, .action-btn.btn-cancel):hover { background: rgba(184,74,92,0.12); }
+.paper .btn-danger,
+.paper :where(.btn-delete, #modalLogoutBtn, .action-btn.btn-cancel) { color: var(--ume-ink); }
 
-/* ── 8. Badges & Pills ───────────────────────────────────────────────────────── */
-.badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.25rem 0.75rem;
-    border-radius: var(--radius-pill);
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-wide);
+/* Specialised fills */
+.btn-kin,
+:where(.btn-ready) {
+  background: var(--kin);
+  background-image: none;
+  color: var(--sumi-ink);
+  border: 1px solid var(--kin-dim);
+  border-radius: var(--radius-seal);
+  box-shadow: 0 2px 0 var(--kin-dim);
 }
+.btn-kin:hover, :where(.btn-ready):hover { background: var(--kin-bright); }
+.btn-kin:active, :where(.btn-ready):active { transform: translateY(1px); box-shadow: none; }
 
-.badge-pending   { background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning-border); }
-.badge-preparing { background: var(--info-bg);    color: var(--info);    border: 1px solid var(--info-border); }
-.badge-ready     { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
-.badge-delivered { background: rgba(148,163,184,0.12); color: #94a3b8; border: 1px solid rgba(148,163,184,0.25); }
-.badge-billed    { background: rgba(168,85,247,0.12);  color: #a855f7; border: 1px solid rgba(168,85,247,0.25); }
-.badge-cancelled { background: rgba(239,68,68,0.10);   color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
+.btn-matcha,
+:where(.btn-serve) {
+  background: var(--matcha-bright);
+  background-image: none;
+  color: var(--sumi-ink);
+  border: 1px solid var(--matcha);
+  border-radius: var(--radius-seal);
+  box-shadow: 0 2px 0 var(--matcha-ink);
+}
+.btn-matcha:hover, :where(.btn-serve):hover { filter: brightness(1.05); }
+.btn-matcha:active, :where(.btn-serve):active { transform: translateY(1px); box-shadow: none; }
 
-/* ── 9. Filter Buttons ────────────────────────────────────────────────────────── */
+/* Secondary variants never carry the seal's ink texture */
+:is(.btn-paper, .btn-ghost, .btn-sumi, .btn-danger, .btn-kin, .btn-matcha)::after { content: none; }
+
+/* .btn-icon — 44×44 circle, aria-label required */
+.btn-icon,
+:where(.header-action-btn, .qty-btn, .ai-qty-btn, #cartCloseBtn, #mobileNavToggle) {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-secondary);
+  text-align: center;
+  vertical-align: middle;
+  line-height: 42px;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+.btn-icon .ico, :where(.header-action-btn, .qty-btn, .ai-qty-btn, #cartCloseBtn, #mobileNavToggle) .ico { width: 20px; height: 20px; }
+.btn-icon:hover, :where(.header-action-btn, .qty-btn, .ai-qty-btn, #cartCloseBtn, #mobileNavToggle):hover { border-color: var(--kin-dim); color: var(--text-primary); }
+.paper .btn-icon { color: var(--sumi-ink-2); border-color: var(--washi-line-strong); }
+
+/* Sizes */
+.btn-sm    { min-height: 36px; padding: 0.4rem 0.8rem; font-size: 0.8125rem; }
+.btn-block { display: flex; width: 100%; }
+
+/* KDS ticket actions — rebuilt every 4 s: no transitions */
+.action-btn { min-height: 48px; flex: 1; font: 700 1rem/1.2 var(--font-sans); border-radius: var(--radius-seal); transition: none; }
+.action-btn.btn-cancel { flex: 0 0 auto; min-width: 88px; }
+.action-btn[disabled] { opacity: 0.6; }
+
+/* ── 8. Count seals (status badges moved to §20) ─────────────────────────────── */
+.seal-count,
+:where(#cartCount, .pill-count) {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 50%;
+  background: var(--shu);
+  color: #fff;
+  font: 800 0.6875rem/1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+.seal-count--kin    { background: var(--kin); color: var(--sumi-ink); }
+.seal-count--matcha { background: var(--matcha-bright); color: var(--sumi-ink); }
+
+/* ── 9. Filter chips (leaf buttons — never add children; no vermilion) ───────── */
 .filter-btn {
-    background: var(--bg-surface-variant);
-    color: var(--text-secondary);
-    border: 1px solid var(--glass-border);
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-pill);
-    font-weight: 600;
-    font-size: 0.875rem;
-    transition: all var(--duration-fast) var(--ease-out);
-    cursor: pointer;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-hover);
+  padding: 0.5rem 0.9rem;
+  min-height: 40px;
+  border-radius: var(--radius-paper);
+  font: 600 0.8125rem/1.2 var(--font-sans);
+  transition: background-color var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out);
+  cursor: pointer;
 }
+.filter-btn:hover { border-color: var(--kin-dim); background: rgba(240,220,190,0.05); color: var(--text-primary); }
+.filter-btn.active { background: var(--washi); color: var(--sumi-ink); border-color: var(--washi); box-shadow: var(--shadow-soft); }
+.paper .filter-btn { color: var(--sumi-ink-2); border-color: var(--washi-line-strong); }
+.paper .filter-btn.active { background: var(--sumi-ink); color: var(--washi); border-color: var(--sumi-ink); }
 
-.filter-btn:hover {
-    border-color: var(--glass-border-hover);
-    background: var(--bg-surface-bright);
-    color: var(--text-primary);
+/* ── 10. Status indicators — lanterns ────────────────────────────────────────── */
+.status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.status-dot.green  { color: var(--success); background-color: var(--success); box-shadow: 0 0 10px rgba(79,185,138,0.5); }
+.status-dot.grey   { color: var(--text-muted); background-color: var(--text-muted); }
+.status-dot.red    { color: var(--danger);  background-color: var(--danger);  box-shadow: 0 0 10px rgba(239,83,80,0.5); }
+.status-dot.yellow { color: var(--warning); background-color: var(--warning); box-shadow: 0 0 10px rgba(232,168,56,0.5); }
+
+/* Lit lanterns (≤12 px; never on anything JS rebuilds) */
+.chochin,
+.pulse-dot,
+.server-status .status-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  color: var(--lantern);
+  background: currentColor;
+  animation: lantern 2.4s ease-in-out infinite;
 }
+.chochin { width: 12px; height: 12px; }
+.chochin--shu    { color: var(--primary); }
+.chochin--matcha { color: var(--matcha-bright); }
+.chochin--ume    { color: var(--ume-light); }
+.server-status .status-dot.green { color: var(--matcha-bright); background: currentColor; }
 
-.filter-btn.active {
-    background: var(--primary-raw);
-    color: #fff;
-    border-color: var(--primary-raw);
-    box-shadow: 0 0 16px var(--primary-glow);
-}
-
-/* ── 10. Status Indicators ────────────────────────────────────────────────────── */
-.status-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    display: inline-block;
-}
-
-.status-dot.green {
-    background-color: var(--success);
-    box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
-}
-
-.status-dot.grey {
-    background-color: var(--text-muted);
-}
-
-.status-dot.red {
-    background-color: var(--danger);
-    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-}
-
-.status-dot.yellow {
-    background-color: var(--warning);
-    box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
-}
-
-/* ── 11. Toggle Switch ────────────────────────────────────────────────────────── */
-.toggle-switch {
-    position: relative;
-    display: inline-block;
-    width: 44px;
-    height: 24px;
-}
-
-.toggle-switch input { opacity: 0; width: 0; height: 0; }
-
+/* ── 11. Toggle switch — 営 / 休 sign ────────────────────────────────────────── */
+.toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
 .toggle-slider {
-    position: absolute;
-    cursor: pointer;
-    inset: 0;
-    background-color: var(--bg-surface-bright);
-    transition: 0.3s;
-    border-radius: 34px;
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: var(--bg-surface-bright);
+  border: 1px solid var(--border-hover);
+  transition: 0.3s;
+  border-radius: 34px;
 }
-
 .toggle-slider:before {
-    position: absolute;
-    content: "";
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 3px;
-    background-color: var(--text-primary);
-    transition: 0.3s;
-    border-radius: 50%;
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  bottom: 2px;
+  background-color: var(--washi);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  transition: 0.3s;
+  border-radius: 50%;
 }
+.toggle-slider::after {
+  content: none;
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font: 500 0.6875rem/1 var(--font-jp);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+input:checked + .toggle-slider { background-color: var(--matcha); border-color: var(--matcha); }
+input:checked + .toggle-slider:before { transform: translateX(20px); }
+input:checked + .toggle-slider::after { content: none; left: 6px; right: auto; color: #fff; }
+.toggle-switch input:focus-visible + .toggle-slider { box-shadow: var(--ring-kin); }
 
-input:checked + .toggle-slider {
-    background-color: var(--primary-raw);
-}
-
-input:checked + .toggle-slider:before {
-    transform: translateX(20px);
-}
-
-/* ── 12. Tables ───────────────────────────────────────────────────────────────── */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-}
+/* ── 12. Tables (inside .lacquer; paper variant for bill slips) ─────────────── */
+table { width: 100%; border-collapse: collapse; text-align: left; }
 
 th {
-    padding: 1rem;
-    color: var(--text-muted);
-    font-weight: 700;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-wide);
-    border-bottom: 1px solid var(--border);
+  padding: 0.75rem 1rem;
+  color: var(--text-muted);
+  font: 700 0.6875rem/1.3 var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  border-bottom: 1px solid var(--kin-hair);
+  white-space: nowrap;
 }
+th .jp, th small.jp { text-transform: none; letter-spacing: 0.06em; margin-left: 0.35em; color: var(--text-dimmed); font-size: 0.75rem; }
 
 td {
-    padding: 1rem;
-    color: var(--text-primary);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-    font-size: 0.95rem;
+  padding: 0.8rem 1rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+  vertical-align: middle;
 }
-
 tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(240,220,190,0.03); }
 
-tr:hover td {
-    background: rgba(255, 255, 255, 0.02);
+.num   { text-align: right; font-variant-numeric: tabular-nums; }
+.price { font: 600 1rem/1.2 var(--font-display); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.price::before { content: "₹"; color: var(--kin); margin-right: 0.15em; }   /* emit bare numbers in .price */
+.paper .price::before { color: var(--kin-ink); }
+
+/* Paper tables (bill slips) */
+.paper th { color: var(--sumi-ink-3); border-bottom-color: var(--washi-line-strong); }
+.paper th .jp { color: var(--sumi-ink-3); }
+.paper td { color: var(--sumi-ink); border-bottom-color: var(--washi-line); }
+.paper tr:hover td { background: rgba(28,24,22,0.03); }
+
+/* Horizontal scroll frame with edge fade; sticky first column on phones */
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 24px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 24px), transparent);
+}
+@media (max-width: 767px) {
+  .table-container th:first-child,
+  .table-container td:first-child { position: sticky; left: 0; background: var(--bg-surface-container); z-index: 1; }
 }
 
-/* ── 13. Input Fields ─────────────────────────────────────────────────────────── */
+/* Expandable order rows (admin) — display contract kept exactly */
+.order-main-row { cursor: pointer; }
+.order-main-row td:first-child::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 0.45em;
+  vertical-align: -1px;
+  background: var(--text-muted);
+  -webkit-mask: var(--glyph-chevron-right) center / contain no-repeat;
+  mask: var(--glyph-chevron-right) center / contain no-repeat;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+tr.order-main-row:has(+ .order-expand-row.open) td:first-child::before { transform: rotate(90deg); }
+.order-expand-row { display: none; }
+.order-expand-row.open { display: table-row; }
+.order-expand-row.open > td { padding: 0 1rem 1rem; }
+.order-expand-row:hover td { background: transparent; }
+.expand-mini-table td[style] { color: var(--sumi-ink-3) !important; }   /* allowed !important #1: JS inline colour */
+
+/* Critical rows (bots health) */
+tr.health-critical td { background: rgba(184,74,92,0.10); }
+tr.health-critical td:first-child::after {
+  content: "!";
+  font: 700 0.75rem var(--font-display);
+  color: var(--ume-light);
+  margin-left: 0.4rem;
+}
+
+/* ── 13. Input fields, select, checkbox / radio chips ────────────────────────── */
 input[type="text"],
 input[type="number"],
 input[type="search"],
 input[type="email"],
 input[type="tel"],
+input[type="password"],
+input[type="date"],
+input[type="time"],
+input[type="url"],
 select,
 textarea {
-    background: var(--bg-surface-highest);
-    border: 1px solid var(--border);
-    color: var(--text-primary);
-    border-radius: var(--radius-sm);
-    padding: 0.75rem 1rem;
-    font-family: var(--font-sans);
-    font-size: 0.95rem;
-    transition: all var(--duration-fast) var(--ease-out);
-    outline: none;
+  background: var(--bg-surface-low);
+  border: 1px solid var(--border-hover);
+  border-bottom: 2px solid var(--outline-variant);
+  color: var(--text-primary);
+  border-radius: var(--radius-paper);
+  padding: 0.7rem 0.9rem;
+  font-family: var(--font-sans);
+  font-size: 1rem;                       /* 16 px stops iOS zoom */
+  line-height: 1.3;
+  transition: border-color var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out),
+              background-color var(--duration-fast) var(--ease-out);
+  outline: none;
 }
+textarea { resize: vertical; min-height: 88px; }
 
 input:focus,
 select:focus,
 textarea:focus {
-    background: var(--bg-surface-bright);
-    border-color: rgba(99, 102, 241, 0.4);
-    box-shadow: 0 0 0 3px var(--primary-glow);
+  background: var(--bg-surface);
+  border-color: var(--kin);
+  border-bottom-color: var(--kin);
+  box-shadow: var(--ring-kin);
+}
+::placeholder { color: var(--text-dimmed); opacity: 1; }
+option { background: var(--bg-surface-high); color: var(--text-primary); }
+
+/* Paper (ruled-line) inputs: login cards, #loginOverlay, #menuItemForm — any .paper */
+.paper :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), select, textarea) {
+  background: var(--washi-bright);
+  border: 0;
+  border-bottom: 1.5px solid rgba(28,24,22,0.35);
+  border-radius: 3px 3px 0 0;
+  color: var(--sumi-ink);
+  box-shadow: none;
+}
+.paper :is(input, select, textarea):focus {
+  background: var(--washi-bright);
+  border-bottom: 2px solid var(--shu-ink);
+  box-shadow: 0 1px 0 var(--shu-ink);
+}
+.paper ::placeholder { color: var(--sumi-ink-3); }
+
+/* Input with a leading icon */
+.input-wrap { position: relative; }
+.input-wrap > input { padding-left: 2.6rem; width: 100%; }
+.input-wrap > .ico,
+.input-wrap > .input-icon,
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+.input-wrap:focus-within > :is(.ico, .input-icon) { color: var(--kin); }
+.paper .input-wrap > :is(.ico, .input-icon), .paper .input-icon { color: var(--sumi-ink-3); }
+.paper .input-wrap:focus-within > :is(.ico, .input-icon) { color: var(--shu-ink); }
+.input-wrap.is-code:focus-within > :is(.ico, .input-icon) { filter: drop-shadow(0 0 6px var(--lantern-glow-strong)); }  /* lantern icon on code fields */
+
+/* Mono fields: codes and PINs */
+.form-input.code, :where(#restaurantCodeInput, #restCode) { font-family: var(--font-mono); font-weight: 600; text-transform: uppercase; letter-spacing: 0.18em; }
+.form-input.pin,  :where(#pinInput, #credPin)             { font-family: var(--font-mono); font-weight: 600; letter-spacing: 0.35em; }
+.code-pill {
+  display: inline-block;
+  font: 600 0.875rem/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  padding: 0.3rem 0.6rem;
+  border-radius: 3px;
+  background: var(--kin);
+  color: var(--sumi-ink);
 }
 
-::placeholder {
-    color: var(--text-dimmed);
+/* Select wrapper (survives cloneNode): <span class="select-wrap"><select>…</select></span> */
+.select-wrap { position: relative; display: inline-block; vertical-align: middle; max-width: 100%; }
+.select-wrap.block { display: block; }
+.select-wrap > select { appearance: none; -webkit-appearance: none; padding-right: 2.25rem; width: 100%; }
+.select-wrap::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  transform: translateY(-50%);
+  background: var(--kin);
+  -webkit-mask: var(--glyph-chevron-down) center / contain no-repeat;
+  mask: var(--glyph-chevron-down) center / contain no-repeat;
+  pointer-events: none;
+}
+.paper .select-wrap::after { background: var(--shu-ink); }
+
+/* Checkbox / radio seal chips (.form-checkbox-label, .pref-chip, .payment-method) */
+.form-checkbox-label,
+.pref-chip,
+.payment-method {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 36px;
+  padding: 0.4rem 0.8rem;
+  border: 2px solid currentColor;
+  border-radius: var(--radius-seal);
+  background: transparent;
+  color: var(--text-secondary);
+  font: 600 0.875rem/1.2 var(--font-sans);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+}
+.paper :is(.form-checkbox-label, .pref-chip, .payment-method) { color: var(--sumi-ink); }
+:is(.form-checkbox-label, .pref-chip, .payment-method) > input { accent-color: var(--shu); }   /* native box = fallback */
+.payment-method { display: grid; justify-items: center; text-align: center; gap: 0.35rem; padding: 0.75rem 0.5rem; }
+.payment-method .ico { width: 24px; height: 24px; }
+@supports selector(:has(a)) {
+  :is(.form-checkbox-label, .pref-chip, .payment-method) > input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+  :is(.form-checkbox-label, .pref-chip, .payment-method):has(input:checked) {
+    background: var(--shu);
+    color: #fff;
+    border-color: var(--shu-deep);
+    animation: stamp 0.32s var(--ease-spring);
+  }
+  :is(.form-checkbox-label, .pref-chip, .payment-method):has(input:focus-visible) { box-shadow: var(--ring-shu); }
 }
 
 /* ── 14. Selection ────────────────────────────────────────────────────────────── */
-::selection {
-    background: var(--primary-raw);
-    color: #fff;
-}
+::selection { background: var(--primary-raw); color: var(--on-primary); }
 
-/* ── 15. Animations ───────────────────────────────────────────────────────────── */
+/* ── 15. Animations (legacy names consumed by pages — keep) ──────────────────── */
 @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
-
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(8px); }
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(8px); }
 }
-
 @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 12px var(--primary-glow); }
-    50%      { box-shadow: 0 0 24px var(--primary-glow-strong); }
+  0%, 100% { box-shadow: 0 0 12px var(--primary-glow); }
+  50%      { box-shadow: 0 0 24px var(--primary-glow-strong); }
 }
-
 @keyframes wave {
-    0%, 100% { transform: rotate(-10deg); }
-    50%      { transform: rotate(10deg); }
+  0%, 100% { transform: rotate(-10deg); }
+  50%      { transform: rotate(10deg); }
 }
-
-.animate-fadeInUp {
-    animation: fadeInUp 0.6s var(--ease-out) forwards;
-}
-
-.animate-fadeIn {
-    animation: fadeIn 0.4s var(--ease-out) forwards;
-}
+.animate-fadeInUp { animation: fadeInUp 0.6s var(--ease-out) forwards; }
+.animate-fadeIn   { animation: fadeIn 0.4s var(--ease-out) forwards; }
 
 /* ── 16. Utility: Hidden (preserved for JS toggle logic) ──────────────────────── */
 .hidden { display: none !important; }
 
-/* ── 17. Container ────────────────────────────────────────────────────────────── */
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
+
+/* ── 17. Container ────────────────────────────────────────────────────────────── */
+.container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+/* ── 18. Paper & Lacquer — surfaces and the compositions built on them ───────── */
+
+/* 18.1 Paper: washi + sumi ink. One noise tile, no blend mode. */
+.paper,
+.stat-card,
+.order-card,
+.toast {
+  background-color: var(--washi);
+  background-image: var(--washi-fibre), linear-gradient(180deg, var(--washi-bright), var(--washi) 60%, var(--washi-2));
+  background-size: 240px 240px, auto;
+  box-shadow: var(--shadow-paper);
+  border: 1px solid rgba(28,24,22,0.18);
+  border-radius: var(--radius-paper);
+  color: var(--sumi-ink);
+  position: relative;
+}
+/* Children on paper */
+.paper :is(h1, h2, h3, h4, h5, h6),
+.paper .page-title { color: var(--sumi-ink); }
+.paper :is(.text-muted, .text-secondary, .meta),
+.paper .page-subtitle,
+.paper .jp,
+.paper .lbl-jp { color: var(--sumi-ink-3); }
+.paper .eyebrow { color: var(--shu-ink); }
+.paper .bi[data-ja]::before { color: var(--shu-ink); }
+.paper a:not([class]) { color: var(--shu-ink); }
+.paper hr { border-color: var(--washi-line); }
+.paper .rule-kin { background: var(--brush-rule-sumi) center / 100% 100% no-repeat; height: 8px; }
+.paper .page-header::after { background-image: var(--brush-rule-sumi); }
+
+/* Deckled top edge */
+.paper--torn::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 0;
+  right: 0;
+  height: 7px;
+  background: var(--washi-bright);
+  -webkit-mask: var(--deckle) 0 0 / 18px 7px repeat-x;
+  mask: var(--deckle) 0 0 / 18px 7px repeat-x;
+  pointer-events: none;
+}
+
+/* Hover lift — clickable, static cards only (JS-rebuilt .menu-card gets shadow, no transform) */
+.paper.is-clickable,
+.module-card.paper { transition: box-shadow var(--duration-normal) var(--ease-out), transform var(--duration-normal) var(--ease-out); }
+.paper.is-clickable:hover,
+.module-card.paper:hover { box-shadow: var(--shadow-paper-lift); transform: translateY(-1px); }
+.menu-card.paper:hover { box-shadow: var(--shadow-paper-lift); }
+
+/* 18.2 Ticket: perforation + two punched holes (holes layered first) */
+.ticket {
+  background-image:
+    radial-gradient(circle at 14px 10px, var(--bg-surface-low) 4px, transparent 4.5px),
+    radial-gradient(circle at calc(100% - 14px) 10px, var(--bg-surface-low) 4px, transparent 4.5px),
+    var(--washi-fibre),
+    linear-gradient(180deg, var(--washi-bright), var(--washi) 60%, var(--washi-2));
+  background-size: auto, auto, 240px 240px, auto;
+}
+.ticket .card-top { border-bottom: 2px dashed var(--washi-line); }
+
+/* 18.3 Tanzaku: narrow strip with a coloured top band and a hole */
+.tanzaku,
+.stat-card { border-top: 6px solid var(--shu); }
+.tanzaku::before,
+.stat-card::before {
+  content: "";
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--bg-deep);
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.tanzaku--kin    { border-top-color: var(--kin); }
+.tanzaku--ai     { border-top-color: var(--ai); }
+.tanzaku--sakura { border-top-color: var(--sakura); }
+.tanzaku--matcha { border-top-color: var(--matcha); }
+.tanzaku--sumi   { border-top-color: var(--sumi-ink-2); }
+
+/* 18.4 Ema: votive plaque with a roof; status cord on border-top */
+.ema { border-top: 4px solid var(--nezumi); margin-top: 10px; }
+.ema::after {
+  content: "";
+  position: absolute;
+  top: -14px;
+  left: 0;
+  right: 0;
+  height: 12px;
+  background: var(--bg-surface-highest);
+  clip-path: polygon(0 100%, 50% 0, 100% 100%);
+  pointer-events: none;
+}
+.ema.online   { border-top-color: var(--matcha); }
+.ema.charging { border-top-color: var(--kuchiba); }
+.ema.offline  { border-top-color: var(--nezumi); }
+
+/* 18.5 Lacquer: the container. No backdrop-filter. (.panel / .kanban-column are lacquer per §6.3; pages add ids) */
+.lacquer,
+.panel,
+.kanban-column {
+  background: var(--bg-surface-container);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: inset 0 1px 0 rgba(255,235,205,0.04), 0 2px 8px rgba(0,0,0,0.35);
+}
+.lacquer-header {
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background-image: var(--rule-kin);
+  background-position: bottom;
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+}
+/* Shoji lattice band (cart header, drawers) */
+.shoji-band {
+  background-color: var(--bg-surface-low);
+  background-image:
+    repeating-linear-gradient(90deg, var(--border) 0 1px, transparent 1px 48px),
+    repeating-linear-gradient(0deg,  var(--border) 0 1px, transparent 1px 48px);
+  min-height: 56px;
+}
+
+/* 18.6 Order ticket (denpyo) — generic parts. .order-card is rebuilt every 4 s:
+   no transitions, no entrance animation, no hover transform, no ::after texture. */
+.order-card { padding: 0 0 0.75rem; margin-bottom: 0.85rem; transition: none; }
+.order-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 6px; border-radius: 4px 4px 0 0; background: var(--nezumi); }
+.order-card.status-pending::before   { background: var(--kuchiba); }
+.order-card.status-preparing::before { background: var(--shu); }
+.order-card.status-ready::before     { background: var(--matcha); }
+/* Tickets are paper by selector (no .paper class), so the paper-ink child variants are restated here */
+.order-card .action-btn.btn-cancel { color: var(--ume-ink); }
+.order-card .action-btn.btn-cancel:hover { background: rgba(143, 49, 64, 0.10); }
+.order-card .veg-dot.veg { color: var(--veg-ink); }
+.order-card .veg-dot.nonveg { color: var(--nonveg-ink); }
+.order-card :is(.btn-cancel, .btn-ready, .btn-serve):focus-visible { outline-color: var(--shu-ink); }
+.order-card .btn-start:focus-visible { outline-color: #fff; }
+.order-card .item-instructions::before { font-size: 0.6875rem; }
+
+.order-card .card-top {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1rem 0.75rem;
+  border-bottom: 2px dashed var(--washi-line);
+}
+/* Table seal 卓 — JS emits the bare number */
+.table-badge {
+  display: inline-grid;
+  place-items: center;
+  position: relative;
+  width: 56px;
+  height: 56px;
+  font: 700 2rem/1 var(--font-display);
+  color: #fff;
+  background: var(--shu);
+  border: 2px solid rgba(255,255,255,0.55);
+  outline: 1px solid var(--shu-deep);
+  border-radius: var(--radius-seal);
+  transform: rotate(-2deg);
+  letter-spacing: 0;
+}
+.table-badge::before { content: "T"; position: absolute; top: 3px; left: 5px; font: 500 0.6875rem/1 var(--font-jp); opacity: 0.85; }
+/* Timer — tabular Inter, incense glyph; urgent = ember */
+.timer {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  font: 800 1.5rem/1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--sumi-ink);
+  transition: none;
+}
+.timer::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  background: var(--sumi-ink-3);
+  -webkit-mask: var(--glyph-incense) center / contain no-repeat;
+  mask: var(--glyph-incense) center / contain no-repeat;
+}
+.timer.timer-red {
+  background: var(--shu);
+  color: #fff;
+  padding: 0.1em 0.5em;
+  border-radius: var(--radius-seal);
+  animation: ember 1.2s ease-in-out infinite;
+}
+.timer.timer-red::before { background: rgba(255,255,255,0.85); }
+.timer.timer-red::after { content: "!"; font: 700 0.75em/1 var(--font-jp); margin-left: 0.15em; }
+.order-id {
+  grid-column: 1 / -1;
+  font: 500 0.6875rem/1.3 var(--font-mono);
+  letter-spacing: 0.08em;
+  color: var(--sumi-ink-3);
+}
+.items-list { list-style: none; padding: 0.5rem 1rem; margin: 0; }
+.items-list li { padding: 0.55rem 0; border-bottom: 1px solid var(--washi-line); }
+.items-list li:last-child { border-bottom: 0; }
+.item-main { display: flex; align-items: center; gap: 0.6rem; }
+.item-qty  { font: 700 1.375rem/1 var(--font-display); min-width: 2.2ch; color: var(--sumi-ink); font-variant-numeric: tabular-nums; }
+.item-name { font: 600 1.125rem/1.3 var(--font-sans); color: var(--sumi-ink); flex: 1; }
+.item-name.item-none { color: var(--sumi-ink-3); font-weight: 500; }
+.item-main .veg-dot { margin-left: auto; }
+.card-actions { display: flex; gap: 0.5rem; padding: 0.5rem 1rem 0; }
+
+/* 18.7 Stat tiles — koban / tanzaku (.stat-card inherits .paper + .tanzaku above) */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+.stat-card { padding: 1.25rem 1.25rem 1rem; display: grid; gap: 0.25rem; align-content: start; }
+.stat-card:nth-child(2) { border-top-color: var(--kin); }
+.stat-card:nth-child(3) { border-top-color: var(--ai); }
+.stat-card:nth-child(4) { border-top-color: var(--sakura); }
+.stat-label {
+  font: 600 0.6875rem/1.4 var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--shu-ink);
+}
+.stat-label .jp { text-transform: none; letter-spacing: 0.08em; color: var(--sumi-ink-3); margin-left: 0.4em; }
+.stat-value {
+  font: 700 clamp(1.75rem, 2.4vw, 2.5rem)/1.1 var(--font-display);
+  color: var(--sumi-ink);
+  white-space: nowrap;
+  overflow: visible;
+  font-variant-numeric: tabular-nums;
+}
+.stat-value-green { color: var(--sumi-ink); }
+.stat-card:nth-child(2) .stat-value::before {
+  content: "";
+  display: inline-block;
+  width: 20px;
+  height: 14px;
+  margin-right: 0.3em;
+  vertical-align: 0.05em;
+  background: var(--kin-dim);
+  -webkit-mask: var(--glyph-koban) center / contain no-repeat;
+  mask: var(--glyph-koban) center / contain no-repeat;
+}
+.stat-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--washi-line);
+  color: var(--sumi-ink-2);
+  font-size: 0;
+}
+.stat-icon .ico { width: 18px; height: 18px; }
+
+/* 18.8 Charts — one hue per single-series chart, values readable without hover */
+.bar-chart {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 6px;
+  align-items: end;
+  height: 180px;
+  border-bottom: 1px solid var(--kin-hair);
+  background-image: repeating-linear-gradient(0deg, transparent 0 44px, var(--border) 44px 45px);
+  position: relative;
+}
+.revenue-chart { grid-template-columns: repeat(7, 1fr); }
+.bar {
+  position: relative;
+  width: auto;
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(180deg, var(--kin), var(--kin-dim));
+  transition: none;
+}
+.revenue-chart .bar {
+  background: var(--kin);
+  background-image: repeating-linear-gradient(0deg, transparent 0 9px, rgba(28,24,22,0.35) 9px 10px);   /* koban stack */
+}
+.bar[data-val]::after {
+  content: attr(data-val);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 4px);
+  transform: translateX(-50%);
+  padding: 0.15rem 0.4rem;
+  background: var(--washi);
+  color: var(--sumi-ink);
+  font: 600 0.6875rem/1.2 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  border-radius: 3px;
+  box-shadow: var(--shadow-soft);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+.bar[data-val]:hover::after { opacity: 1; }
+@media (min-width: 1200px) { .bar[data-val]::after { opacity: 0.85; } }
+.chart-labels {
+  display: grid;
+  grid-template-columns: inherit;
+  text-align: center;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  margin-top: 0.4rem;
+}
+.bar-chart + .chart-labels { grid-template-columns: repeat(12, 1fr); gap: 6px; }
+.revenue-chart + .chart-labels { grid-template-columns: repeat(7, 1fr); }
+/* Top dishes: CSS-counter 一二三 seals, no JS */
+.dish-list, #topDishesList { counter-reset: rank; }
+.dish-row { counter-increment: rank; display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0; border-bottom: 1px solid var(--border); }
+.dish-row:last-child { border-bottom: 0; }
+.dish-rank {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  font-size: 0;
+  flex-shrink: 0;
+  background: var(--kin);
+  color: var(--sumi-ink);
+  border: 2px solid rgba(255,255,255,0.55);
+  outline: 1px solid var(--kin-dim);
+  border-radius: var(--radius-seal);
+  transform: rotate(-6deg);
+}
+.dish-rank::before { content: counter(rank, decimal); font: 700 0.875rem/1 var(--font-display); }
+.dish-count { margin-left: auto; text-align: right; font-variant-numeric: tabular-nums; font: 600 1rem var(--font-display); color: var(--kin); }
+/* Satisfaction ensō (inline SVG; --pct set by JS or left open) */
+.enso-track { fill: none; stroke: var(--bg-surface-bright); stroke-width: 6; }
+.enso-fill  { fill: none; stroke: var(--kin); stroke-width: 6; stroke-linecap: round; transform: rotate(-100deg); transform-origin: 50% 50%; transition: stroke-dashoffset 0.6s var(--ease-out); }
+
+/* 18.9 Chat bubbles — fukidashi on paper */
+.message {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-end;
+  max-width: min(78%, 640px);
+  margin: 0.5rem 0;
+  animation: slideUp 0.25s var(--ease-out);
+}
+.message.user { margin-left: auto; flex-direction: row-reverse; }
+.msg-role {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--kin-dim);
+  background: var(--bg-surface-high);
+  font-size: 0;
+  overflow: hidden;
+}
+.msg-role svg, .msg-role .ico { width: 24px; height: 24px; }
+.msg-bubble { min-width: 0; overflow-wrap: anywhere; }
+/* Bots .log-entry.bot / .log-entry.user reuse the bubbles (the entry itself is the bubble) */
+.log-entry.bot, .log-entry.user { max-width: min(78%, 640px); margin: 0.5rem 0; }
+.log-entry.user { margin-left: auto; }
+.message.bot .msg-bubble,
+.log-entry.bot {
+  background-color: var(--washi);
+  background-image: var(--washi-fibre), linear-gradient(180deg, var(--washi-bright), var(--washi) 60%, var(--washi-2));
+  background-size: 240px 240px, auto;
+  box-shadow: var(--shadow-paper);
+  border: 1px solid rgba(28,24,22,0.18);
+  border-left: 3px solid var(--kin);
+  border-radius: 3px 12px 12px 12px;
+  padding: 0.7rem 0.9rem;
+  color: var(--sumi-ink);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+.message.user .msg-bubble,
+.log-entry.user {
+  background: linear-gradient(160deg, var(--shu), var(--primary-dim));
+  color: #fff;
+  border-radius: 12px 3px 12px 12px;
+  box-shadow: 0 2px 0 var(--shu-deep);
+  padding: 0.7rem 0.9rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+.chat-fade-top { position: absolute; top: 0; left: 0; right: 0; height: 56px; background: linear-gradient(180deg, var(--bg-deep), transparent); pointer-events: none; }
+
+/* Kamon roundels + character colours */
+.kamon {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  background: radial-gradient(circle at 50% 40%, rgba(227,181,90,0.22), transparent 70%);
+  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, currentColor 22%, transparent), transparent 70%);
+}
+.kamon .ico, .kamon svg { width: 60%; height: 60%; }
+.char-naruto   { color: var(--c-naruto); }
+.char-goku     { color: var(--c-goku); }
+.char-doraemon { color: var(--c-doraemon-text); }
+.char-shinchan { color: var(--c-shinchan); }
+.char-luffy    { color: var(--c-luffy-text); }
+.paper .char-naruto   { color: var(--daidai); }
+.paper .char-goku     { color: var(--kin-ink); }
+.paper .char-doraemon { color: var(--ai); }
+.paper .char-shinchan { color: var(--momo); }
+.paper .char-luffy    { color: var(--shu-ink); }
+
+/* 18.10 Modals & drawers — shoji (generic parts; ids / z-plan live in page CSS) */
+.modal-overlay,
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(16,13,12,0.72);
+}
+.modal-sheet,
+.paper.modal-content {
+  width: 100%;
+  max-width: 480px;
+  border-top: 4px solid var(--shu);
+  animation: ink-in 0.3s var(--ease-out);
+}
+.modal-title { font: 600 1.375rem/1.2 var(--font-display); letter-spacing: var(--tracking-display); }
+.modal-close {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  background: transparent;
+  color: var(--sumi-ink);
+  cursor: pointer;
+}
+.modal-close .ico { width: 18px; height: 18px; }
+.modal-close:hover { background: rgba(28,24,22,0.06); }
+.drawer { transform: translateX(100%); transition: transform 0.32s var(--ease-out); }
+.drawer.open { transform: translateX(0); }
+
+/* 18.11 Progress rail (一 二 三 seals) */
+.step-rail {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  justify-content: center;
+  gap: 2.5rem;
+  position: relative;
+  margin-bottom: 1.25rem;
+}
+.step-rail::before { content: ""; position: absolute; left: 15%; right: 15%; top: 50%; height: 1px; background: var(--rule-kin); }
+.step-rail > * {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  font: 700 0.875rem/1 var(--font-display);
+  color: var(--sumi-ink-3);
+  background: var(--washi);
+  border: 2px solid currentColor;
+  border-radius: var(--radius-seal);
+  transform: rotate(-6deg);
+}
+.step-rail > .is-done    { background: var(--kin); color: var(--sumi-ink); border-color: var(--kin); }
+.step-rail > .is-current { background: var(--shu); color: #fff; border-color: var(--shu-deep); }
+
+/* Brand lockup: [cat 28] + kanji / romaji stack + small hanko */
+.brand-lockup { display: inline-flex; gap: 0.6rem; align-items: center; text-decoration: none; color: inherit; }
+.brand-lockup .mn, .brand-lockup > .ico { width: 28px; height: 28px; flex-shrink: 0; }
+.brand-stack  { display: grid; line-height: 1.1; }
+.brand-kanji  { font: 700 1.125rem/1.1 var(--font-display); letter-spacing: 0.04em; color: var(--text-primary); }
+.brand-romaji { font: 600 0.6875rem/1.2 var(--font-sans); text-transform: uppercase; letter-spacing: 0.18em; color: var(--text-muted); }
+.paper .brand-kanji  { color: var(--sumi-ink); }
+.paper .brand-romaji { color: var(--sumi-ink-3); }
+/* Painted-lantern caption (restaurant name in app headers) */
+.lantern-caption,
+:where(#sidebarRestaurantName, #kdsRestaurantName) {
+  font: 500 0.7rem/1.3 var(--font-jp);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--lantern);
+  text-shadow: 0 0 8px var(--lantern-glow);
+}
+
+/* Brand cat (inline svg.mn) */
+.mn { display: inline-block; overflow: visible; }
+.mn .mn-paw { animation: beckon 2.4s ease-in-out infinite; transform-origin: 82px 66px; transform-box: view-box; }
+.mn--washi { filter: drop-shadow(0 1px 0 rgba(28,24,22,0.25)); }
+.mn--resting .mn-paw { animation: none; transform: rotate(-70deg); }
+.mn--resting .mn-face path:nth-child(-n+2) { stroke-dasharray: 10 0; }
+
+/* ── 19. Hanko seal ───────────────────────────────────────────────────────────── */
+.hanko {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25em;
+  height: 2.25em;
+  font: 700 0.875rem/1 var(--font-display);
+  color: #fff;
+  background: var(--shu);
+  border: 2px solid rgba(255,255,255,0.55);
+  outline: 1px solid var(--shu-deep);
+  border-radius: var(--radius-seal);
+  transform: rotate(-6deg);
+  position: relative;
+  letter-spacing: 0;
+  flex-shrink: 0;
+}
+.hanko::after {   /* textured ink edge; static elements only */
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background: var(--washi-fibre);
+  background-size: 120px;
+  opacity: 0.45;
+  mix-blend-mode: multiply;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.hanko--sm    { width: 18px; height: 18px; font-size: 0.6875rem; }
+.hanko--lg    { width: 56px; height: 56px; font-size: 1.75rem; transform: rotate(-2deg); }
+.hanko--round { border-radius: 50%; }
+.hanko--kin   { background: var(--kin); color: var(--sumi-ink); outline-color: var(--kin-dim); }      /* paid / billed */
+.hanko--sumi  { background: transparent; color: var(--sumi-ink); border: 2px solid currentColor; outline: 0; }  /* ink impression, outline only */
+.hanko--sumi::after { content: none; }
+.hanko--matcha { background: var(--matcha-ink); outline-color: var(--matcha-ink); }
+.hanko--ai     { background: var(--ai); outline-color: var(--ai); }
+.hanko.stamp-in { animation: stamp 0.32s var(--ease-spring) both; }
+.hanko .jp { font: inherit; color: inherit; letter-spacing: 0; }
+
+/* ── 20. Status seals (.badge) — colour on dark · ink on paper · kanji glyph ──── */
+.badge,
+.badge-status,
+.history-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.55rem 0.2rem 0.4rem;
+  border-radius: var(--radius-seal);
+  border: 1.5px solid currentColor;
+  color: var(--text-secondary);
+  background: rgba(203,191,176,0.12);
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  font: 700 0.6875rem/1.2 var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  transform: none;
+}
+.badge::before,
+.badge-status::before,
+.history-status::before {
+  content: var(--ja, "·");
+  font: 700 0.75rem/1 var(--font-jp);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.badge-pending   { color: var(--st-pending);   --ja: var(--st-pending-ja); }
+.badge-preparing { color: var(--st-preparing); --ja: var(--st-preparing-ja); }
+.badge-ready     { color: var(--st-ready);     --ja: var(--st-ready-ja); }
+.badge-delivered { color: var(--st-delivered); --ja: var(--st-delivered-ja); }
+.badge-billed    { color: var(--st-billed);    --ja: var(--st-billed-ja); }
+.badge-cancelled { color: var(--st-cancelled); --ja: var(--st-cancelled-ja); text-decoration: line-through; }
+.badge-completed { color: var(--st-delivered); --ja: none; }
+
+.badge-status.online   { color: var(--st-online);   --ja: var(--st-online-ja); }
+.badge-status.offline  { color: var(--st-offline);  --ja: var(--st-offline-ja); }
+.badge-status.charging { color: var(--st-charging); --ja: var(--st-charging-ja); }
+
+.history-status.status-pending   { color: var(--st-pending);   --ja: var(--st-pending-ja); }
+.history-status.status-preparing { color: var(--st-preparing); --ja: var(--st-preparing-ja); }
+.history-status.status-ready     { color: var(--st-ready);     --ja: var(--st-ready-ja); }
+.history-status.status-delivered { color: var(--st-delivered); --ja: var(--st-delivered-ja); }
+.history-status.status-billed    { color: var(--st-billed);    --ja: var(--st-billed-ja); }
+.history-status.status-cancelled { color: var(--st-cancelled); --ja: var(--st-cancelled-ja); text-decoration: line-through; }
+.history-status.status-completed { color: var(--st-delivered); --ja: none; }
+
+/* Ink variants on paper */
+.paper :is(.badge, .badge-status, .history-status) { color: var(--sumi-ink-3); }
+.paper .badge-pending,   .paper .history-status.status-pending   { color: var(--st-pending-ink); }
+.paper .badge-preparing, .paper .history-status.status-preparing { color: var(--st-preparing-ink); }
+.paper .badge-ready,     .paper .history-status.status-ready     { color: var(--st-ready-ink); }
+.paper .badge-delivered, .paper .history-status.status-delivered,
+.paper .badge-completed, .paper .history-status.status-completed { color: var(--st-delivered-ink); }
+.paper .badge-billed,    .paper .history-status.status-billed    { color: var(--st-billed-ink); }
+.paper .badge-cancelled, .paper .history-status.status-cancelled { color: var(--st-cancelled-ink); }
+.paper .badge-status.online   { color: var(--matcha-ink); }
+.paper .badge-status.offline  { color: var(--nezumi-ink); }
+.paper .badge-status.charging { color: var(--kuchiba-ink); }
+
+/* ── 21. Marks (FSSAI veg / non-veg shapes — never colour alone) ─────────────── */
+.mark,
+.veg-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  position: relative;
+  vertical-align: -2px;
+  flex-shrink: 0;
+  background: transparent;
+}
+.veg-dot { width: 16px; height: 16px; }
+.mark::after,
+.veg-dot::after { content: ""; position: absolute; inset: 3px; }
+.mark-veg,      .veg-dot.veg    { color: var(--veg); }
+.mark-veg::after,    .veg-dot.veg::after    { border-radius: 50%; background: currentColor; }
+.mark-nonveg,   .veg-dot.nonveg { color: var(--nonveg); }
+.mark-nonveg::after, .veg-dot.nonveg::after { background: currentColor; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.paper .mark-veg,    .paper .veg-dot.veg    { color: var(--veg-ink); }
+.paper .mark-nonveg, .paper .veg-dot.nonveg { color: var(--nonveg-ink); }
+.spicy { color: var(--spicy); }
+
+/* ── 22. Noren tabs · sidebar · lintel ───────────────────────────────────────── */
+/* Container carries the kintsugi rod */
+.noren,
+:where(.tab-bar, .mode-tabs) {
+  position: relative;
+  padding-top: 6px;
+  display: flex;
+  gap: 0.25rem;
+}
+.noren::before,
+:where(.tab-bar, .mode-tabs)::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--rule-kin);
+}
+/* Tab = hanging cloth; active = lit paper panel hanging 2 px lower */
+.noren-tab,
+:where(.tab-btn, .mode-tab) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 0.7rem 1.1rem;
+  min-height: 44px;
+  border: 0;
+  border-top: 3px solid transparent;
+  border-radius: 0 0 var(--radius-paper) var(--radius-paper);
+  font: 500 0.9375rem/1.2 var(--font-sans);
+  white-space: nowrap;
+  cursor: pointer;
+  transform-origin: top center;
+  transition: background-color var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out),
+              transform var(--duration-normal) var(--ease-out),
+              box-shadow var(--duration-normal) var(--ease-out);
+}
+.noren-tab .jp, :where(.tab-btn, .mode-tab) .jp { color: inherit; opacity: 0.7; font-size: 0.75rem; }
+.noren-tab:hover:not(.active),
+:where(.tab-btn, .mode-tab):hover:not(.active) {
+  color: var(--text-primary);
+  background: rgba(240,220,190,0.05);
+  transform: translateY(1px);
+  animation: sway 0.6s var(--ease-out);
+}
+.noren-tab.active, .noren-tab[aria-selected="true"],
+:where(.tab-btn.active, .mode-tab.active, .role-tab.active, .role-tab[aria-selected="true"]) {
+  background: var(--washi);
+  color: var(--sumi-ink);
+  box-shadow: var(--shadow-paper);
+  border-top: 3px solid var(--shu);
+  transform: translateY(2px);
+}
+.noren-tab.active .jp, :where(.tab-btn.active, .mode-tab.active) .jp { opacity: 1; color: var(--sumi-ink-3); }
+/* Overflow rails: edge fade, hidden scrollbar, snap */
+.noren--scroll,
+.cat-rail,
+.scroll-rail,
+:where(.tab-bar, .menu-filters) {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 6px;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 24px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 24px), transparent);
+}
+.noren--scroll::-webkit-scrollbar, .cat-rail::-webkit-scrollbar, .scroll-rail::-webkit-scrollbar,
+:where(.tab-bar, .menu-filters)::-webkit-scrollbar { display: none; }
+.noren--scroll > *, .cat-rail > *, .scroll-rail > *, :where(.tab-bar, .menu-filters) > * { scroll-snap-align: start; flex-shrink: 0; }
+
+/* Sidebar rows (quiet; the active row gets a 6×22 shu seal bar) */
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 48px;
+  padding: 0 1rem 0 1.25rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  position: relative;
+  border-radius: var(--radius-paper);
+  font: 500 0.9375rem/1.2 var(--font-sans);
+  transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+.nav-link .ico { width: 20px; height: 20px; flex-shrink: 0; }
+.nav-link .nav-jp { margin-left: auto; font: 500 0.75rem var(--font-jp); color: var(--text-dimmed); letter-spacing: 0.06em; }
+.nav-link:hover { color: var(--text-primary); background: rgba(240,220,190,0.04); }
+.nav-link.active { color: var(--text-primary); background: rgba(240,220,190,0.04); }
+.nav-link.active::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  width: 6px;
+  height: 22px;
+  transform: translateY(-50%);
+  border-radius: 2px;
+  background: var(--shu);
+}
+.nav-link.active .nav-jp { color: var(--kin); }
+
+/* Lintel: app header / sidebar brand band with two lantern pools */
+.lintel {
+  position: relative;
+  min-height: var(--header-h);
+  background: var(--lintel);
+  border-bottom: 1px solid var(--kin-hair);
+  overflow: hidden;
+  z-index: var(--z-header);
+}
+.lintel::before,
+.lintel::after {
+  content: "";
+  position: absolute;
+  top: -30px;
+  width: 160px;
+  height: calc(100% + 70px);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, var(--lantern-glow-strong), var(--lantern-glow) 35%, transparent 70%);
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: 0;
+}
+.lintel::before { left: 14%; transform: translateX(-50%); }
+.lintel::after  { left: 86%; transform: translateX(-50%); }
+.lintel > * { position: relative; z-index: 1; }
+
+/* ── 23. Toast · Empty states · Loading ─────────────────────────────────────── */
+/* Toast — chōchin tag (paper, cord, glyph); never over the chat input */
+#toastContainer,
+.toast-container {
+  position: fixed;
+  z-index: var(--z-toast);
+  right: 1rem;
+  bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+@media (max-width: 1023px) {
+  #toastContainer,
+  .toast-container { top: 68px; bottom: auto; left: 50%; right: auto; transform: translateX(-50%); width: min(92vw, 380px); }
+}
+.toast {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.7rem 0.9rem;
+  color: var(--sumi-ink);
+  font-size: 0.875rem;
+  border-left: 4px solid var(--kin-dim);
+  pointer-events: auto;
+  animation: slideUp 0.3s var(--ease-out);
+}
+.toast::before {   /* hanging cord */
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 10px;
+  width: 2px;
+  height: 12px;
+  background: var(--kin-dim);
+}
+.toast::after {    /* glyph in the border colour (replaces the JS emoji span) */
+  content: "";
+  order: -1;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  background: var(--kin-dim);
+  -webkit-mask: var(--glyph-enso) center / contain no-repeat;
+  mask: var(--glyph-enso) center / contain no-repeat;
+}
+.toast > span:first-child { display: none; }
+.toast.success { border-color: var(--matcha-ink); }
+.toast.success::after { background: var(--matcha-ink); -webkit-mask-image: var(--glyph-check); mask-image: var(--glyph-check); }
+.toast.error { border-color: var(--ume-ink); }
+.toast.error::after { background: var(--ume-ink); -webkit-mask-image: var(--glyph-warning); mask-image: var(--glyph-warning); }
+.toast.info { border-color: var(--kin-dim); }
+.toast.hiding { animation: toastExit 0.25s forwards; }   /* JS removes the node on animationend */
+
+/* Empty states — ensō (allowed !important #2 overrides the JS inline rgba(255,255,255,.3)) */
+.empty-state,
+.empty-hint,
+.col-empty,
+.log-placeholder,
+.table-loading,
+#feedbackList > .text-secondary,
+#topDishesList > .text-secondary,
+#botCardsGrid > div[style] {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: var(--text-muted) !important;
+}
+.paper :is(.empty-state, .empty-hint, .col-empty, .log-placeholder, .table-loading) { color: var(--sumi-ink-3) !important; }
+.empty-state::before,
+.empty-hint::before,
+.col-empty::before,
+.log-placeholder::before,
+.table-loading::before,
+#feedbackList > .text-secondary::before,
+#topDishesList > .text-secondary::before,
+#botCardsGrid > div[style]::before {
+  content: "";
+  width: 64px;
+  height: 64px;
+  background: var(--enso-bg) center / contain no-repeat;
+  opacity: 0.5;
+}
+.empty-state::after,
+.empty-hint::after,
+.col-empty::after,
+.log-placeholder::after,
+.table-loading::after,
+#feedbackList > .text-secondary::after,
+#topDishesList > .text-secondary::after,
+#botCardsGrid > div[style]::after {
+  content: none;
+  font: 500 0.75rem/1.3 var(--font-jp);
+  color: var(--text-dimmed);
+  letter-spacing: 0.08em;
+}
+.empty-state[data-ja]::after, .col-empty[data-ja]::after { content: attr(data-ja); }
+.paper :is(.empty-state, .empty-hint, .col-empty)::after { color: var(--sumi-ink-3); }
+/* Empty table rows stay table cells (only-row guard keeps expand rows untouched) */
+td.empty-cell,
+tbody > tr:only-child > td[colspan]:only-child {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--text-muted) !important;
+}
+td.empty-cell::before,
+tbody > tr:only-child > td[colspan]:only-child::before {
+  content: "";
+  display: block;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 0.5rem;
+  background: var(--enso-bg) center / contain no-repeat;
+  opacity: 0.5;
+}
+.paper td.empty-cell::before, .paper tbody > tr:only-child > td[colspan]:only-child::before { width: 32px; height: 32px; }
+/* KDS per column: the three line drawings */
+#cards-pending   .col-empty::before { background-image: var(--mn-resting); opacity: 0.55; }
+#cards-pending   .col-empty::after  { content: none; }
+#cards-preparing .col-empty::before { background-image: var(--kama); opacity: 0.55; }
+#cards-preparing .col-empty::after  { content: none; }
+#cards-ready     .col-empty::before { background-image: var(--obon); opacity: 0.55; }
+#cards-ready     .col-empty::after  { content: none; }
+.col-empty > span { display: none; }   /* hides the JS emoji; the <p> text stays */
+.col-empty::before { width: 96px; height: 96px; }
+
+/* Loading — open ensō rings */
+.enso-spin,
+.btn-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: enso-spin 0.9s linear infinite;
+  flex-shrink: 0;
+}
+.btn-spinner { width: 18px; height: 18px; display: none; }
+.loading .btn-spinner, [aria-busy="true"] .btn-spinner { display: inline-block; }
+.loading .btn-text,    [aria-busy="true"] .btn-text    { display: none; }
+.paper .enso-spin, .btn-paper .btn-spinner, .btn-ghost .btn-spinner { border-color: rgba(28,24,22,0.25); border-top-color: var(--sumi-ink); border-right-color: transparent; }
+.loading:not([class*="mi-"]):not(:has(.btn-spinner))::before {
+  content: "";
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin-right: 0.5em;
+  vertical-align: -0.25em;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: enso-spin 0.9s linear infinite;
+}
+.restarting::before { animation: enso-spin 0.9s linear infinite; }
+#refreshBtn:active::before, #refreshLogs:active .ico { animation: enso-spin 0.9s linear infinite; }   /* never style #refreshBtn opacity */
+/* Streaming cursor = brush tip */
+.cursor {
+  display: inline-block;
+  width: 0.45em;
+  height: 1em;
+  vertical-align: -0.15em;
+  background: var(--shu-ink);
+  border-radius: 1px 1px 3px 3px;
+  transform: skewX(-8deg);
+  animation: blink 1s steps(2) infinite;
+}
+
+/* ── 24. Keyframes · reduced motion · focus · skip link ─────────────────────── */
+@keyframes beckon {
+  0%, 55%, 100% { rotate: 0deg; }
+  15%           { rotate: -22deg; }
+  30%           { rotate: 6deg; }
+  42%           { rotate: -16deg; }
+}
+@keyframes enso-draw {
+  from { stroke-dashoffset: 300; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes stamp {
+  0%   { opacity: 0; transform: scale(1.35) rotate(-10deg); }
+  60%  { opacity: 1; transform: scale(0.96) rotate(-5deg); }
+  100% { transform: scale(1) rotate(-6deg); }
+}
+@keyframes ink-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes ember {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(214,58,31,0.55); }
+  50%      { box-shadow: 0 0 0 6px rgba(214,58,31,0); }
+}
+@keyframes lantern {
+  0%, 100% { box-shadow: 0 0 6px currentColor; }
+  50%      { box-shadow: 0 0 16px currentColor; }
+}
+@keyframes ripple {
+  0%   { box-shadow: 0 0 0 0 rgba(214,58,31,0.45); }
+  100% { box-shadow: 0 0 0 16px rgba(214,58,31,0); }
+}
+@keyframes sakura-fall {
+  0%   { transform: translate(0, -10%) rotate(0); }
+  50%  { transform: translate(14px, 45%) rotate(140deg); }
+  100% { transform: translate(-8px, 110%) rotate(300deg); }
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+@keyframes enso-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes sway {
+  0%   { rotate: 0deg; }
+  25%  { rotate: 1.5deg; }
+  75%  { rotate: -1.2deg; }
+  100% { rotate: 0deg; }
+}
+/* Safety net: pages may redefine toastExit locally; .toast.hiding must always end */
+@keyframes toastExit {
+  to { opacity: 0; transform: translateX(16px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .hero-content > *, .module-card, .tab-content, .admin-section, #devMain, .step.active { opacity: 1 !important; transform: none !important; }
+  .sakura-drift { display: none; }
+  .mn-paw { animation: none; transform: rotate(0); }
+}
+
+/* Focus-visible ring: kin on lacquer, shu-ink on paper, white on a seal */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--kin);
+  outline-offset: 3px;
+  border-radius: inherit;
+}
+:where(input, select, textarea):focus-visible { outline: none; }   /* fields show the box-shadow ring instead */
+.paper :focus-visible,
+.paper:focus-visible { outline-color: var(--shu-ink); }
+.btn-seal:focus-visible { outline-color: #fff; outline-offset: 3px; }
+
+/* Skip link: <a class="skip" href="#main">Skip to content</a> */
+.skip {
+  position: absolute;
+  left: 1rem;
+  top: -100px;
+  z-index: var(--z-toast);
+  padding: 0.6rem 1rem;
+  background: var(--washi);
+  color: var(--sumi-ink);
+  border-radius: var(--radius-paper);
+  font-weight: 600;
+  box-shadow: var(--shadow-paper);
+  text-decoration: none;
+}
+.skip:focus { top: 1rem; }

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" stroke="#6a5f55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<!-- chagama: round iron kettle on three legs, lid on, no flame -->
+<path d="M26 62c0-16 15-28 34-28s34 12 34 28c0 15-11 26-26 29H52C37 88 26 77 26 62z"/>
+<path d="M34 44c7-4 16-6 26-6s19 2 26 6"/>
+<path d="M40 42c4-7 11-11 20-11s16 4 20 11"/>
+<circle cx="60" cy="27" r="3.5"/>
+<path d="M24 58c-5-1-9 1-9 5s4 6 9 5M96 58c5-1 9 1 9 5s-4 6-9 5"/>
+<path d="M40 90l-5 14M80 90l5 14M60 91v13"/>
+</svg>

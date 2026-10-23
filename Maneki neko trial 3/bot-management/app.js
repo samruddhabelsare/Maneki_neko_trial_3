@@ -17,12 +17,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Character definitions ──────────────────────────────────────────────
     const CHARACTERS = [
-        { value: 'Naruto',   label: 'Naruto \uD83C\uDF65',   css: 'char-naruto' },
-        { value: 'Goku',     label: 'Goku \uD83D\uDC09',     css: 'char-goku' },
-        { value: 'Doraemon', label: 'Doraemon \uD83D\uDD14', css: 'char-doraemon' },
-        { value: 'Shinchan', label: 'Shinchan \uD83D\uDE1C', css: 'char-shinchan' },
-        { value: 'Luffy',    label: 'Luffy \u2620\uFE0F',    css: 'char-luffy' }
+        { value: 'Naruto',   label: 'Naruto',   css: 'char-naruto' },
+        { value: 'Goku',     label: 'Goku',     css: 'char-goku' },
+        { value: 'Doraemon', label: 'Doraemon', css: 'char-doraemon' },
+        { value: 'Shinchan', label: 'Shinchan', css: 'char-shinchan' },
+        { value: 'Luffy',    label: 'Luffy',    css: 'char-luffy' }
     ];
+
+    // Sprite icon markup for JS templates (same pattern as the static markup)
+    const ICON = (name) => `<svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#${name}"/></svg>`;
 
     const CHARACTER_OPTIONS_HTML = CHARACTERS.map(c =>
         `<option value="${c.value}">${c.label}</option>`
@@ -40,9 +43,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getBatteryColor(pct) {
-        if (pct > 50) return '#00e676';
-        if (pct > 20) return '#ffa600';
-        return '#ff4444';
+        if (pct > 50) return 'var(--matcha)';
+        if (pct > 20) return 'var(--kuchiba)';
+        return 'var(--shu)';
     }
 
     function getStatusDotClass(status) {
@@ -88,8 +91,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const target = document.getElementById(`tab-${tabId}`);
         if (target) target.classList.add('active-tab');
+        document.querySelectorAll('.tab-btn[role="tab"]').forEach(b => b.setAttribute('aria-selected', 'false'));
         const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
-        if (btn) btn.classList.add('active');
+        if (btn) { btn.classList.add('active'); btn.setAttribute('aria-selected', 'true'); }
 
         // Per-tab actions
         if (tabId === 'live-logs') {
@@ -143,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
         grid.innerHTML = '';
 
         if (state.bots.length === 0) {
-            grid.innerHTML = `<div style="color:rgba(255,255,255,0.3);padding:3rem;text-align:center;grid-column:1/-1">No bots found \uD83E\uDD16</div>`;
+            grid.innerHTML = `<div class="empty-state">No bots found</div>`;
             return;
         }
 
@@ -179,22 +183,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="status-dot ${dotClass}"></span>
             </div>
             <div class="character-badge ${charCss}">${charLabel}</div>
-            <div class="bot-table">Table ${bot.table_number || '\u2014'}</div>
+            <span class="bot-table"><b class="hanko hanko--sm">${bot.table_number || '\u2014'}</b> Table</span>
             <div class="battery-bar-wrap">
+                ${ICON('i-battery')}
                 <div class="battery-bar-track">
                     <div class="battery-bar" style="width:${battery}%; background:${batColor};"></div>
                 </div>
                 <span>${battery}%</span>
             </div>
-            <div class="temp-reading ${tempHot ? 'temp-hot' : ''}">\uD83C\uDF21\uFE0F ${temp}\u00B0C${tempHot ? ' \u26A0\uFE0F' : ''}</div>
-            <div class="last-seen">Last seen: ${lastSeen}</div>
+            <div class="temp-reading ${tempHot ? 'temp-hot' : ''}">${ICON(tempHot ? 'i-warning' : 'i-thermo')}${temp}\u00B0C</div>
+            <div class="last-seen">Registered ${lastSeen}</div>
             <div class="bot-actions">
-                <select class="character-select" data-bot-id="${bot.id}">
-                    ${charOpts}
-                </select>
+                <span class="select-wrap block">
+                    <select class="character-select" data-bot-id="${bot.id}" aria-label="Character for ${bot.name || 'bot'}">
+                        ${charOpts}
+                    </select>
+                </span>
                 <div class="bot-btn-row">
-                    <button class="btn-restart" data-bot-id="${bot.id}">\uD83D\uDD04 Restart</button>
-                    <button class="btn-view-logs" data-bot-id="${bot.id}" data-bot-name="${bot.name}">\uD83D\uDCCB Logs</button>
+                    <button class="btn-restart btn-sumi btn-sm mi-daruma" data-bot-id="${bot.id}">Restart</button>
+                    <button class="btn-view-logs btn-sm" data-bot-id="${bot.id}" data-bot-name="${bot.name}">${ICON('i-scroll')}Logs</button>
                 </div>
             </div>
         `;
@@ -210,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.querySelector('.btn-restart').addEventListener('click', async () => {
             const btn = card.querySelector('.btn-restart');
             btn.classList.add('restarting');
-            btn.textContent = '\u23F3 Restarting...';
+            btn.textContent = 'Restarting\u2026';
             await window.updateBotStatus(bot.id, { status: 'offline' });
             await loadBots();
             setTimeout(async () => {
@@ -246,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const feed = document.getElementById('logFeed');
         if (!feed) return;
         if (!botId) {
-            feed.innerHTML = `<div class="log-placeholder">Select a bot to view logs \uD83D\uDCCB</div>`;
+            feed.innerHTML = `<div class="log-placeholder">Select a bot to view logs</div>`;
             return;
         }
 
@@ -262,18 +269,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const logs = (data || []).reverse(); // show oldest first
 
         if (logs.length === 0) {
-            feed.innerHTML = `<div class="log-placeholder">No logs yet for this bot \uD83E\uDD16</div>`;
+            feed.innerHTML = `<div class="log-placeholder">No logs yet for this bot</div>`;
             return;
         }
 
         feed.innerHTML = logs.map(log => {
             const role    = log.role || 'user';
-            const prefix  = role === 'bot' ? '\uD83D\uDC31 ' : '';
+            const avatar  = role === 'bot' ? `<span class="log-avatar" aria-hidden="true">${ICON('neko')}</span>` : '';
             return `
                 <div class="log-entry ${role}">
+                    ${avatar}
                     <span class="log-time">${formatDateTime(log.created_at)}</span>
                     <span class="log-role ${role}">${role.toUpperCase()}</span>
-                    <span class="log-message">${prefix}${log.message || ''}</span>
+                    <span class="log-message">${log.message || ''}</span>
                 </div>
             `;
         }).join('');
@@ -320,19 +328,19 @@ document.addEventListener('DOMContentLoaded', () => {
             row.innerHTML = `
                 <td><strong>${bot.name || '\u2014'}</strong></td>
                 <td>T-${bot.table_number || '\u2014'}</td>
-                <td><span class="character-badge ${charCss}" style="font-size:0.78rem;">${charLabel}</span></td>
-                <td><select class="char-row-select">${charOpts}</select></td>
-                <td><button class="btn-row-apply">Apply</button></td>
+                <td><span class="character-badge ${charCss}">${charLabel}</span></td>
+                <td><span class="select-wrap"><select class="char-row-select" aria-label="New character for ${bot.name || 'bot'}">${charOpts}</select></span></td>
+                <td><button class="btn-row-apply btn-paper btn-sm mi-check">Apply</button></td>
             `;
 
             const applyBtn = row.querySelector('.btn-row-apply');
             applyBtn.addEventListener('click', async () => {
                 const newMode = row.querySelector('.char-row-select').value;
-                applyBtn.textContent = '\u23F3...';
+                applyBtn.textContent = 'Saving\u2026';
                 applyBtn.disabled = true;
                 await window.updateBotStatus(bot.id, { character_mode: newMode });
                 applyBtn.classList.add('success');
-                applyBtn.textContent = '\u2705 Done';
+                applyBtn.textContent = 'Done';
                 applyBtn.disabled = false;
                 await loadBots();
                 setTimeout(() => {
@@ -348,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function applyCharacterToAll(mode) {
         const msgEl = document.getElementById('applyAllMsg');
         const btn   = document.getElementById('applyAllBtn');
-        if (btn) { btn.disabled = true; btn.textContent = '\u23F3 Applying...'; }
+        if (btn) { btn.disabled = true; btn.textContent = 'Applying\u2026'; }
 
         await Promise.all(state.bots.map(b =>
             window.updateBotStatus(b.id, { character_mode: mode })
@@ -359,10 +367,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (msgEl) {
             msgEl.style.display = 'block';
-            msgEl.textContent   = `\u2705 Applied ${getCharLabel(mode)} to all ${state.bots.length} bots!`;
+            msgEl.textContent   = `Applied ${getCharLabel(mode)} to all ${state.bots.length} bots`;
             setTimeout(() => { msgEl.style.display = 'none'; }, 3000);
         }
-        if (btn) { btn.disabled = false; btn.textContent = '\uD83C\uDFAD Apply to All'; }
+        if (btn) { btn.disabled = false; btn.textContent = 'Apply to all'; }
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -401,10 +409,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td><strong>${bot.name || '\u2014'}</strong></td>
                 <td>T-${bot.table_number || '\u2014'}</td>
                 <td><span class="badge-status ${bot.status || 'offline'}">${bot.status || 'unknown'}</span></td>
-                <td><span class="${battery < 20 ? 'text-danger' : ''}">\uD83D\uDD0B${battery}%</span></td>
-                <td><span class="${temp > 70 ? 'text-danger' : temp > 55 ? 'text-warn' : ''}">\uD83C\uDF21\uFE0F${temp}\u00B0C</span></td>
+                <td><span class="${battery < 20 ? 'text-danger' : ''}">${ICON('i-battery')}${battery}%</span></td>
+                <td><span class="${temp > 70 ? 'text-danger' : temp > 55 ? 'text-warn' : ''}">${ICON('i-thermo')}${temp}\u00B0C</span></td>
                 <td>${formatTime(bot.created_at)}</td>
-                <td>${crit ? '<span class="text-danger">\u26A0\uFE0F Critical</span>' : '<span style="color:var(--success)">\u2705 Normal</span>'}</td>
+                <td>${crit ? `<span class="text-danger">${ICON('i-warning')}Critical</span>` : `<span class="text-ok">${ICON('i-check')}Normal</span>`}</td>
             `;
             body.appendChild(row);
         });
@@ -427,16 +435,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.ok) {
                 const data = await res.json();
                 el.textContent = `Online (${Math.round(data.uptime_seconds || 0)}s)`;
-                el.style.color = '#00e676';
-                if (pill) pill.style.borderColor = 'rgba(0, 230, 118, 0.4)';
+                if (pill) pill.className = 'health-pill is-online';
             } else {
                 el.textContent = `Degraded (${res.status})`;
-                el.style.color = '#ffa600';
+                if (pill) pill.className = 'health-pill is-degraded';
             }
         } catch (e) {
             el.textContent = 'Unreachable';
-            el.style.color = '#ff4444';
-            if (pill) pill.style.borderColor = 'rgba(255, 68, 68, 0.4)';
+            if (pill) pill.className = 'health-pill is-down';
         }
     }
 
@@ -475,7 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Live Logs — auto-refresh toggle
         document.getElementById('autoRefreshToggle')?.addEventListener('click', (e) => {
             state.autoRefresh = !state.autoRefresh;
-            e.target.textContent = state.autoRefresh ? '\u23F1 Auto ON' : '\u23F1 Auto OFF';
+            e.target.textContent = state.autoRefresh ? 'Auto ON' : 'Auto OFF';
             e.target.classList.toggle('active-ctrl', state.autoRefresh);
         });
 
@@ -488,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Init ───────────────────────────────────────────────────────────────
     async function init() {
-        console.log('\uD83D\uDC31 Bot Control Center Loaded');
+        console.log('Bot Control loaded');
 
         // ── Auth guard: bot_manager role only ─────────────────────────────
         const session = window.RestaurantAuth.requireAuth(['bot_manager']);

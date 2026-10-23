@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" stroke="#6a5f55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<!-- the brand cat, resting: both paws down, eyes as flat lines -->
+<path d="M44 68C31 76 28 90 28 103q0 5 5 5h54q5 0 5-5c0-13-3-27-16-35"/>
+<path d="M30 103c-9 0-13-6-10-12"/>
+<circle cx="60" cy="46" r="27"/>
+<path d="M39 29 42 13l10 10M81 29 78 13 68 23"/>
+<path d="M47 46.5h10M63 46.5h10"/>
+<path d="M57.8 52.2h4.4L60 55.2z"/>
+<path d="M54 57q3 3.5 6 0q3 3.5 6 0"/>
+<path d="M38 50 26 48M38 54H24M38 58l-12 2M82 50l12-2M82 54h14M82 58l12 2"/>
+<path d="M45 70q15 9 30 0M45 70v5q15 10 30 0v-5"/>
+<circle cx="60" cy="83" r="5.5"/><path d="M57 84h6M60 84v2.4"/>
+<ellipse cx="44" cy="103" rx="8" ry="4.5"/><ellipse cx="76" cy="103" rx="8" ry="4.5"/>
+<path d="M36 80c-3 6-3 12-1 18M84 80c3 6 3 12 1 18"/>
+</svg>

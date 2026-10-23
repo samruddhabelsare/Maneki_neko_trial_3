@@ -22,10 +22,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const TIMER_UPDATE_MS     = 30000; // 30s timer label refresh
     const WARN_THRESHOLD_MINS = 15;
 
+    // Icons are drawn by CSS (.col-empty::before line art per column); the span stays for the DOM shape.
     const EMPTY_MESSAGES = {
-        pending:   { icon: '🎉', text: 'No new orders' },
-        preparing: { icon: '🍳', text: 'Nothing cooking yet' },
-        ready:     { icon: '✅', text: 'Nothing ready yet' }
+        pending:   { icon: '', text: 'No new orders' },
+        preparing: { icon: '', text: 'Nothing cooking yet' },
+        ready:     { icon: '', text: 'Nothing ready yet' }
     };
 
     // ── Live Clock ─────────────────────────────────────────────────────────
@@ -86,10 +87,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateStatusIndicator(isOnline, label) {
         const dot = document.querySelector('.kds-status-dot');
         if (dot) {
-            dot.style.background = isOnline ? 'var(--success)' : 'var(--danger)';
-            dot.style.boxShadow = isOnline
-                ? '0 0 10px rgba(16, 185, 129, 0.6)'
-                : '0 0 10px rgba(239, 68, 68, 0.6)';
+            const tone = isOnline ? 'var(--matcha-bright)' : 'var(--ume-light)';
+            dot.style.background = tone;
+            dot.style.color = tone;                 // lantern glow colour (CSS animation draws the box-shadow)
+            dot.style.boxShadow = `0 0 10px ${tone}`;
         }
     }
 
@@ -351,16 +352,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // ── Items HTML ───────────────────────────────────────────────────
         const itemsHtml = items.length === 0
-            ? '<li><span class="item-name" style="color:rgba(255,255,255,0.3)">No items</span></li>'
+            ? '<li><span class="item-name item-none">No items</span></li>'
             : items.map(i => {
                 const isVeg = i.is_veg !== undefined ? Boolean(i.is_veg) : true;
-                const instructionsHtml = i.instructions ? `<div class="item-instructions">"${i.instructions}"</div>` : '';
+                const instructionsHtml = i.instructions ? `<div class="item-instructions">${escapeHtml(i.instructions)}</div>` : '';
                 return `
                   <li>
                     <div class="item-main">
                         <span class="item-qty">${i.qty || 1}×</span>
-                        <span class="item-name">${i.name || '?'}</span>
-                        <span class="veg-dot ${isVeg ? 'veg' : 'nonveg'}"></span>
+                        <span class="item-name">${escapeHtml(i.name || '?')}</span>
+                        <span class="veg-dot ${isVeg ? 'veg' : 'nonveg'}" role="img" aria-label="${isVeg ? 'Veg' : 'Non-veg'}"></span>
                     </div>
                     ${instructionsHtml}
                   </li>
@@ -373,22 +374,24 @@ document.addEventListener('DOMContentLoaded', () => {
         let nextStatus = null;
 
         if (order.status === 'pending') {
-            btnLabel  = '▶ Start Preparing';
+            btnLabel  = 'Start Preparing';
             btnClass += ' btn-start';
             nextStatus = 'preparing';
         } else if (order.status === 'preparing') {
-            btnLabel  = '✅ Mark Ready';
+            btnLabel  = 'Mark Ready';
             btnClass += ' btn-ready';
             nextStatus = 'ready';
         } else if (order.status === 'ready') {
-            btnLabel  = '🍽 Serve & Complete';
+            btnLabel  = 'Serve';
             btnClass += ' btn-serve';
             nextStatus = 'delivered';
         }
 
+        card.style.setProperty('--mins', elapsedMins);   // incense bar (CSS reads it on .card-top::after)
+
         card.innerHTML = `
             <div class="card-top">
-                <span class="table-badge">T-${order.table_number || '—'}</span>
+                <span class="table-badge">${order.table_number || '—'}</span>
                 <span class="order-id">#${shortId}</span>
                 <span class="${timerClass}" id="timer-${order.id}">${timerLabel}</span>
             </div>
@@ -512,6 +515,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!timerEl) return;
             const mins = getElapsedMinutes(order.created_at);
             timerEl.textContent = formatElapsed(mins);
+            const cardEl = timerEl.closest('.order-card');
+            if (cardEl) cardEl.style.setProperty('--mins', mins);
             if (mins >= WARN_THRESHOLD_MINS) {
                 timerEl.classList.add('timer-red');
             } else {
@@ -544,6 +549,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function capitalize(str) {
         return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    // Escape user-supplied strings before they enter innerHTML (item names / special instructions)
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     // ── Boot ────────────────────────────────────────────────────────────────

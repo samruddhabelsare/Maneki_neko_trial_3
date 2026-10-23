@@ -6,1062 +6,903 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maneki Neko | Admin Hub</title>
     <meta name="description" content="Maneki Neko Smart Restaurant Admin Dashboard">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#100d0c">
+    <link rel="icon" href="../shared/favicon.svg">
     <link rel="stylesheet" href="../shared/theme.css">
+    <link rel="stylesheet" href="../shared/icons.css">
     <style>
-        /* ── Admin-Specific Styles ────────────────────────────────────── */
+        /* ══════════════════════════════════════════════════════════════════
+           ADMIN — 管理の間 (the manager's room)
+           Page CSS holds layout + admin-only selectors. Components, tokens
+           and keyframes come from ../shared/theme.css.
+           ══════════════════════════════════════════════════════════════════ */
 
-        /* Preserved for JS logic toggling */
-        .hidden {
-            display: none !important;
-        }
+        /* Preserved for JS logic toggling (theme defines it too) */
+        .hidden { display: none !important; }
 
-        /* ── Sidebar ──────────────────────────────────────────────────── */
-        #sidebar {
-            position: fixed;
-            inset: 0 auto 0 0;
-            z-index: 40;
-            width: 260px;
-            background: var(--bg-surface);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.3s var(--ease-out);
-            transform: translateX(-100%);
-        }
-
-        @media (min-width: 1024px) {
-            #sidebar {
-                position: static;
-                transform: translateX(0);
-                flex-shrink: 0;
-            }
-        }
-
-        #sidebar.mobile-open {
-            transform: translateX(0);
-        }
-
-        .sidebar-brand {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .sidebar-brand span:first-child {
-            font-size: 1.75rem;
-        }
-
-        .sidebar-brand-name {
-            font-size: 1.25rem;
-            font-weight: 800;
-            letter-spacing: var(--tracking-tight);
-            color: var(--text-primary);
-        }
-
-        .sidebar-nav {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1.5rem 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem 1rem;
-            color: var(--text-secondary);
-            border-radius: var(--radius-md);
-            font-weight: 500;
-            font-size: 0.95rem;
-            text-decoration: none;
-            transition: all var(--duration-fast) var(--ease-out);
-            position: relative;
-        }
-
-        .nav-link:hover {
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--text-primary);
-        }
-
-        .nav-link.active {
-            background: var(--primary-glow);
-            color: var(--primary);
-            font-weight: 700;
-        }
-
-        .nav-link.active::before {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 3px;
-            height: 60%;
-            background: var(--primary-raw);
-            border-radius: var(--radius-pill);
-        }
-
-        .nav-link span:first-child {
-            font-size: 1.25rem;
-        }
-
-        .sidebar-footer {
-            padding: 1.25rem;
-            border-top: 1px solid var(--border);
-        }
-
-        .server-status {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            background: var(--bg-surface-variant);
-            padding: 0.75rem 1rem;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border);
-        }
-
-        /* ── Mobile Toggle ─────────────────────────────────────────── */
-        #mobileNavToggle {
-            position: fixed;
-            top: 1rem;
-            left: 1rem;
-            z-index: 50;
-            padding: 0.5rem;
-            background: var(--bg-surface);
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-            display: none;
-        }
-
-        @media (max-width: 1023px) {
-            #mobileNavToggle {
-                display: block;
-            }
-        }
-
-        /* ── Main Content ──────────────────────────────────────────── */
+        /* ── Shell ─────────────────────────────────────────────────────── */
         .admin-main {
             flex: 1;
+            min-width: 0;
             overflow-y: auto;
             padding: 2rem;
             width: 100%;
             max-width: 80rem;
             margin: 0 auto;
             scroll-behavior: smooth;
-        }
-
-        @media (min-width: 1024px) {
-            .admin-main {
-                padding: 3rem;
-            }
-        }
-
-        /* ── Section Animation ─────────────────────────────────────── */
-        .admin-section {
-            animation: fadeInUp 0.4s var(--ease-out);
-        }
-
-        /* ── Section Header ────────────────────────────────────────── */
-        .page-header {
-            margin-bottom: 2.5rem;
-        }
-
-        @media (max-width: 1023px) {
-            .page-header {
-                margin-top: 3rem;
-            }
-        }
-
-        .page-title {
-            font-size: 1.75rem;
-            font-weight: 800;
-            letter-spacing: var(--tracking-tight);
-            margin-bottom: 0.5rem;
-        }
-
-        .page-subtitle {
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        /* ── Stat Cards ────────────────────────────────────────────── */
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 1.25rem;
-            margin-bottom: 2.5rem;
-        }
-
-        .stat-card {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-lg);
-            padding: 1.25rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            transition: all var(--duration-normal) var(--ease-out);
-            min-width: 0;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-            border-color: var(--glass-border-hover);
-            box-shadow: var(--shadow-card-hover);
-        }
-
-        .stat-icon {
-            width: 3rem;
-            height: 3rem;
-            border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.75rem;
-            flex-shrink: 0;
-        }
-
-        .stat-icon-orders {
-            background: var(--info-bg);
-        }
-
-        .stat-icon-revenue {
-            background: var(--success-bg);
-        }
-
-        .stat-icon-bots {
-            background: rgba(99, 102, 241, 0.12);
-        }
-
-        .stat-icon-rating {
-            background: var(--warning-bg);
-        }
-
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--text-primary);
-            line-height: 1.2;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .stat-value-green {
-            color: var(--success);
-        }
-
-        .stat-card>div:not(.stat-icon) {
-            min-width: 0;
-            flex: 1;
-        }
-
-        .stat-label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: var(--tracking-wide);
-            margin-top: 0.35rem;
-        }
-
-        /* ── Content Layout Grid ───────────────────────────────────── */
-        .content-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }
-
-        @media (min-width: 1024px) {
-            .content-grid-wide {
-                grid-template-columns: 2fr 1fr;
-            }
-        }
-
-        /* ── Panel Card ────────────────────────────────────────────── */
-        .panel {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-        }
-
-        .panel-header {
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--border);
-            background: rgba(255, 255, 255, 0.02);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .panel-title {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .panel-body {
-            padding: 1rem;
-            overflow-y: auto;
-        }
-
-        /* ── Tables (admin-specific overrides) ─────────────────────── */
-        .order-main-row {
-            cursor: pointer;
-            transition: background-color 0.15s;
-        }
-
-        .order-main-row:hover td {
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .order-expand-row {
-            display: none;
-        }
-
-        .order-expand-row.open {
-            display: table-row;
-        }
-
-        .expand-mini-table {
-            background: var(--bg-surface-variant);
-            border-radius: var(--radius-sm);
-            margin: 0.5rem;
-            width: calc(100% - 1rem);
-        }
-
-        .expand-mini-table th {
-            font-size: 0.7rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .expand-mini-table td {
-            padding: 0.5rem 1rem;
-            font-size: 0.85rem;
-        }
-
-        .item-instructions {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            font-style: italic;
-            display: block;
-            margin-top: 0.25rem;
-            padding-left: 0.5rem;
-            border-left: 2px solid var(--primary-raw);
-        }
-
-        /* ── Charts ────────────────────────────────────────────────── */
-        .bar-chart {
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            height: 150px;
-            padding-top: 1rem;
-        }
-
-        .bar {
-            width: 8%;
-            background-color: var(--primary-glow-strong);
-            border-radius: 4px 4px 0 0;
-            transition: height 0.5s ease, background 0.2s;
             position: relative;
         }
-
-        .bar:hover {
-            background-color: var(--primary-raw);
+        @media (max-width: 1023px) {
+            .admin-main { padding: calc(60px + 1.25rem) 1.5rem 2rem; }
+        }
+        @media (max-width: 767px) {
+            .admin-main { padding: calc(60px + 1rem) 1rem 1.5rem; }
         }
 
-        .bar[data-val]:hover::after {
-            content: attr(data-val);
-            position: absolute;
-            top: -28px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--text-primary);
-            color: var(--bg-deep);
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 700;
-            pointer-events: none;
-            white-space: nowrap;
-        }
+        /* Section entry: one ink-in per switch, no row animations (5 s poll) */
+        .admin-section { animation: ink-in 0.35s var(--ease-out); }
 
-        .revenue-chart .bar {
-            background-color: rgba(168, 85, 247, 0.2);
-        }
-
-        .revenue-chart .bar:hover {
-            background-color: #a855f7;
-        }
-
-        .chart-labels {
+        /* ── Sidebar (lacquer, kintsugi right edge) ─────────────────────── */
+        #sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            z-index: 40;
+            width: 260px;
+            background: var(--bg-surface-low);
+            border-right: 1px solid var(--kin-hair-soft);
             display: flex;
-            justify-content: space-between;
-            margin-top: 0.5rem;
-            font-size: 0.75rem;
-            color: var(--text-dimmed);
+            flex-direction: column;
+            overflow: hidden;
+            transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+            transform: translateX(-100%);
+            box-shadow: 0 0 0 100vmax rgba(16, 13, 12, 0);
+        }
+        #sidebar.mobile-open {
+            transform: translateX(0);
+            box-shadow: 0 0 0 100vmax rgba(16, 13, 12, 0.6);   /* scrim without JS */
+        }
+        @media (min-width: 1024px) {
+            #sidebar {
+                position: relative;
+                transform: none;
+                flex-shrink: 0;
+                box-shadow: none;
+            }
         }
 
-        /* ── Bot Fleet ─────────────────────────────────────────────── */
-        .bot-item {
+        .sidebar-brand {
+            min-height: 72px;
+            padding: 0.9rem 1.25rem;
+            display: grid;
+            gap: 0.3rem;
+            align-content: center;
+        }
+        @media (max-width: 1023px) {
+            .sidebar-brand { padding-left: 4.5rem; }   /* room for the fixed hamburger */
+            .sidebar-restaurant { padding-left: 0; }
+        }
+        .sidebar-brand .brand-lockup > .ico { width: 32px; height: 32px; }
+        .sidebar-restaurant { padding-left: calc(32px + 0.6rem); }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.25rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        /* Ghost tategaki — decorative room name down the right edge */
+        .sidebar-ghost {
+            position: absolute;
+            right: 1.1rem;
+            bottom: 104px;
+            color: var(--text-ghost);
+            font-size: 1.5rem;
+            font-weight: 600;
+            opacity: 0.55;
+            pointer-events: none;
+            user-select: none;
+        }
+        @media (max-height: 720px) { .sidebar-ghost { display: none; } }   /* never over the nav on short screens */
+
+        .sidebar-footer {
+            padding: 0.9rem 1.25rem 1rem;
+            border-top: 1px solid var(--border);
+            display: grid;
+            gap: 0.6rem;
+            justify-items: start;
+        }
+        .sidebar-footer #logoutBtn { justify-self: end; }
+        .server-status {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem;
-            border-radius: var(--radius-md);
-            background: var(--bg-surface-variant);
-            margin-bottom: 0.5rem;
-            border: 1px solid var(--border);
-            transition: all var(--duration-fast) var(--ease-out);
+            gap: 0.6rem;
+            font: 500 0.8125rem/1.2 var(--font-sans);
+            color: var(--text-secondary);
+            white-space: nowrap;
         }
+        .server-status .jp { color: var(--text-dimmed); }
+        #logoutBtn { flex-shrink: 0; min-height: 44px; }   /* .btn-sm is 36px; spec §9 hit area */
+        #logoutBtn .ico { width: 16px; height: 16px; }
 
-        .bot-item:hover {
-            border-color: var(--glass-border-hover);
-        }
+        /* PROMOTE: theme's .filter-btn is 40px tall — every chip group on every page needs the §9 44px hit area */
+        .filter-btn { min-height: 44px; }
 
-        .bot-name {
-            font-weight: 700;
+        /* ── Mobile bar + hamburger ─────────────────────────────────────── */
+        #mobileNavToggle {
+            position: fixed;
+            top: 8px;
+            left: 1rem;
+            z-index: 50;
+            display: none;
+            background: var(--bg-surface-high);
             color: var(--text-primary);
         }
-
-        .bot-meta {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: var(--tracking-wide);
+        #mobileNavToggle svg { width: 22px; height: 22px; }
+        .mobile-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            z-index: 35;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0 1rem 0 4.5rem;
+        }
+        @media (max-width: 1023px) {
+            #mobileNavToggle { display: inline-grid; }
+            .mobile-bar { display: flex; }
         }
 
-        .bot-table {
-            background: var(--bg-surface-highest);
-            padding: 2px 8px;
-            border-radius: var(--radius-xs);
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-        }
-
-        /* ── Menu Manager ──────────────────────────────────────────── */
+        /* ── Headers ───────────────────────────────────────────────────── */
+        .page-header { margin-bottom: 1.75rem; }
+        .eyebrow .sep { opacity: 0.6; margin: 0 0.15em; }
         .header-row {
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
-            align-items: flex-start;
-            gap: 1.5rem;
-            margin-bottom: 2.5rem;
-        }
-
-        @media (max-width: 1023px) {
-            .header-row {
-                margin-top: 3rem;
-            }
-        }
-
-        .menu-filters {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 0.75rem;
-        }
-
-        #addItemBtn {
-            background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
-            color: #fff;
-            font-weight: 700;
-            padding: 0.75rem 1.5rem;
-            border-radius: var(--radius-pill);
-            border: none;
-            transition: all var(--duration-normal) var(--ease-out);
-            white-space: nowrap;
-            cursor: pointer;
-        }
-
-        #addItemBtn:hover {
-            box-shadow: var(--shadow-glow);
-            transform: scale(1.03);
-        }
-
-        /* ── Menu Form ─────────────────────────────────────────────── */
-        .menu-form {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-lg);
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .form-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 1.5rem;
+            align-items: flex-end;
+            gap: 1rem 1.5rem;
             margin-bottom: 1.5rem;
         }
+        .header-row > .page-header { margin-bottom: 0; flex: 1 1 320px; min-width: 0; }
+        .header-row .filter-group { padding-bottom: 0.25rem; }
+        .filter-group { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        .header-row > .btn-seal { margin-bottom: 0.35rem; }
 
-        .form-label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-        }
-
-        .form-input {
-            width: 100%;
-            background: var(--bg-surface-highest);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            border-radius: var(--radius-md);
-            padding: 0.75rem 1rem;
-            font-family: var(--font-sans);
-            font-size: 0.95rem;
-            outline: none;
-            transition: all var(--duration-fast) var(--ease-out);
-        }
-
-        .form-input:focus {
-            border-color: rgba(99, 102, 241, 0.4);
-            box-shadow: 0 0 0 3px var(--primary-glow);
-            background: var(--bg-surface-bright);
-        }
-
-        .form-checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            padding-top: 2rem;
-        }
-
-        .form-checkbox-label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            font-weight: 600;
-            color: var(--text-secondary);
-            user-select: none;
-        }
-
-        .form-checkbox-label input[type="checkbox"] {
-            width: 1.25rem;
-            height: 1.25rem;
-            accent-color: var(--primary-raw);
-            cursor: pointer;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 1rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--border);
-        }
-
-        .btn-save {
-            background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
-            color: #fff;
-            font-weight: 700;
-            padding: 0.75rem 2rem;
-            border-radius: var(--radius-md);
-            border: none;
-            cursor: pointer;
-            transition: all var(--duration-normal) var(--ease-out);
-        }
-
-        .btn-save:hover {
-            box-shadow: var(--shadow-glow);
-        }
-
-        .btn-cancel {
-            background: var(--bg-surface-variant);
-            color: var(--text-secondary);
-            font-weight: 700;
-            padding: 0.75rem 2rem;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border);
-            cursor: pointer;
-            transition: all var(--duration-fast) var(--ease-out);
-        }
-
-        .btn-cancel:hover {
-            background: var(--bg-surface-bright);
-            color: var(--text-primary);
-        }
-
-        /* ── Action Buttons (Edit/Delete) ──────────────────────────── */
-        .btn-edit,
-        .btn-delete {
-            padding: 4px 10px;
-            font-size: 0.85rem;
-            border-radius: var(--radius-xs);
-            margin-right: 4px;
-            font-weight: 600;
-            transition: all var(--duration-fast) var(--ease-out);
-            cursor: pointer;
-            border: 1px solid var(--border);
-        }
-
-        .btn-edit {
-            background: var(--info-bg);
-            color: var(--info);
-            border-color: var(--info-border);
-        }
-
-        .btn-edit:hover {
-            background: rgba(59, 130, 246, 0.2);
-        }
-
-        .btn-delete {
-            background: var(--danger-bg);
-            color: var(--danger);
-            border-color: var(--danger-border);
-        }
-
-        .btn-delete:hover {
-            background: rgba(239, 68, 68, 0.2);
-        }
-
-        /* ── Feedback ──────────────────────────────────────────────── */
-        .feedback-header {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 1.5rem;
-            margin-bottom: 2.5rem;
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-lg);
-            padding: 2rem;
-        }
-
-        @media (max-width: 1023px) {
-            .feedback-header {
-                margin-top: 3rem;
-            }
-        }
-
-        .feedback-filters {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .feedback-sentiment {
-            background: var(--primary-glow);
-            border: 1px solid rgba(99, 102, 241, 0.2);
-            padding: 1.5rem;
-            border-radius: var(--radius-lg);
-            text-align: center;
-            min-width: 180px;
-        }
-
-        .feedback-sentiment-label {
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: var(--tracking-wide);
-            margin-bottom: 0.5rem;
-        }
-
-        .feedback-sentiment-value {
-            display: block;
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--primary);
-            margin-bottom: 0.5rem;
-        }
-
-        .feedback-sentiment-stars {
-            display: block;
-            font-size: 1.25rem;
-            color: #f59e0b;
-            letter-spacing: 3px;
-        }
-
-        .feedback-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .feedback-card {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-lg);
-            padding: 1.5rem;
-            transition: all var(--duration-normal) var(--ease-out);
-        }
-
-        .feedback-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--glass-border-hover);
-            box-shadow: var(--shadow-card-hover);
-        }
-
-        .stars {
-            color: #f59e0b;
-            font-size: 1.25rem;
-            letter-spacing: 2px;
-            margin-bottom: 0.75rem;
-        }
-
-        .feedback-comment {
-            color: var(--text-primary);
-            font-size: 0.95rem;
-            line-height: 1.5;
-            margin-bottom: 1rem;
-            min-height: 60px;
-            font-weight: 500;
-        }
-
-        .feedback-meta {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: var(--tracking-wide);
-            border-top: 1px solid var(--border);
-            padding-top: 0.75rem;
-        }
-
-        /* ── Analytics ─────────────────────────────────────────────── */
-        .analytics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        @media (min-width: 1280px) {
-            .analytics-wide {
-                grid-column: span 2;
-            }
-        }
-
-        .dish-row {
-            display: flex;
-            align-items: center;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid var(--border);
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-
-        .dish-row:last-child {
-            border-bottom: none;
-        }
-
-        .dish-rank {
-            font-size: 1.25rem;
-            font-weight: 800;
-            width: 30px;
-            color: var(--primary);
-        }
-
-        .dish-count {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            font-weight: 600;
-            background: var(--bg-surface-variant);
-            padding: 2px 8px;
-            border-radius: var(--radius-md);
-        }
-
-        /* Satisfaction Score Donut */
-        .satisfaction-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 250px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .satisfaction-bg {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, var(--success-bg), transparent);
-            z-index: 0;
-            opacity: 0.5;
-            border-radius: var(--radius-lg);
-        }
-
-        .satisfaction-donut {
-            position: relative;
-            z-index: 1;
-            width: 10rem;
-            height: 10rem;
-            border-radius: 50%;
-            border: 12px solid var(--success-bg);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #satisfactionScore {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--success);
-        }
-
-        .satisfaction-label {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: var(--success);
-            text-transform: uppercase;
-            letter-spacing: var(--tracking-wide);
-            margin-top: 0.25rem;
-        }
-
-        /* ── Customer search ───────────────────────────────────────── */
-        .search-wrapper {
-            position: relative;
-            width: 100%;
-            max-width: 20rem;
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 1.25rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-dimmed);
-            pointer-events: none;
-        }
-
-        .search-input {
-            width: 100%;
-            background: var(--bg-surface-variant);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            border-radius: var(--radius-pill);
-            padding: 0.75rem 1rem 0.75rem 3rem !important;
-            font-family: var(--font-sans);
-            font-size: 0.95rem;
-            outline: none;
-            transition: all var(--duration-fast) var(--ease-out);
-        }
-
-        .search-input:focus {
-            border-color: rgba(99, 102, 241, 0.4);
-            box-shadow: 0 0 0 3px var(--primary-glow);
-            background: var(--bg-surface-bright);
-        }
-
-        /* ── Dashboard Filters ─────────────────────────────────────── */
+        /* ── Koyomi strip (time range) ─────────────────────────────────── */
         .dashboard-filters {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            padding: 0.75rem 1.25rem;
-            border-radius: var(--radius-pill);
-            border: 1px solid var(--glass-border);
+            gap: 0.75rem 1.25rem;
+            margin-bottom: 1.5rem;
+            padding: 0.7rem 1rem;
+            background: var(--bg-surface-container);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background-image: var(--rule-kin);
+            background-repeat: no-repeat;
+            background-size: 100% 2px;
+            background-position: top;
+            box-shadow: inset 0 1px 0 rgba(255, 235, 205, 0.04), 0 2px 8px rgba(0, 0, 0, 0.35);
         }
-
+        .dashboard-filters.compact { padding: 0.5rem 0.9rem; margin-bottom: 1.25rem; }
         .filter-label {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--text-secondary);
+            font: 600 0.6875rem/1.4 var(--font-sans);
             text-transform: uppercase;
-            letter-spacing: var(--tracking-wide);
+            letter-spacing: var(--tracking-eyebrow);
+            color: var(--kin);
+            white-space: nowrap;
         }
-
+        .filter-label .jp { font-size: inherit; color: inherit; text-transform: none; letter-spacing: 0.08em; }
         .custom-range-box {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding-left: 1rem;
-            border-left: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.35rem 0.5rem 0.35rem 0.6rem;
             animation: fadeIn 0.3s ease-out;
         }
+        .custom-range-box .date-input {
+            width: 10rem;
+            min-height: 44px;   /* §9 hit area, matches the Apply seal */
+            padding: 0.35rem 0.5rem;
+            font-size: 0.9375rem;
+            color-scheme: light;
+        }
+        .range-sep { color: var(--sumi-ink-3); font-family: var(--font-jp); }
+        .custom-range-box .btn-apply { min-height: 44px; padding: 0.3rem 0.9rem; }
 
-        .date-input {
-            background: var(--bg-surface-variant);
+        /* ── Stat tiles (theme: paper + tanzaku) ───────────────────────── */
+        .stat-grid { margin-bottom: 1.75rem; gap: 1.25rem; }
+        .stat-card { padding: 1.5rem 1.25rem 1.1rem; min-width: 0; }
+        .stat-card > .stat-icon { position: absolute; top: 1rem; right: 1rem; }
+        .stat-card > div:not(.stat-icon) { display: flex; flex-direction: column-reverse; gap: 0.3rem; min-width: 0; }
+        .stat-card .stat-label { display: flex; align-items: baseline; gap: 0.4em; flex-wrap: wrap; }
+        .stat-card .stat-label .jp { margin-left: 0; }
+        @media (max-width: 1023px) {
+            .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 560px) {
+            .stat-grid { gap: 0.85rem; }
+            .stat-card { padding: 1.1rem 1rem 0.9rem; }
+            .stat-card .stat-value { font-size: 1.375rem; }
+            .stat-card:nth-child(2) .stat-value::before { display: none; }   /* koban glyph needs the room */
+            /* Icon joins the flow above the label so it never collides with the kanji */
+            .stat-card > .stat-icon { position: static; width: 24px; height: 24px; margin: 0.35rem 0 0.5rem; }
+            .stat-card > .stat-icon .ico { width: 13px; height: 13px; }
+        }
+
+        /* ── Content grid ──────────────────────────────────────────────── */
+        .content-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; align-items: start; }
+        @media (min-width: 1024px) {
+            .content-grid-wide { grid-template-columns: 2fr 1fr; }
+        }
+
+        /* ── Panels (theme: lacquer) ───────────────────────────────────── */
+        .panel { overflow: hidden; min-width: 0; }
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .panel-title { display: flex; align-items: center; gap: 0.6rem; color: var(--text-primary); }
+        .panel-title .ico { width: 18px; height: 18px; color: var(--kin); }
+        .panel-title .jp { color: var(--text-muted); }
+        .panel-body { padding: 1rem; }
+        .panel-foot { padding: 0.75rem 1.25rem 1rem; border-top: 1px solid var(--border); }
+
+        /* Live-poll cue (orders): a 6 px kin lantern */
+        .live-cue {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font: 600 0.6875rem/1 var(--font-sans);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+        }
+        .live-cue::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            color: var(--kin);
+            background: currentColor;
+            animation: lantern 2.4s ease-in-out infinite;
+        }
+        .live-cue .jp { color: var(--text-dimmed); }
+
+        /* ── Tables ────────────────────────────────────────────────────── */
+        .table-container > table { min-width: 680px; }   /* the ledger only — never the nested bill slip */
+        #recentOrdersTable { min-width: 520px; }
+        th .jp { margin-left: 0.3em; }
+        /* Order ids: mono, de-emphasised */
+        .order-id-cell,
+        #fullOrdersBody .order-main-row td:first-child {
+            font: 500 0.75rem/1.3 var(--font-mono);
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        /* Carved numerals for money columns */
+        #recentOrdersBody td:nth-child(3),
+        #fullOrdersBody .order-main-row td:nth-child(4),
+        #menuTableBody td:nth-child(3) {
+            font: 600 1rem/1.2 var(--font-display);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+        #menuTableBody td:first-child { font-weight: 600; white-space: nowrap; }   /* sticky name column reads as a list on phones */
+        #menuTableBody td:nth-child(4) { white-space: nowrap; }
+        #menuTableBody td:nth-child(4) .mark { margin-right: 0.35em; }
+        #menuTableBody td:nth-child(5) { white-space: nowrap; }
+        #menuTableBody td:nth-child(5) .spicy { width: 18px; height: 18px; margin-right: 0.3em; vertical-align: -0.25em; color: var(--spicy); }
+        #menuTableBody td:last-child { white-space: nowrap; }
+        /* Availability switch (JS row): input stays focusable, ring on the slider */
+        .toggle-switch .visible-toggle { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+        .toggle-switch .visible-toggle:focus-visible + .toggle-slider { box-shadow: var(--ring-kin); }
+        /* Customers: name + hanko and the phone stay on one line (container scrolls sideways on phones) */
+        #customersBody td:first-child { white-space: nowrap; font-weight: 500; }
+        #customersBody td:nth-child(2) { font-family: var(--font-mono); font-size: 0.8125rem; letter-spacing: 0.04em; white-space: nowrap; }
+
+        /* Row action chips (keep .filter-btn for the JS contract, restyle) */
+        .filter-btn.btn-edit,
+        .filter-btn.btn-delete {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.6rem;
+            min-height: 36px;
+            border-radius: var(--radius-paper);
+            background: transparent;
+            margin-right: 0.35rem;
+            font-weight: 600;
+        }
+        .filter-btn.btn-edit .ico,
+        .filter-btn.btn-delete .ico { width: 15px; height: 15px; }
+        .filter-btn.btn-edit { color: var(--text-secondary); border-color: var(--border-hover); }
+        .filter-btn.btn-edit:hover { color: var(--text-primary); border-color: var(--kin-dim); }
+        .filter-btn.btn-delete { color: var(--ume-light); border-color: currentColor; }
+        .filter-btn.btn-delete:hover { background: rgba(184, 74, 92, 0.12); color: var(--ume-light); }
+
+        /* Customers: hanko initial + stamp-rally visits (JS-rendered) */
+        #customersBody .hanko {
+            width: 26px;
+            height: 26px;
+            font-size: 0.75rem;
+            color: var(--kin);
+            margin-right: 0.6rem;
+            vertical-align: middle;
+        }
+        .visits { display: inline-flex; align-items: center; gap: 0.6rem; }
+        .visits > b { font: 700 1.125rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
+        .stamp-rally { display: inline-grid; grid-template-columns: repeat(5, 7px); gap: 3px; }
+        .stamp-rally i { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--kin-dim); }
+        .stamp-rally i.on { background: var(--shu); border-color: var(--shu-deep); }
+
+        /* Expanded order → paper bill slip (明細) */
+        .order-expand-row.open > td { padding: 0.35rem 1rem 1.1rem; position: relative; }
+        /* The 明細 seal belongs to the slip (so it travels with it when the slip sticks on phones) */
+        .expand-mini-table::after {
+            content: "BILL";
+            position: absolute;
+            top: -0.55rem;
+            right: 1.6rem;   /* stamped over the slip's top edge, clear of the punched hole and the PRICE header */
+            z-index: 1;
+            display: inline-grid;
+            place-items: center;
+            padding: 0.35rem 0.4rem;
+            font: 700 0.75rem/1 var(--font-display);
+            color: #fff;
+            background: var(--shu);
+            border: 2px solid rgba(255, 255, 255, 0.55);
+            outline: 1px solid var(--shu-deep);
+            border-radius: var(--radius-seal);
+            transform: rotate(-6deg);
+            letter-spacing: 0.05em;
+        }
+        .expand-mini-table {
+            width: min(100%, 640px);
+            min-width: 0;   /* not the ledger's 680px floor */
+            margin: 0;
+            position: relative;
+            background-color: var(--washi);
+            background-image:
+                radial-gradient(circle at 14px 10px, var(--bg-surface-container) 4px, transparent 4.5px),
+                radial-gradient(circle at calc(100% - 14px) 10px, var(--bg-surface-container) 4px, transparent 4.5px),
+                var(--washi-fibre),
+                linear-gradient(180deg, var(--washi-bright), var(--washi) 60%, var(--washi-2));
+            background-size: auto, auto, 240px 240px, auto;
+            box-shadow: var(--shadow-paper);
+            border: 1px solid rgba(28, 24, 22, 0.18);
+            border-radius: var(--radius-paper);
+            color: var(--sumi-ink);
+        }
+        .expand-mini-table th {
+            padding: 1.1rem 1rem 0.5rem;
+            color: var(--sumi-ink-3);
+            border-bottom: 2px dashed var(--washi-line-strong);
+            font-size: 0.6875rem;
+        }
+        .expand-mini-table td {
+            padding: 0.55rem 1rem;
+            font-size: 0.875rem;
+            color: var(--sumi-ink);
+            border-bottom: 1px solid var(--washi-line);
+        }
+        .expand-mini-table tr:last-child td { border-bottom: 0; }
+        .expand-mini-table tr:hover td { background: rgba(28, 24, 22, 0.03); }
+        .expand-mini-table th:nth-child(2), .expand-mini-table td:nth-child(2) { text-align: center; width: 4rem; }
+        .expand-mini-table td:nth-child(2) { font: 700 1.125rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
+        .expand-mini-table th:nth-child(3), .expand-mini-table td:nth-child(3) { text-align: right; white-space: nowrap; }
+        .expand-mini-table td:nth-child(3) { font: 600 0.9375rem/1.2 var(--font-display); font-variant-numeric: tabular-nums; }
+        .expand-mini-table .item-instructions { margin-top: 0.35rem; font-style: normal; max-width: 36ch; }
+        /* JS 'No item details' row: theme's generic only-row empty state (ensō, 2.5rem, !important grey) is too loud inside a slip.
+           PROMOTE: scope theme's `tbody > tr:only-child > td[colspan]:only-child` with `:not(.expand-mini-table)` and this block can go. */
+        .expand-mini-table tbody > tr:only-child > td[colspan]:only-child {
+            color: var(--sumi-ink-3) !important;   /* scoped: beats theme's !important on the same selector */
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-style: italic;
+        }
+        .expand-mini-table tbody > tr:only-child > td[colspan]:only-child::before { display: none; }
+        /* Phones: the slip must not inherit the lacquer sticky first column, and it stays in view while the ledger scrolls sideways */
+        @media (max-width: 767px) {
+            .expand-mini-table th:first-child,
+            .expand-mini-table td:first-child { position: static; background: transparent; }
+            .expand-mini-table { position: sticky; left: 1rem; width: calc(100vw - 4rem); }
+        }
+
+        /* ── Bot fleet (dashboard) ─────────────────────────────────────── */
+        .fleet-panel { display: flex; flex-direction: column; min-height: 220px; }
+        #botOverviewList { flex: 1; padding: 0.75rem; display: grid; gap: 0.5rem; align-content: start; }
+        #botOverviewList:empty {
+            display: grid;
+            justify-items: center;
+            align-content: center;
+            gap: 0.5rem;
+            padding: 2rem 1rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        #botOverviewList:empty::before {
+            content: "";
+            width: 64px;
+            height: 64px;
+            background: url("../shared/art/empty-neko.svg") center / contain no-repeat;   /* --mn-resting resolves relative to theme.css only */
+            opacity: 0.55;
+        }
+        #botOverviewList:empty::after {
+            content: "Fleet lives in Bot Control";   /* true while loading and when empty */
+            font: 500 0.8125rem/1.4 var(--font-jp);
+            color: var(--text-muted);
+            letter-spacing: 0.04em;
+        }
+        .bot-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 0.75rem;
+            border-radius: var(--radius-paper);
+            background: var(--bg-surface-high);
             border: 1px solid var(--border);
+        }
+        .bot-item .status-dot { width: 8px; height: 8px; }
+        .bot-main { min-width: 0; }
+        .bot-name { font: 600 0.9rem/1.3 var(--font-sans); color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .bot-meta { font: 500 0.6875rem/1.4 var(--font-sans); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+        .bot-meta .jp { color: var(--text-dimmed); }
+        .bot-table { display: inline-grid; }
+        .bot-table .hanko { width: 26px; height: 26px; font-size: 0.8125rem; }
+        .panel-foot .btn-paper { width: 100%; }
+
+        /* ── Menu manager ──────────────────────────────────────────────── */
+        /* Category rail: scrolls under 1024px (theme's rail rule), wraps like the other chip groups on desktop */
+        .menu-filters {
+            display: flex;
+            gap: 0.4rem;
+            margin: calc(-0.25rem - 6px) 0 1.25rem;
+            padding: 6px 0;                 /* room for the kin focus ring inside overflow-y:hidden */
+            max-width: 100%;
+            scroll-padding-inline: 14px;    /* focused first/last chip clears the edge fade */
+        }
+        .menu-filters:empty { display: none; }
+        @media (min-width: 1024px) {
+            .menu-filters {
+                flex-wrap: wrap;
+                overflow: visible;
+                padding: 0;
+                margin-top: -0.25rem;
+                scroll-snap-type: none;
+                -webkit-mask-image: none;
+                mask-image: none;
+            }
+            .menu-filters > .filter-btn { flex-shrink: 1; }
+        }
+        #addItemBtn .ico { width: 16px; height: 16px; }
+
+        /* Add / edit form — byōbu paper panel; inline display toggled by JS */
+        .menu-form {
+            padding: 1.25rem 1.75rem 1rem;
+            margin-bottom: 1.5rem;
+            animation: ink-in 0.35s var(--ease-out);
+            isolation: isolate;
+            scroll-margin-top: 0.75rem;   /* openMenuForm → scrollIntoView: clear the ink-in offset */
+        }
+        @media (max-width: 1023px) {
+            .menu-form { scroll-margin-top: calc(60px + 1rem); }   /* and the fixed 60px lintel bar */
+        }
+        .menu-form::after {   /* folding-screen hinges */
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            border-radius: inherit;
+            background: repeating-linear-gradient(90deg, transparent 0 calc(25% - 1px), rgba(107, 78, 18, 0.12) calc(25% - 1px) 25%);
+            z-index: -1;
+        }
+        @media (max-width: 767px) {
+            .menu-form { padding: 1.25rem 1rem; }
+            .menu-form::after { display: none; }
+        }
+        .form-title { font-size: 1.25rem; margin-bottom: 0.75rem; }
+        .form-title::after {
+            content: "";
+            display: block;
+            width: 120px;
+            height: 8px;
+            margin-top: 0.5rem;
+            background: var(--brush-rule-sumi) left / 100% 100% no-repeat;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1rem 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .form-field { margin-bottom: 0.75rem; }
+        .form-label {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            font: 600 0.8125rem/1.3 var(--font-sans);
+            color: var(--sumi-ink-2);
+            margin-bottom: 0.45rem;
+        }
+        .form-input { width: 100%; }
+        .form-checkbox-group { display: flex; align-items: flex-end; gap: 0.6rem; padding-bottom: 0.2rem; flex-wrap: wrap; }
+        .form-checkbox-label .jp { color: var(--sumi-ink-3); }
+        .form-checkbox-label .ico { width: 16px; height: 16px; }
+        .form-checkbox-label:has(input:checked) :is(.jp, .ico) { color: inherit; }
+        .form-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            padding-top: 1rem;
+            border-top: 2px dashed var(--washi-line);
+        }
+
+        /* ── Customers search (paper slip) ─────────────────────────────── */
+        .search-wrapper { width: 100%; max-width: 22rem; margin-bottom: 0.35rem; }
+        .search-icon { display: grid; place-items: center; color: var(--sumi-ink-3); }
+        .search-icon .ico { width: 18px; height: 18px; }
+        .search-wrapper:focus-within > .search-icon { color: var(--shu-ink); }
+        .search-input {
+            background: var(--washi-bright);
+            border: 0;
+            border-bottom: 1.5px solid rgba(28, 24, 22, 0.35);
+            border-radius: 3px 3px 0 0;
+            color: var(--sumi-ink);
+            box-shadow: var(--shadow-soft);
+        }
+        .search-input::placeholder { color: var(--sumi-ink-3); }
+        .search-input:focus {
+            background: var(--washi-bright);
+            border-color: transparent;
+            border-bottom: 2px solid var(--shu-ink);
+            box-shadow: 0 1px 0 var(--shu-ink);
+        }
+
+        /* ── Feedback ──────────────────────────────────────────────────── */
+        .feedback-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1.25rem 2rem;
+            margin-bottom: 1.5rem;
+            padding: 1.25rem 1.5rem;
+        }
+        .feedback-controls { flex: 1 1 280px; min-width: 0; }
+        .feedback-header .filter-label { display: block; margin-bottom: 0.75rem; }
+        .feedback-filters { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        /* Sakura glyph after the numeric rating chips (chips stay leaf buttons) */
+        #feedbackFilters .filter-btn[data-rating]:not([data-rating="all"]) { padding-right: 1.9rem; position: relative; }
+        #feedbackFilters .filter-btn[data-rating]:not([data-rating="all"])::after {
+            content: "";
+            position: absolute;
+            right: 0.6rem;
+            top: 50%;
+            width: 14px;
+            height: 14px;
+            transform: translateY(-50%);
+            background: var(--kin);
+            -webkit-mask: var(--glyph-sakura) center / contain no-repeat;
+            mask: var(--glyph-sakura) center / contain no-repeat;
+        }
+        #feedbackFilters .filter-btn.active::after { background: var(--shu-ink); }
+        .feedback-sentiment {
+            display: grid;
+            justify-items: center;
+            gap: 0.15rem;
+            min-width: 180px;
+            text-align: center;
+        }
+        .feedback-sentiment-label { order: 3; margin-top: 0.4rem; }
+        .feedback-sentiment-value {
+            display: grid;
+            place-items: center;
+            width: 116px;
+            height: 116px;
+            background: var(--enso-bg) center / contain no-repeat;
+            font: 700 2.25rem/1 var(--font-display);
+            color: var(--kin);
+            font-variant-numeric: tabular-nums;
+        }
+        .feedback-sentiment-stars { color: var(--kin); font-size: 1.125rem; letter-spacing: 3px; min-height: 1.4em; }
+
+        .feedback-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        /* Omikuji slips (JS adds .glass-card; paper wins) */
+        #feedbackList .feedback-card {
+            background-color: var(--washi);
+            background-image: var(--washi-fibre), linear-gradient(180deg, var(--washi-bright), var(--washi) 60%, var(--washi-2));
+            background-size: 240px 240px, auto;
+            box-shadow: var(--shadow-paper);
+            border: 1px solid rgba(28, 24, 22, 0.18);
+            border-top: 6px solid var(--kin);
+            border-radius: var(--radius-paper);
+            color: var(--sumi-ink);
+            padding: 1.5rem 1.25rem 1rem;
+            position: relative;
+            transform: none !important;   /* scoped: .glass-card comes from JS */
+            backdrop-filter: none;
+            transition: none;
+        }
+        #feedbackList .feedback-card:hover { box-shadow: var(--shadow-paper); border-color: rgba(28, 24, 22, 0.18); border-top-color: var(--kin); }
+        #feedbackList .feedback-card::before {   /* tanzaku hole */
+            content: "";
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--bg-deep);
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        /* Fortune tier seal by rating */
+        #feedbackList .feedback-card[data-rating]::after {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: inline-grid;
+            place-items: center;
+            padding: 0.4rem 0.4rem;
+            font: 700 0.8125rem/1 var(--font-display);
+            color: #fff;
+            background: var(--shu);
+            border: 2px solid rgba(255, 255, 255, 0.55);
+            outline: 1px solid var(--shu-deep);
+            border-radius: var(--radius-seal);
+            transform: rotate(-6deg);
+            letter-spacing: 0.05em;
+        }
+        #feedbackList .feedback-card[data-rating="5"]::after { content: "EXCELLENT"; }
+        #feedbackList .feedback-card[data-rating="4"]::after { content: "GREAT"; background: var(--shu-ink); }
+        #feedbackList .feedback-card[data-rating="3"]::after { content: "GOOD"; background: var(--kuchiba-ink); outline-color: var(--kuchiba-ink); }
+        #feedbackList .feedback-card[data-rating="2"]::after { content: "FAIR"; background: var(--nezumi-ink); outline-color: var(--nezumi-ink); }
+        #feedbackList .feedback-card[data-rating="1"]::after { content: "POOR"; background: var(--sumi-ink); outline-color: var(--sumi-ink); }
+        .stars { color: var(--kuchiba-ink); font-size: 1.125rem; letter-spacing: 2px; margin-bottom: 0.75rem; }   /* 5.5:1 on washi (kin-dim was 2.85:1) */
+        .feedback-comment {
+            font: 500 1rem/1.55 var(--font-display);
+            color: var(--sumi-ink);
+            margin-bottom: 1rem;
+            min-height: 48px;
+            overflow-wrap: anywhere;
+        }
+        .feedback-meta {
+            font: 500 0.75rem/1.4 var(--font-mono);
+            color: var(--sumi-ink-3);
+            letter-spacing: 0.04em;
+            border-top: 1px dashed var(--washi-line-strong);
+            padding-top: 0.6rem;
+        }
+
+        /* ── Analytics ─────────────────────────────────────────────────── */
+        .analytics-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        @media (min-width: 1024px) {
+            .analytics-grid { grid-template-columns: 2fr 1fr; }
+        }
+        .chart-panel { padding: 1.25rem 1.5rem 1.5rem; }
+        .chart-panel .panel-title { margin-bottom: 0.5rem; }
+        .chart-panel .bar-chart { margin-top: 2.25rem; }
+        .chart-note { font: 500 0.75rem/1.4 var(--font-sans); color: var(--text-dimmed); margin-top: 0.75rem; }
+        /* Unloaded / empty chart: say so instead of showing bare gridlines (true while loading and when the range is empty) */
+        .bar-chart:empty::after {
+            content: "Nothing to chart yet";
+            grid-column: 1 / -1;
+            align-self: center;
+            justify-self: center;
+            font: 500 0.8125rem/1.4 var(--font-jp);
+            color: var(--text-muted);
+            letter-spacing: 0.04em;
+            text-align: center;
+        }
+        /* Touch screens have no hover: values stay readable (spec §6.13) */
+        @media (hover: none) {
+            .bar[data-val]::after { opacity: 0.85; }
+            .revenue-chart .bar[data-val]::after {   /* long ₹ values in 7 narrow columns: stand them up, inside the chart's height */
+                writing-mode: vertical-rl;
+                transform: translateX(-50%) rotate(180deg);
+                padding: 0.4rem 0.15rem;
+                bottom: 4px;
+            }
+        }
+        .dish-panel { display: flex; flex-direction: column; min-height: 320px; padding: 1.25rem 1.5rem 1rem; }
+        .dish-panel .panel-title { padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); margin-bottom: 0.5rem; }
+        #topDishesList { flex: 1; }
+        .dish-row { color: var(--text-primary); font-weight: 500; }
+        .dish-row > span[style] { min-width: 0; }
+        .dish-row .dish-count { font-size: 0.875rem; white-space: nowrap; }
+        /* Empty top-dishes state: theme's #topDishesList > .text-secondary rule (ensō + まだありません) */
+
+        /* Satisfaction ensō */
+        .satisfaction-container { display: flex; flex-direction: column; align-items: center; padding: 1.25rem 1.5rem 1.5rem; }
+        .satisfaction-container .panel-title { align-self: flex-start; margin-bottom: 0.5rem; }
+        .satisfaction-donut {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            display: grid;
+            place-items: center;
+            align-content: center;
+            margin: auto 0;
+        }
+        .satisfaction-donut svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+        /* Until JS sets --pct (which creates the style attribute) the zero-length round-capped dash would paint a stray dot */
+        .satisfaction-donut:not([style]) .enso-fill { opacity: 0; }
+        #satisfactionScore {
+            font: 700 2rem/1 var(--font-display);
             color: var(--text-primary);
-            border-radius: var(--radius-sm);
-            padding: 0.4rem 0.75rem;
-            font-size: 0.85rem;
-            outline: none;
-            cursor: pointer;
+            font-variant-numeric: tabular-nums;
+            position: relative;
         }
-
-        .date-input:focus {
-            border-color: var(--primary);
+        .satisfaction-label {
+            position: relative;
+            font: 600 0.6875rem/1.4 var(--font-sans);
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: var(--tracking-eyebrow);
+            margin-top: 0.35rem;
         }
+        .satisfaction-label .jp { text-transform: none; }
 
-        .btn-apply {
-            background: var(--primary-raw);
-            color: white;
-            border: none;
-            padding: 0.4rem 1rem;
-            border-radius: var(--radius-sm);
-            font-weight: 700;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        .btn-apply:hover {
-            opacity: 0.9;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateX(-10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+        /* Page-local glyph (same path as the sprite's i-sakura) */
+        :root {
+            --glyph-sakura: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg id='p'%3E%3Cpath d='M12 9.8C9.4 8.4 8.4 6.1 9.8 4.6c.9-1 1.8-.6 2.2.5.4-1.1 1.3-1.5 2.2-.5 1.4 1.5.4 3.8-2.2 5.2z'/%3E%3C/g%3E%3Cuse href='%23p' transform='rotate(72 12 12)'/%3E%3Cuse href='%23p' transform='rotate(144 12 12)'/%3E%3Cuse href='%23p' transform='rotate(216 12 12)'/%3E%3Cuse href='%23p' transform='rotate(288 12 12)'/%3E%3C/svg%3E");
         }
     </style>
 </head>
 
 <body style="height: 100vh; display: flex; overflow: hidden;">
 
+    <a class="skip" href="#main">Skip to content</a>
+
     <!-- Mobile hamburger -->
-    <button id="mobileNavToggle" aria-label="Toggle sidebar">
-        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <button id="mobileNavToggle" class="btn-icon" aria-label="Toggle sidebar" aria-controls="sidebar">
+        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
         </svg>
     </button>
 
-    <!-- ── Sidebar ──────────────────────────────────────────────────────── -->
-    <aside id="sidebar">
-        <div class="sidebar-brand">
-            <span>🐱</span>
-            <div>
-                <div class="sidebar-brand-name">Maneki Neko</div>
-                <div id="sidebarRestaurantName" style="font-size:0.7rem;color:var(--text-muted);font-weight:600;letter-spacing:0.05em;text-transform:uppercase;margin-top:1px;">Admin</div>
+    <!-- Mobile lintel: lantern pools + brand on phones/tablets -->
+    <header class="mobile-bar lintel" aria-hidden="true">
+        <div class="brand-lockup">
+            <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#neko"/></svg>
+            <div class="brand-stack">
+                
+                <span class="brand-kanji">Maneki Neko</span><span class="brand-romaji">Admin</span>
             </div>
         </div>
+    </header>
 
-        <nav class="sidebar-nav">
+    <!-- ── Sidebar ──────────────────────────────────────────────────────── -->
+    <aside id="sidebar">
+        <div class="sidebar-brand lintel">
+            <div class="brand-lockup">
+                <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#neko"/></svg>
+                <div class="brand-stack">
+                    
+                    <span class="brand-kanji">Maneki Neko</span><span class="brand-romaji">Smart Restaurant</span>
+                </div>
+            </div>
+            <div id="sidebarRestaurantName" class="sidebar-restaurant">Admin</div>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Sections">
             <a href="#" class="nav-link active" data-section="dashboard">
-                <span>📊</span> Dashboard
+                <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-lantern"/></svg>
+                Dashboard
+                
             </a>
             <a href="#" class="nav-link" data-section="menu-manager">
-                <span>🍱</span> Menu Manager
+                <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-bowl"/></svg>
+                Menu Manager
+                
             </a>
             <a href="#" class="nav-link" data-section="orders">
-                <span>📜</span> Orders
+                <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-scroll"/></svg>
+                Orders
+                
             </a>
             <a href="#" class="nav-link" data-section="customers">
-                <span>👥</span> Customers
+                <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-people"/></svg>
+                Customers
+                
             </a>
             <a href="#" class="nav-link" data-section="feedback">
-                <span>💬</span> Feedback
+                <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-ema"/></svg>
+                Feedback
+                
             </a>
             <a href="#" class="nav-link" data-section="analytics">
-                <span>📈</span> Analytics
+                <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-soroban"/></svg>
+                Analytics
+                
             </a>
         </nav>
+
+        
 
         <div class="sidebar-footer">
             <div class="server-status">
                 <div class="status-dot green"></div>
-                <span>Server Online</span>
+                <span>Server online </span>
             </div>
-            <button id="logoutBtn" style="margin-top:0.75rem;width:100%;background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border);border-radius:var(--radius-md);padding:0.625rem 1rem;font-weight:700;font-size:0.85rem;cursor:pointer;transition:all var(--duration-fast) var(--ease-out);display:flex;align-items:center;justify-content:center;gap:0.5rem;">🚪 Logout</button>
+            <button id="logoutBtn" class="btn-danger btn-sm">
+                <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-noren"/></svg>
+                Logout 
+            </button>
         </div>
     </aside>
 
     <!-- ── Main Content ─────────────────────────────────────────────────── -->
-    <main class="admin-main">
+    <main class="admin-main" id="main">
 
         <!-- ═══════════ 1. DASHBOARD ═══════════ -->
         <section id="dashboard" class="section admin-section">
             <header class="page-header">
-                <h1 class="page-title">Dashboard Overview</h1>
-                <p class="page-subtitle">Real-time restaurant neural metrics</p>
+                <p class="eyebrow">Overview</p>
+                <h1 class="page-title">Dashboard</h1>
+                <p class="page-subtitle">Today in the house</p>
             </header>
 
-            <!-- Dashboard Filters -->
+            <!-- Dashboard Filters (koyomi strip) -->
             <div class="dashboard-filters">
-                <span class="filter-label">📅 Time Range</span>
+                <span class="filter-label">Range</span>
                 <div class="filter-group global-date-filters">
-                    <button class="filter-btn active" data-range="all">All Time</button>
-                    <button class="filter-btn" data-range="1d">1 Day</button>
-                    <button class="filter-btn" data-range="7d">7 Days</button>
-                    <button class="filter-btn" data-range="1m">1 Month</button>
+                    <button class="filter-btn active" data-range="all">All time</button>
+                    <button class="filter-btn" data-range="1d">1 day</button>
+                    <button class="filter-btn" data-range="7d">7 days</button>
+                    <button class="filter-btn" data-range="1m">1 month</button>
                     <button class="filter-btn" data-range="custom">Custom</button>
                 </div>
 
-                <div class="custom-range-box global-custom-range hidden">
-                    <input type="date" class="date-input global-start-date">
-                    <span style="color: var(--text-muted)">to</span>
-                    <input type="date" class="date-input global-end-date">
-                    <button class="btn-apply global-apply-date">Apply</button>
+                <div class="custom-range-box global-custom-range paper hidden">
+                    <input type="date" class="date-input global-start-date" aria-label="Start date">
+                    
+                    <input type="date" class="date-input global-end-date" aria-label="End date">
+                    <button class="btn-apply global-apply-date btn-seal btn-sm">Apply</button>
                 </div>
             </div>
 
             <!-- Stat Cards -->
             <div class="stat-grid">
                 <div class="stat-card">
-                    <div class="stat-icon stat-icon-orders">📦</div>
+                    <div class="stat-icon stat-icon-orders"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-scroll"/></svg></div>
                     <div>
                         <div class="stat-value" id="stat-orders">0</div>
-                        <div class="stat-label">Total Orders</div>
+                        <div class="stat-label">Total Orders </div>
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon stat-icon-revenue">💰</div>
+                    <div class="stat-icon stat-icon-revenue"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-koban"/></svg></div>
                     <div>
                         <div class="stat-value stat-value-green" id="stat-revenue">₹0.00</div>
-                        <div class="stat-label">Revenue</div>
+                        <div class="stat-label">Revenue </div>
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon stat-icon-bots">🤖</div>
+                    <div class="stat-icon stat-icon-bots"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-neko-head"/></svg></div>
                     <div>
                         <div class="stat-value" id="stat-bots">0</div>
-                        <div class="stat-label">Active Bots</div>
+                        <div class="stat-label">Active Bots </div>
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon stat-icon-rating">⭐</div>
+                    <div class="stat-icon stat-icon-rating"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-sakura"/></svg></div>
                     <div>
                         <div class="stat-value" id="stat-rating">0.0</div>
-                        <div class="stat-label">Avg Rating</div>
+                        <div class="stat-label">Avg Rating </div>
                     </div>
                 </div>
             </div>
@@ -1069,29 +910,33 @@
             <!-- Recent Orders + Bot Fleet -->
             <div class="content-grid content-grid-wide">
                 <div class="panel">
-                    <div class="panel-header">
-                        <h3 class="panel-title">📋 Recent Orders</h3>
+                    <div class="panel-header lacquer-header">
+                        <h3 class="panel-title"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-scroll"/></svg>Recent Orders </h3>
                     </div>
-                    <div style="overflow-x: auto;">
+                    <div class="table-container">
                         <table id="recentOrdersTable">
                             <thead>
                                 <tr>
-                                    <th>Table No.</th>
-                                    <th>Items Count</th>
-                                    <th>Total Amount</th>
-                                    <th>Status</th>
-                                    <th>Date & Time</th>
+                                    <th>Order </th>
+                                    <th>Table </th>
+                                    <th>Total </th>
+                                    <th>Status </th>
+                                    <th>Time </th>
                                 </tr>
                             </thead>
                             <tbody id="recentOrdersBody"></tbody>
                         </table>
                     </div>
                 </div>
-                <div class="panel" style="display: flex; flex-direction: column; height: 500px;">
-                    <div class="panel-header">
-                        <h3 class="panel-title">🤖 Bot Fleet Status</h3>
+                <div class="panel fleet-panel">
+                    <div class="panel-header lacquer-header">
+                        <h3 class="panel-title"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-neko-head"/></svg>Bot Fleet </h3>
                     </div>
-                    <div id="botOverviewList" class="panel-body" style="flex: 1; overflow-y: auto;">
+                    <div id="botOverviewList" class="panel-body"></div>
+                    <div class="panel-foot">
+                        <a class="btn-paper btn-sm" href="../bot-management/index.html">
+                            Open Bot Control 
+                        </a>
                     </div>
                 </div>
             </div>
@@ -1100,75 +945,82 @@
         <!-- ═══════════ 2. MENU MANAGER ═══════════ -->
         <section id="menu-manager" class="section admin-section hidden">
             <header class="header-row">
-                <div>
-                    <h1 class="page-title" style="display: flex; align-items: center; gap: 0.75rem;">🍱 Menu Manager
-                    </h1>
-                    <div class="menu-filters" id="menuFilters">
-                        <!-- populated dynamically by loadMenu() -->
-                    </div>
+                <div class="page-header">
+                    <p class="eyebrow">Menu</p>
+                    <h1 class="page-title">Menu Manager</h1>
+                    <p class="page-subtitle">What the kitchen offers tonight</p>
                 </div>
-                <button id="addItemBtn">+ Add New Item</button>
+                <button id="addItemBtn" class="btn-seal">
+                    <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-plus"/></svg>
+                    New item 
+                </button>
             </header>
 
+            <!-- Category fuda rail (rebuilt by loadMenu) -->
+            <div class="menu-filters" id="menuFilters">
+                <!-- populated dynamically by loadMenu() -->
+            </div>
+
             <!-- Add / Edit Form -->
-            <div id="menuItemForm" class="menu-form" style="display:none;">
-                <h3 id="formTitle" class="form-title">➕ Add New Item</h3>
+            <div id="menuItemForm" class="menu-form paper" style="display:none;">
+                <h3 id="formTitle" class="form-title">Add new item</h3>
                 <form id="itemForm">
                     <input type="hidden" id="editItemId">
                     <div class="form-grid">
                         <div>
-                            <label class="form-label">Item Name</label>
+                            <label class="form-label" for="itemName">Item name </label>
                             <input type="text" id="itemName" placeholder="e.g. Classic Ramen" required
                                 class="form-input">
                         </div>
                         <div>
-                            <label class="form-label">Category</label>
-                            <select id="itemCategory" required class="form-input"
-                                style="cursor: pointer; appearance: none;">
-                                <!-- populated dynamically by loadMenu() -->
-                            </select>
+                            <label class="form-label" for="itemCategory">Category </label>
+                            <span class="select-wrap block">
+                                <select id="itemCategory" required class="form-input">
+                                    <!-- populated dynamically by loadMenu() -->
+                                </select>
+                            </span>
                         </div>
                         <div>
-                            <label class="form-label">Price (₹)</label>
-                            <input type="number" id="itemPrice" placeholder="Price (e.g. 12.50)" step="0.01" min="0"
+                            <label class="form-label" for="itemPrice">Price (₹) </label>
+                            <input type="number" id="itemPrice" placeholder="e.g. 12.50" step="0.01" min="0"
                                 required class="form-input">
                         </div>
                         <div class="form-checkbox-group">
                             <label class="form-checkbox-label">
                                 <input type="checkbox" id="itemIsVeg">
-                                <span>🟢 Veg</span>
+                                 Veg
                             </label>
                             <label class="form-checkbox-label">
                                 <input type="checkbox" id="itemIsSpicy">
-                                <span>🌶️ Spicy</span>
+                                <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-chili"/></svg> Spicy 
                             </label>
                         </div>
                     </div>
-                    <div style="margin-bottom: 2rem;">
-                        <label class="form-label">Allergens</label>
+                    <div class="form-field">
+                        <label class="form-label" for="itemAllergens">Allergens </label>
                         <textarea id="itemAllergens" placeholder="Comma separated, e.g. nuts, dairy, soy" rows="2"
-                            class="form-input" style="resize: vertical;"></textarea>
+                            class="form-input"></textarea>
                     </div>
                     <div class="form-actions">
-                        <button type="submit" class="btn-save">💾 Save Item</button>
-                        <button type="button" id="cancelForm" class="btn-cancel">✕ Cancel</button>
+                        <button type="submit" class="btn-save">Save </button>
+                        <button type="button" id="cancelForm" class="btn-cancel btn-ghost">Cancel</button>
                     </div>
                 </form>
             </div>
 
             <!-- Menu Table -->
             <div class="panel">
-                <div style="overflow-x: auto;">
-                    <table id="menuTable" style="min-width: 800px;">
+                <div class="table-container">
+                    <table id="menuTable">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Category</th>
-                                <th>Price</th>
-                                <th>Type</th>
-                                <th>Spicy</th>
-                                <th>Available</th>
-                                <th>Actions</th>
+                                <th>Name </th>
+                                <th>Category </th>
+                                <th>Price </th>
+                                <th>Type </th>
+                                <th>Spicy </th>
+                                <th>Available </th>
+                                <th>Actions </th>
                             </tr>
                         </thead>
                         <tbody id="menuTableBody"></tbody>
@@ -1180,8 +1032,12 @@
         <!-- ═══════════ 3. ORDERS ═══════════ -->
         <section id="orders" class="section admin-section hidden">
             <header class="header-row">
-                <h1 class="page-title" style="display: flex; align-items: center; gap: 0.75rem;">📜 Order History</h1>
-                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;" id="orderFilters">
+                <div class="page-header">
+                    <p class="eyebrow">Orders</p>
+                    <h1 class="page-title">Order History</h1>
+                    <p class="page-subtitle">Every slip, live from the floor</p>
+                </div>
+                <div class="filter-group" id="orderFilters">
                     <button class="filter-btn active" data-status="all">All</button>
                     <button class="filter-btn" data-status="pending">Pending</button>
                     <button class="filter-btn" data-status="preparing">Preparing</button>
@@ -1192,17 +1048,21 @@
                 </div>
             </header>
             <div class="panel">
-                <div style="overflow-x: auto;">
-                    <table id="fullOrdersTable" style="min-width: 800px;">
+                <div class="panel-header lacquer-header">
+                    <h3 class="panel-title"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-scroll"/></svg>Order ledger </h3>
+                    <span class="live-cue">Live </span>
+                </div>
+                <div class="table-container">
+                    <table id="fullOrdersTable">
                         <thead>
                             <tr>
-                                <th>Order ID</th>
-                                <th>Table</th>
-                                <th>Items</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                                <th>Payment</th>
-                                <th>Date & Time</th>
+                                <th>Order </th>
+                                <th>Table </th>
+                                <th>Items </th>
+                                <th>Total </th>
+                                <th>Status </th>
+                                <th>Payment </th>
+                                <th>Time </th>
                             </tr>
                         </thead>
                         <tbody id="fullOrdersBody"></tbody>
@@ -1214,23 +1074,27 @@
         <!-- ═══════════ 4. CUSTOMERS ═══════════ -->
         <section id="customers" class="section admin-section hidden">
             <header class="header-row">
-                <h1 class="page-title" style="display: flex; align-items: center; gap: 0.75rem;">👥 Customers</h1>
-                <div class="search-wrapper">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="customerSearch" placeholder="Search by name or phone..."
-                        class="search-input">
+                <div class="page-header">
+                    <p class="eyebrow">Guests</p>
+                    <h1 class="page-title">Customers</h1>
+                    <p class="page-subtitle">Regulars and first-timers</p>
+                </div>
+                <div class="search-wrapper input-wrap">
+                    <span class="search-icon input-icon"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-search"/></svg></span>
+                    <input type="text" id="customerSearch" placeholder="Search by name or phone"
+                        class="search-input" aria-label="Search customers">
                 </div>
             </header>
             <div class="panel">
-                <div style="overflow-x: auto;">
-                    <table id="customersTable" style="min-width: 800px;">
+                <div class="table-container">
+                    <table id="customersTable">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Phone</th>
-                                <th>Visits</th>
-                                <th>Preferences</th>
-                                <th>Joined</th>
+                                <th>Name </th>
+                                <th>Phone </th>
+                                <th>Visits </th>
+                                <th>Preferences </th>
+                                <th>Joined </th>
                             </tr>
                         </thead>
                         <tbody id="customersBody"></tbody>
@@ -1242,42 +1106,44 @@
         <!-- ═══════════ 5. FEEDBACK ═══════════ -->
         <section id="feedback" class="section admin-section hidden">
             <header class="page-header">
-                <h1 class="page-title">💬 Customer Feedback</h1>
+                <p class="eyebrow">Voices</p>
+                <h1 class="page-title">Feedback</h1>
+                <p class="page-subtitle">How guests feel</p>
             </header>
 
             <!-- Global Date Filters -->
-            <div class="dashboard-filters">
-                <span class="filter-label">📅 Time Range</span>
+            <div class="dashboard-filters compact">
+                <span class="filter-label">Range</span>
                 <div class="filter-group global-date-filters">
-                    <button class="filter-btn active" data-range="all">All Time</button>
-                    <button class="filter-btn" data-range="1d">1 Day</button>
-                    <button class="filter-btn" data-range="7d">7 Days</button>
-                    <button class="filter-btn" data-range="1m">1 Month</button>
+                    <button class="filter-btn active" data-range="all">All time</button>
+                    <button class="filter-btn" data-range="1d">1 day</button>
+                    <button class="filter-btn" data-range="7d">7 days</button>
+                    <button class="filter-btn" data-range="1m">1 month</button>
                     <button class="filter-btn" data-range="custom">Custom</button>
                 </div>
 
-                <div class="custom-range-box global-custom-range hidden">
-                    <input type="date" class="date-input global-start-date">
-                    <span style="color: var(--text-muted)">to</span>
-                    <input type="date" class="date-input global-end-date">
-                    <button class="btn-apply global-apply-date">Apply</button>
+                <div class="custom-range-box global-custom-range paper hidden">
+                    <input type="date" class="date-input global-start-date" aria-label="Start date">
+                    
+                    <input type="date" class="date-input global-end-date" aria-label="End date">
+                    <button class="btn-apply global-apply-date btn-seal btn-sm">Apply</button>
                 </div>
             </div>
 
-            <header class="feedback-header">
-                <div style="flex: 1;">
-                    <span class="filter-label" style="display: block; margin-bottom: 0.75rem;">⭐ Rating Filter</span>
+            <header class="feedback-header lacquer">
+                <div class="feedback-controls">
+                    <span class="filter-label">Rating</span>
                     <div class="feedback-filters" id="feedbackFilters">
                         <button class="filter-btn active" data-rating="all">All</button>
-                        <button class="filter-btn" data-rating="1">1★</button>
-                        <button class="filter-btn" data-rating="2">2★</button>
-                        <button class="filter-btn" data-rating="3">3★</button>
-                        <button class="filter-btn" data-rating="4">4★</button>
-                        <button class="filter-btn" data-rating="5">5★</button>
+                        <button class="filter-btn" data-rating="1">1</button>
+                        <button class="filter-btn" data-rating="2">2</button>
+                        <button class="filter-btn" data-rating="3">3</button>
+                        <button class="filter-btn" data-rating="4">4</button>
+                        <button class="filter-btn" data-rating="5">5</button>
                     </div>
                 </div>
                 <div class="feedback-sentiment">
-                    <span class="feedback-sentiment-label">Global Sentiment</span>
+                    <span class="feedback-sentiment-label eyebrow">Average</span>
                     <span class="feedback-sentiment-value" id="avg-rating-display">N/A</span>
                     <span class="feedback-sentiment-stars" id="avg-stars-display"></span>
                 </div>
@@ -1289,69 +1155,70 @@
         <!-- ═══════════ 6. ANALYTICS ═══════════ -->
         <section id="analytics" class="section admin-section hidden">
             <header class="page-header">
-                <h1 class="page-title">📈 Temporal Analytics</h1>
+                <p class="eyebrow">Insights</p>
+                <h1 class="page-title">Analytics</h1>
+                <p class="page-subtitle">Hours, dishes and the week's takings</p>
             </header>
 
             <!-- Global Date Filters -->
-            <div class="dashboard-filters">
-                <span class="filter-label">📅 Time Range</span>
+            <div class="dashboard-filters compact">
+                <span class="filter-label">Range</span>
                 <div class="filter-group global-date-filters">
-                    <button class="filter-btn active" data-range="all">All Time</button>
-                    <button class="filter-btn" data-range="1d">1 Day</button>
-                    <button class="filter-btn" data-range="7d">7 Days</button>
-                    <button class="filter-btn" data-range="1m">1 Month</button>
+                    <button class="filter-btn active" data-range="all">All time</button>
+                    <button class="filter-btn" data-range="1d">1 day</button>
+                    <button class="filter-btn" data-range="7d">7 days</button>
+                    <button class="filter-btn" data-range="1m">1 month</button>
                     <button class="filter-btn" data-range="custom">Custom</button>
                 </div>
 
-                <div class="custom-range-box global-custom-range hidden">
-                    <input type="date" class="date-input global-start-date">
-                    <span style="color: var(--text-muted)">to</span>
-                    <input type="date" class="date-input global-end-date">
-                    <button class="btn-apply global-apply-date">Apply</button>
+                <div class="custom-range-box global-custom-range paper hidden">
+                    <input type="date" class="date-input global-start-date" aria-label="Start date">
+                    
+                    <input type="date" class="date-input global-end-date" aria-label="End date">
+                    <button class="btn-apply global-apply-date btn-seal btn-sm">Apply</button>
                 </div>
             </div>
 
             <div class="analytics-grid">
                 <!-- Peak Hours -->
-                <div class="panel analytics-wide" style="padding: 1.5rem;">
-                    <h3 class="panel-title" style="margin-bottom: 1.5rem;">⏰ Peak Order Hours</h3>
-                    <div id="peakHoursChart" class="bar-chart" style="border-bottom: 1px solid var(--border);"></div>
+                <div class="panel analytics-wide chart-panel">
+                    <h3 class="panel-title"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-clock"/></svg>Peak Order Hours </h3>
+                    <div id="peakHoursChart" class="bar-chart"></div>
                     <div class="chart-labels" id="peakHoursLabels">
                         <span>11a</span><span>12p</span><span>1p</span><span>2p</span>
                         <span>3p</span><span>4p</span><span>5p</span><span>6p</span>
                         <span>7p</span><span>8p</span><span>9p</span><span>10p</span>
                     </div>
+                    <p class="chart-note">Orders per hour, 11:00–22:00</p>
                 </div>
 
                 <!-- Top Dishes -->
-                <div class="panel"
-                    style="padding: 1.5rem; height: 320px; overflow: hidden; display: flex; flex-direction: column;">
-                    <h3 class="panel-title"
-                        style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">🏆
-                        Top 5 Dishes</h3>
-                    <div id="topDishesList" style="flex: 1; overflow-y: auto; padding-right: 0.5rem;"></div>
+                <div class="panel dish-panel">
+                    <h3 class="panel-title"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-bowl"/></svg>Top 5 Dishes </h3>
+                    <div id="topDishesList"></div>
                 </div>
 
                 <!-- Revenue This Week -->
-                <div class="panel analytics-wide" style="padding: 1.5rem;">
-                    <h3 class="panel-title" style="margin-bottom: 1.5rem;">💰 Revenue This Week</h3>
-                    <div id="revenueChart" class="bar-chart revenue-chart"
-                        style="border-bottom: 1px solid var(--border);"></div>
+                <div class="panel analytics-wide chart-panel">
+                    <h3 class="panel-title"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-koban"/></svg>Revenue This Week </h3>
+                    <div id="revenueChart" class="bar-chart revenue-chart"></div>
                     <div class="chart-labels">
                         <span>Mon</span><span>Tue</span><span>Wed</span>
                         <span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
                     </div>
+                    <p class="chart-note">Koban stacks by weekday</p>
                 </div>
 
                 <!-- Satisfaction Score -->
-                <div class="panel satisfaction-container" style="padding: 1.5rem;">
-                    <div class="satisfaction-bg"></div>
-                    <h3 class="panel-title"
-                        style="position: relative; z-index: 1; margin-bottom: 2rem; width: 100; text-align: center;">😊
-                        Customer Satisfaction</h3>
+                <div class="panel satisfaction-container">
+                    <h3 class="panel-title"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-sakura"/></svg>Guest Satisfaction </h3>
                     <div class="satisfaction-donut">
+                        <svg viewBox="0 0 120 120" aria-hidden="true">
+                            <circle class="enso-track" r="44" cx="60" cy="60"/>
+                            <circle class="enso-fill" r="44" cx="60" cy="60" style="stroke-dasharray:276;stroke-dashoffset:calc(276 - 276 * var(--pct, 0) / 100)"/>
+                        </svg>
                         <span id="satisfactionScore">—</span>
-                        <span class="satisfaction-label">Score</span>
+                        <span class="satisfaction-label">Score </span>
                     </div>
                 </div>
             </div>

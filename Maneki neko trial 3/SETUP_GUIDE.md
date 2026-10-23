@@ -20,27 +20,28 @@ Maneki neko trial 3/
 │
 ├── shared/                 ← 🔗 Shared across all modules
 │   ├── supabase.js         ←   Supabase client + all DB helper functions
-│   └── theme.css           ←   Global Maneki Noir design system
+│   ├── auth.js / customer-auth.js ← staff + guest session helpers
+│   ├── theme.css           ←   Global "Kami to Sumi" design system (tokens, components, motion)
+│   ├── icons.svg / icons.css ← SVG icon sprite + mask icons (replaces all emoji icons)
+│   ├── maneki.svg / favicon.svg ← brand mascot + favicon
+│   ├── art/                ←   KDS empty-state line drawings
+│   └── brand-preview.html  ←   Design-system reference page (/shared/brand-preview.html)
 │
 ├── customer/               ← 🛒 Customer Ordering Panel (AI Chatbot)
-│   ├── index.html          ←   Chat UI + Doraemon SVG avatar
-│   ├── app.js              ←   AI logic, TTS, emotion system
-│   └── style.css           ←   Customer-specific styles
+│   ├── index.html          ←   Chat UI + Doraemon SVG avatar (page CSS lives in its <style> block)
+│   └── app.js              ←   AI logic, TTS, emotion system
 │
 ├── admin/                  ← 📊 Admin Dashboard
 │   ├── index.html          ←   Dashboard UI
-│   ├── app.js              ←   Dashboard logic + real-time data
-│   └── style.css           ←   Admin styles
+│   └── app.js              ←   Dashboard logic + real-time data
 │
 ├── kds/                    ← 🍳 Kitchen Display System
 │   ├── index.html          ←   Kitchen order board
-│   ├── app.js              ←   Real-time order updates
-│   └── style.css           ←   KDS styles
+│   └── app.js              ←   Real-time order updates
 │
 └── bot-management/         ← 🤖 Bot Management Panel
     ├── index.html          ←   Bot config UI
-    ├── app.js              ←   Bot CRUD operations
-    └── style.css           ←   Bot panel styles
+    └── app.js              ←   Bot CRUD operations
 ```
 
 ---

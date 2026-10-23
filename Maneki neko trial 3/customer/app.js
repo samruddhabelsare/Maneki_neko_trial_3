@@ -33,11 +33,8 @@ function showToast(message, type) {
     var toast = document.createElement('div');
     toast.className = 'toast ' + type;
 
-    var icon = 'ℹ️';
-    if (type === 'success') icon = '✅';
-    if (type === 'error') icon = '❌';
-
-    toast.innerHTML = '<span style="font-size: 1.25rem;">' + icon + '</span> <span>' + escapeHtml(message) + '</span>';
+    // Glyph is drawn by CSS (.toast::after) in the border colour; the first span stays as a hidden slot.
+    toast.innerHTML = '<span></span> <span>' + escapeHtml(message) + '</span>';
     container.appendChild(toast);
 
     setTimeout(function () {
@@ -132,14 +129,14 @@ function loadSession() {
 const characterConfig = {
     Naruto: {
         prompt: 'You are a Maneki Neko robot waiter with the personality of Naruto Uzumaki. You are EXTREMELY energetic, enthusiastic, and never give up on helping customers. You frequently say "Dattebayo!" and "Believe it!" at the end of sentences. You compare food to ramen constantly. You call the customer your "friend" or "comrade". When recommending dishes, you say things like "This dish has as much power as a Rasengan!" or "Even Ichiraku Ramen can\'t beat this!" Keep responses short (2-3 sentences max) and ALWAYS stay in character.',
-        tagline: 'Believe it! Let\'s order, Dattebayo! 🍥',
+        tagline: 'Believe it! Let\'s order, Dattebayo!',
         pitch: 1.3,
         rate: 1.35,
         voicePrefs: ['male', 'energetic']
     },
     Goku: {
         prompt: 'You are a Maneki Neko robot waiter with the personality of Son Goku from Dragon Ball. You are innocent, cheerful, and OBSESSED with food. You get incredibly excited about every dish. You say things like "Wow!" and "This looks amazing!" and "I could eat a hundred of these!" You relate everything to training and getting stronger. "If you eat this, you\'ll be as strong as a Super Saiyan!" You are simple-minded but very lovable. Keep responses short (2-3 sentences max) and ALWAYS stay in character.',
-        tagline: 'Wow, the food here looks amazing! Let\'s eat! 🍖',
+        tagline: 'Wow, the food here looks amazing! Let\'s eat!',
         pitch: 1.1,
         rate: 1.2,
         voicePrefs: ['male', 'cheerful']
@@ -163,7 +160,7 @@ const characterConfig = {
             + '- Never read aloud text inside *asterisks* or [brackets] or any JSON/technical data.\n'
             + '- Put emotion tags at the START: [happy], [excited], [confused], [shy], [frustrated], [thinking]. These control avatar animation and are hidden from the user.\n'
             + '- You ARE Doraemon. Never break character. Never say you are an AI or language model.',
-        tagline: 'Tananana! 4D pocket se nikla perfect dish! 🔔',
+        tagline: 'Tananana! 4D pocket se nikla perfect dish!',
         pitch: 1.7,
         rate: 1.2,
         voicePrefs: ['female', 'cute', 'high'],
@@ -171,14 +168,14 @@ const characterConfig = {
     },
     Shinchan: {
         prompt: 'You are a Maneki Neko robot waiter with the personality of Shin-chan (Crayon Shin-chan). You are mischievous, cheeky, and hilariously inappropriate but lovable. You do your signature "butt dance" references. You call yourself "Shin-chan" in third person sometimes. You say "Ohhh!" a lot. You tease customers playfully: "Are you sure you can handle spicy food? Even Shin-chan\'s Action Kamen could handle it!" You LOVE Chocobi snacks and mention them. You sometimes flirt jokingly with customers: "You\'re almost as beautiful as my mama!" Keep responses short (2-3 sentences max), be funny and cheeky. ALWAYS stay in character.',
-        tagline: 'Action Kamen says it\'s time to eat! Ohhh! 😜',
+        tagline: 'Action Kamen says it\'s time to eat! Ohhh!',
         pitch: 1.5,
         rate: 1.3,
         voicePrefs: ['female', 'childish', 'high']
     },
     Luffy: {
         prompt: 'You are a Maneki Neko robot waiter with the personality of Monkey D. Luffy from One Piece. You are wildly enthusiastic about ALL food, especially MEAT. You shout "MEAT!" or "NIKU!" whenever you see meat dishes. You laugh "Shishishi!" frequently. You call the restaurant your "ship" and the customer your "nakama" (crewmate). "Welcome aboard the Thousand Sunny — I mean, Maneki Neko!" You are simple, direct, and incredibly excited. You want to eat everything yourself. Keep responses short (2-3 sentences max) and ALWAYS stay in character.',
-        tagline: 'Shishishi! Let\'s find the greatest meal, nakama! ☠️',
+        tagline: 'Shishishi! Let\'s find the greatest meal, nakama!',
         pitch: 1.2,
         rate: 1.3,
         voicePrefs: ['male', 'energetic']
@@ -214,10 +211,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- Update Header ---
     document.getElementById('tableDisplay').textContent = 'Table ' + state.table;
-    document.getElementById('characterBadge').textContent = '🤖 ' + state.character;
+    document.getElementById('characterBadge').textContent = state.character;
 
-    // --- Toggle Doraemon avatar visibility ---
-    document.body.classList.remove('character-doraemon');
+    // --- Character class on body (crest colour for the kamon chip; Doraemon avatar gating unchanged) ---
+    var characterBodyClass = {
+        Naruto: 'character-naruto',
+        Goku: 'character-goku',
+        Doraemon: 'character-doraemon',
+        Shinchan: 'character-shinchan',
+        Luffy: 'character-luffy'
+    };
+    document.body.classList.remove('character-doraemon', 'character-naruto', 'character-goku', 'character-shinchan', 'character-luffy');
+    var bodyCharClass = characterBodyClass[state.character];
+    if (bodyCharClass) document.body.classList.add(bodyCharClass);
     if (state.character === 'Doraemon') {
         document.body.classList.add('character-doraemon');
     }
@@ -350,7 +356,7 @@ async function handleLogin(e) {
 function updateProfileUI() {
     const profileBtn = document.getElementById('profileBtn');
     if (state.user && profileBtn) {
-        profileBtn.innerHTML = '<span style="font-size: 1.1rem; line-height: 1;">👤</span> <span>' + escapeHtml((state.user.name || 'User').split(' ')[0]) + '</span>';
+        profileBtn.innerHTML = '<svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-user"/></svg> <span>' + escapeHtml((state.user.name || 'User').split(' ')[0]) + '</span>';
         profileBtn.title = `Logged in as ${state.user.name} (${state.user.phone})`;
     }
 }
@@ -406,7 +412,7 @@ async function handleCustomerLogout() {
 
     var confirmMsg = 'Are you sure you want to leave this table and exit?';
     if (hasDraftItems) {
-        confirmMsg = '⚠️ You still have unconfirmed items in your order tray.\n\nAre you sure you want to exit? Your draft order will be cleared.';
+        confirmMsg = 'You still have unconfirmed items in your order tray.\n\nAre you sure you want to exit? Your draft order will be cleared.';
     } else if (hasActiveOrder) {
         confirmMsg = 'You currently have an active order. Are you sure you want to log out / leave this table?';
     }
@@ -433,7 +439,7 @@ async function handleCustomerLogout() {
     state.chatHistory = [];
     state.user = null;
 
-    showToast('Logged out. Thank you for dining with us! 🐱', 'info');
+    showToast('Logged out. Thank you for dining with us!', 'info');
 
     setTimeout(function () {
         var depth = window.location.pathname.split('/').filter(Boolean).length;
@@ -619,7 +625,7 @@ function appendMessageUI(role, content, isHistory) {
     var div = document.createElement('div');
     div.className = 'message ' + role;
 
-    var icon = (role === 'user') ? '👤' : (state.character === 'Doraemon' ? getDoraemonMiniSVG() : '🐱');
+    var icon = (role === 'user') ? getUserIconSVG() : (state.character === 'Doraemon' ? getDoraemonMiniSVG() : getNekoIconSVG());
 
     div.innerHTML =
         '<span class="msg-role">' + icon + '</span>' +
@@ -629,6 +635,17 @@ function appendMessageUI(role, content, isHistory) {
 
     chatMessages.appendChild(div);
     chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Sprite icons for chat roles (guest bust / brand cat); Doraemon keeps his canonical mini avatar.
+function getUserIconSVG() {
+    return '<svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-user"/></svg>';
+}
+function getNekoIconSVG() {
+    return '<svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#neko"/></svg>';
+}
+function getTaikoIconSVG() {
+    return '<svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-taiko"/></svg>';
 }
 
 function getDoraemonMiniSVG() {
@@ -854,7 +871,7 @@ async function callNvidiaAPIFallback(messages, onDone) {
         });
     } catch (netErr) {
         console.error('[NVIDIA fallback] Network error:', netErr);
-        appendBotMessage('⚠️ Network error: ' + (netErr.message || String(netErr)));
+        appendBotMessage('Network error: ' + (netErr.message || String(netErr)));
         if (onDone) onDone('');
         return '';
     }
@@ -862,14 +879,14 @@ async function callNvidiaAPIFallback(messages, onDone) {
     if (!response.ok) {
         var errBody = '';
         try { errBody = await response.text(); } catch(e) {}
-        appendBotMessage('⚠️ AI error (' + response.status + '): ' + (errBody.slice(0, 120) || 'Unknown'));
+        appendBotMessage('AI error (' + response.status + '): ' + (errBody.slice(0, 120) || 'Unknown'));
         if (onDone) onDone('');
         return '';
     }
 
     var data;
     try { data = await response.json(); } catch(e) {
-        appendBotMessage('⚠️ Could not parse AI response.');
+        appendBotMessage('Could not parse AI response.');
         if (onDone) onDone('');
         return '';
     }
@@ -902,7 +919,7 @@ async function callNvidiaAPIStream(messages, onDone) {
         var errText = '';
         try { errText = await response.text(); } catch(e) {}
         console.error('[NVIDIA stream] HTTP ' + response.status, errText);
-        appendBotMessage('⚠️ AI error (' + response.status + '): ' + (errText.slice(0, 120) || 'Unknown'));
+        appendBotMessage('AI error (' + response.status + '): ' + (errText.slice(0, 120) || 'Unknown'));
         if (onDone) onDone('');
         return '';
     }
@@ -914,7 +931,7 @@ async function callNvidiaAPIStream(messages, onDone) {
     var chatMessages = document.getElementById('chatMessages');
     var botDiv = document.createElement('div');
     botDiv.className = 'message bot';
-    var streamRoleIcon = (state.character === 'Doraemon') ? getDoraemonMiniSVG() : '🐱';
+    var streamRoleIcon = (state.character === 'Doraemon') ? getDoraemonMiniSVG() : getNekoIconSVG();
     botDiv.innerHTML = '<span class="msg-role">' + streamRoleIcon + '</span><div class="msg-bubble" id="streamBubble">▋</div>';
 
     chatMessages.appendChild(botDiv);
@@ -1182,12 +1199,12 @@ function updateAIOrderPanel() {
             '<div class="ai-item-main">' +
             '<span class="item-name">' + escapeHtml(item.name) + '</span>' +
             '<div class="ai-qty-ctrl">' +
-            '<button class="ai-qty-btn" title="Decrease" onclick="changeDraftItemQty(' + idx + ',' + (item.qty - 1) + ')">−</button>' +
+            '<button class="ai-qty-btn" title="Decrease" aria-label="Decrease quantity" onclick="changeDraftItemQty(' + idx + ',' + (item.qty - 1) + ')"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-minus"/></svg></button>' +
             '<span class="ai-qty-val">' + item.qty + '</span>' +
-            '<button class="ai-qty-btn" title="Increase" onclick="changeDraftItemQty(' + idx + ',' + (item.qty + 1) + ')">+</button>' +
+            '<button class="ai-qty-btn" title="Increase" aria-label="Increase quantity" onclick="changeDraftItemQty(' + idx + ',' + (item.qty + 1) + ')"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-plus"/></svg></button>' +
             '</div>' +
             '<span class="item-price">₹' + subtotal.toFixed(2) + '</span>' +
-            '<button class="ai-item-remove" title="Remove" onclick="removeDraftItem(' + idx + ')">✕</button>' +
+            '<button class="ai-item-remove" title="Remove" aria-label="Remove item" onclick="removeDraftItem(' + idx + ')"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-close"/></svg></button>' +
             '</div>' +
             instrHtml;
         container.appendChild(row);
@@ -1309,7 +1326,7 @@ async function confirmOrder() {
     startPollOrderStatus();
     setQrTotal(total);
 
-    showToast('Order placed successfully! Kitchen has been notified. 🎉', 'success');
+    showToast('Order placed successfully! Kitchen has been notified.', 'success');
 }
 window.confirmOrder = confirmOrder;
 window.confirmAIOrder = confirmOrder;
@@ -1378,16 +1395,16 @@ function renderMenuGrid(menuItems, filter) {
         card.className = 'menu-card';
 
         var badges = '';
-        if (item.is_veg) badges += '<span class="badge badge-veg">🟢 Veg</span>';
-        else badges += '<span class="badge badge-nonveg">🔴 Non-Veg</span>';
-        if (item.is_spicy) badges += '<span class="badge badge-spicy">🌶️ Spicy</span>';
+        if (item.is_veg) badges += '<span class="badge badge-veg"><span class="mark mark-veg" aria-label="Veg"></span> Veg</span>';
+        else badges += '<span class="badge badge-nonveg"><span class="mark mark-nonveg" aria-label="Non-veg"></span> Non-Veg</span>';
+        if (item.is_spicy) badges += '<span class="badge badge-spicy"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-chili"/></svg> Spicy</span>';
 
         card.innerHTML =
             '<div class="menu-card-name">' + escapeHtml(item.name) + '</div>' +
             '<div class="menu-card-badges">' + badges + '</div>' +
             '<div class="menu-card-footer">' +
             '<div class="menu-card-price">₹' + parseFloat(item.price).toFixed(2) + '</div>' +
-            '<button class="btn-add" data-id="' + item.id + '">+ Add</button>' +
+            '<button class="btn-add" data-id="' + item.id + '"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-plus"/></svg>Add</button>' +
             '</div>';
 
         card.querySelector('.btn-add').addEventListener('click', function () {
@@ -1453,13 +1470,13 @@ function updateCartUI() {
         div.innerHTML =
             '<div class="cart-item-header">' +
             '<span class="cart-item-name">' + escapeHtml(item.name) + '</span>' +
-            '<button class="cart-item-remove" data-idx="' + idx + '">✕</button>' +
+            '<button class="cart-item-remove" data-idx="' + idx + '" aria-label="Remove item"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-close"/></svg></button>' +
             '</div>' +
             '<div class="cart-item-controls">' +
             '<div class="qty-controls">' +
-            '<button class="qty-btn minus-btn" data-idx="' + idx + '">−</button>' +
+            '<button class="qty-btn minus-btn" data-idx="' + idx + '" aria-label="Decrease quantity"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-minus"/></svg></button>' +
             '<span class="qty-val">' + item.qty + '</span>' +
-            '<button class="qty-btn plus-btn" data-idx="' + idx + '">+</button>' +
+            '<button class="qty-btn plus-btn" data-idx="' + idx + '" aria-label="Increase quantity"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-plus"/></svg></button>' +
             '</div>' +
             '<span class="cart-item-price">₹' + subtotal.toFixed(2) + '</span>' +
             '</div>' +
@@ -1585,7 +1602,7 @@ async function placeManualOrder() {
     startPollOrderStatus();
     setQrTotal(total);
 
-    showToast('Order placed! Kitchen has been notified. 🎉', 'success');
+    showToast('Order placed! Kitchen has been notified.', 'success');
 }
 
 // ── STATUS POLLING ────────────────────────────────────────────────────────────
@@ -1647,6 +1664,30 @@ function buildQrCode() {
     var qrBox = document.getElementById('qrBox');
     qrBox.innerHTML = '';
     var orderIdStr = state.orderId || state.mcpOrderId || '42';
+
+    // Real QR via the already-loaded qrcode-generator (demo payload, not a payment link).
+    if (typeof qrcode === 'function') {
+        try {
+            var qr = qrcode(0, 'M');
+            qr.addData('MANEKI-NEKO|order:' + orderIdStr + '|table:' + state.table);
+            qr.make();
+            var n = qr.getModuleCount();
+            qrBox.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
+            for (var r = 0; r < n; r++) {
+                for (var c = 0; c < n; c++) {
+                    var mod = document.createElement('div');
+                    mod.className = 'qr-cell ' + (qr.isDark(r, c) ? 'dark' : 'light');
+                    qrBox.appendChild(mod);
+                }
+            }
+            return;
+        } catch (e) {
+            qrBox.innerHTML = '';
+        }
+    }
+
+    // Fallback: decorative 10x10 pattern
+    qrBox.style.gridTemplateColumns = '';
     var seed = orderIdStr.charCodeAt(0) + orderIdStr.charCodeAt(orderIdStr.length - 1);
     for (var i = 0; i < 100; i++) {
         var cell = document.createElement('div');
@@ -1933,11 +1974,11 @@ function updateVoiceUI(isRec) {
         if (isRec) {
             voiceBtn.classList.add('recording');
             voiceBtn.title = 'Listening... click to stop';
-            voiceBtn.innerHTML = '🔴';
+            voiceBtn.innerHTML = getTaikoIconSVG();
         } else {
             voiceBtn.classList.remove('recording');
             voiceBtn.title = 'Voice input (Click to speak)';
-            voiceBtn.innerHTML = '🎙️';
+            voiceBtn.innerHTML = getTaikoIconSVG();
         }
     }
 
@@ -1946,7 +1987,7 @@ function updateVoiceUI(isRec) {
             if (!_micOriginalPlaceholder && inputEl.placeholder) {
                 _micOriginalPlaceholder = inputEl.placeholder;
             }
-            inputEl.placeholder = '🎙️ Listening... speak now!';
+            inputEl.placeholder = 'Listening... speak now!';
         } else {
             inputEl.placeholder = _micOriginalPlaceholder || 'Ask me anything about the menu…';
         }

@@ -5,483 +5,507 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maneki Neko | Kitchen Display</title>
     <meta name="description" content="Maneki Neko Smart Restaurant — Kitchen Display System">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#100d0c">
+    <link rel="icon" href="../shared/favicon.svg">
     <link rel="stylesheet" href="../shared/theme.css">
+    <link rel="stylesheet" href="../shared/icons.css">
     <style>
-        /* ── KDS Specific Styles ─────────────────────────────────────── */
+        /* ══════════════════════════════════════════════════════════════════
+           KDS — 厨房 · Kami to Sumi
+           Page CSS holds layout + page-specific selectors only. Ticket parts
+           (.order-card, .table-badge, .timer, .items-list…) come from theme.css.
+           Scroll chain (do not break): body 100vh column → header/.kds-summary
+           flex-shrink:0 → main.kanban flex:1 → .kanban-inner 100% →
+           .kanban-column flex column overflow:hidden → .kanban-cards flex:1 scroll.
+           ══════════════════════════════════════════════════════════════════ */
+        html { overflow: hidden; }
         body {
             height: 100vh;
+            height: 100dvh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
 
-        /* ── Top Navbar ──────────────────────────────────────────────── */
+        /* ── Header — lintel with lantern pools ─────────────────────────── */
         .kds-header {
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border);
-            padding: 1rem 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            z-index: 10;
+            gap: 1rem;
+            padding: 0.4rem 1.25rem;
             flex-shrink: 0;
         }
 
         .kds-brand {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.7rem;
+            min-width: 0;
         }
-
-        .kds-brand span { font-size: 1.5rem; }
-
+        .kds-brand .ico { color: var(--kin); flex-shrink: 0; }
         .kds-brand h1 {
-            font-size: 1.25rem;
-            font-weight: 800;
-            letter-spacing: var(--tracking-tight);
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            margin: 0;
+            font-size: 1.375rem;
+            line-height: 1;
+        }
+        .kds-brand h1 .jp {
+            font: 600 1.375rem/1 var(--font-display);
+            letter-spacing: 0.04em;
+            color: var(--text-primary);
+        }
+        .kds-brand h1 small {
+            font: 600 0.6875rem/1 var(--font-sans);   /* 11 px floor (§10) */
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--text-muted);
+            white-space: nowrap;
         }
 
+        /* Wadokei clock frame */
         .kds-clock {
-            font-family: var(--font-mono);
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--text-secondary);
-            letter-spacing: 0.15em;
-            background: var(--bg-surface-variant);
-            padding: 0.375rem 1rem;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.25rem 1rem;
+            border: 1.5px solid var(--kin-hair);
+            border-radius: var(--radius-seal);
+            background: rgba(16,13,12,0.35);
+        }
+        .kds-clock::before {
+            content: none;
+            font: 500 0.6875rem/1 var(--font-jp);     /* 11 px floor (§10) */
+            color: var(--text-dimmed);
+            letter-spacing: 0.08em;
+        }
+        #liveClock {
+            font: 700 1.625rem/1 var(--font-sans);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.04em;
+            color: var(--kin);
         }
 
         .kds-status {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.85rem;
+            min-width: 0;
         }
-
         .kds-status-text {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
             display: none;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 26ch;
         }
-
         @media (min-width: 768px) {
             .kds-status-text { display: block; }
         }
-
+        /* Lit lantern: the CSS animation beats the inline box-shadow the JS sets;
+           inline background/color still show (green online / ume offline). */
         .kds-status-dot {
-            width: 10px;
-            height: 10px;
-            background: var(--success);
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
-            box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+            flex-shrink: 0;
+            color: var(--matcha-bright);
+            background: currentColor;
+            animation: lantern 2.4s ease-in-out infinite;
         }
+        #kdsLogoutBtn { white-space: nowrap; }
+        #kdsLogoutBtn .jp { color: inherit; opacity: 0.8; font-size: 0.75rem; }
+        /* 36 px visual, 44 px hit area (§9): the free ::after slot extends the target 4 px each way */
+        #kdsLogoutBtn, #refreshBtn { position: relative; }
+        #kdsLogoutBtn::after, #refreshBtn::after { content: ""; position: absolute; inset: -4px; }
 
-        /* ── Summary Bar ─────────────────────────────────────────────── */
+        /* ── Summary rail — 40 px ───────────────────────────────────────── */
         .kds-summary {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur);
-            border-bottom: 1px solid var(--border);
-            padding: 0.75rem 1.5rem;
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            gap: 1rem;
-            z-index: 10;
+            gap: 0.5rem 1.25rem;
+            min-height: 40px;
+            padding: 0.125rem 1.25rem;          /* 36 px controls + 4 px = the 40 px rail */
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-surface-low);
             flex-shrink: 0;
+            position: relative;
+            z-index: 2;
         }
-
         .summary-pills {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.75rem;
+            align-items: center;
+            gap: 0.35rem 1.25rem;
         }
-
         .summary-pill {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius-pill);
-            font-size: 0.85rem;
-            font-weight: 700;
-        }
-
-        .pill-pending   { background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning-border); }
-        .pill-preparing { background: var(--info-bg);    color: var(--info);    border: 1px solid var(--info-border); }
-        .pill-ready     { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
-
-        .pill-count {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 0.125rem 0.5rem;
-            border-radius: var(--radius-pill);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            margin-left: 0.25rem;
-        }
-
-        #refreshBtn {
-            background: var(--bg-surface-variant);
-            border: 1px solid var(--border);
+            gap: 0.45rem;
+            font: 600 0.8125rem/1 var(--font-sans);
             color: var(--text-secondary);
-            font-weight: 700;
-            padding: 0.5rem 1.25rem;
-            border-radius: var(--radius-pill);
-            transition: all var(--duration-fast) var(--ease-out);
-            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+        .summary-pill .jp { font-size: 0.6875rem; color: var(--text-dimmed); }
+        .summary-pill .pill-count { margin-left: 0.15rem; }
+
+        /* 10 px cloth squares echoing the noren rods */
+        .col-mark {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            background: var(--rod, var(--nezumi));
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25);
+            flex-shrink: 0;
+        }
+        .pill-pending   { --rod: var(--kuchiba); }
+        .pill-preparing { --rod: var(--shu); }
+        .pill-ready     { --rod: var(--matcha); }
+
+        .kds-summary-right {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
+            gap: 1rem;
+            margin-left: auto;
         }
-
-        #refreshBtn:hover {
-            background: var(--bg-surface-bright);
-            border-color: var(--glass-border-hover);
-            color: var(--primary);
+        .legend {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font: 500 0.75rem/1 var(--font-sans);
+            color: var(--text-muted);
+            white-space: nowrap;
         }
+        .legend .mark { margin-right: 0.1rem; }
+        .legend .mark + .mark, .legend .jp + .mark { margin-left: 0.6rem; }
+        .legend .jp { font-size: 0.6875rem; color: var(--text-dimmed); }
+        #refreshBtn { white-space: nowrap; }   /* opacity is driven by JS — never style it here */
 
-        /* ── Kanban Board ────────────────────────────────────────────── */
+        /* ── Board ───────────────────────────────────────────────────────── */
         .kanban {
             flex: 1;
+            min-height: 0;
             overflow-x: auto;
             overflow-y: hidden;
-            padding: 1.5rem;
+            padding: 1rem 1.25rem 1.25rem;
+            scrollbar-width: thin;
         }
-
         .kanban-inner {
             display: flex;
             height: 100%;
-            gap: 1.5rem;
-            min-width: 900px;
+            gap: 1.25rem;
+            min-width: 0;
         }
 
+        /* Column = lacquer (theme) + a quiet seigaiha wash (token .14 × .55 ≈ .08) */
         .kanban-column {
-            flex: 1;
+            flex: 1 1 0;
+            min-width: 0;
             display: flex;
             flex-direction: column;
-            background: var(--bg-surface-low);
-            border-radius: var(--radius-xl);
-            border: 1px solid var(--border);
             overflow: hidden;
+            background-color: var(--bg-surface-low);
+            background-image: linear-gradient(rgba(20,17,16,0.45), rgba(20,17,16,0.45)), var(--seigaiha);
         }
+        .col-pending   { --rod: var(--kuchiba); }
+        .col-preparing { --rod: var(--shu); }
+        .col-ready     { --rod: var(--matcha); }
 
+        /* Noren header: rod painted inside (overflow:hidden never clips it), cloth tint, centre seam */
         .kanban-column-header {
-            background: var(--bg-surface);
-            padding: 1rem 1.25rem;
-            border-bottom: 1px solid var(--border);
-            font-weight: 700;
-            color: var(--text-primary);
-            display: flex;
+            position: relative;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            grid-template-rows: auto auto;
+            column-gap: 0.75rem;
             align-items: center;
-            gap: 0.5rem;
+            padding: 0.95rem 1rem 0.7rem;
             flex-shrink: 0;
-            font-size: 0.95rem;
+            background-color: rgba(43,37,33,0.9);
+            background-color: color-mix(in srgb, var(--rod) 18%, var(--bg-surface-low));
+            background-image: linear-gradient(90deg, transparent calc(50% - 1px), rgba(0,0,0,0.18) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px));
+            background-size: 100% 42%;          /* a hem-only slit, never through the rod */
+            background-position: bottom;
+            background-repeat: no-repeat;
+            box-shadow: inset 0 6px 0 var(--rod), inset 0 -1px 0 var(--kin-hair);
         }
-
-        .kanban-column-header span { font-size: 1.125rem; }
+        .kanban-column-header .col-mark {
+            grid-row: 1 / span 2;
+            width: 12px;
+            height: 12px;
+            align-self: center;
+        }
+        .kanban-column-header .jp {
+            font: 600 1.5rem/1 var(--font-display);
+            letter-spacing: 0.01em;
+            color: var(--text-primary);
+        }
+        .kanban-column-header .en {
+            font: 700 0.6875rem/1 var(--font-sans);
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--text-muted);
+            margin-top: 0.35rem;
+        }
+        /* Station numeral on the right panel of the cloth — the crest a noren would carry (一 二 三) */
+        .kanban-column-header .col-no {
+            grid-column: 3;
+            grid-row: 1 / span 2;
+            justify-self: end;
+            align-self: center;
+            font: 600 1.75rem/1 var(--font-display);
+            color: var(--kin);
+            opacity: 0.38;
+            letter-spacing: 0;
+        }
+        .kanban-column-header { grid-template-columns: auto 1fr auto; }
 
         .kanban-cards {
             flex: 1;
+            min-height: 0;
             overflow-y: auto;
-            padding: 1rem;
+            padding: 0.85rem;
+            scrollbar-width: thin;
+            overscroll-behavior: contain;
         }
 
-        /* ── Order Cards ─────────────────────────────────────────────── */
-        .col-empty {
-            text-align: center;
-            color: var(--text-dimmed);
-            padding: 2rem;
-            border: 2px dashed var(--border);
-            border-radius: var(--radius-lg);
-            background: rgba(255, 255, 255, 0.02);
-            font-weight: 500;
-        }
+        /* ── Tickets — page layer over theme §18.6 ──────────────────────── */
+        .order-card { margin-bottom: 0.85rem; }
+        .order-card:last-child { margin-bottom: 0.25rem; }
 
-        .col-empty span {
-            font-size: 2rem;
-            display: block;
-            margin-bottom: 0.5rem;
-            opacity: 0.5;
-        }
+        /* Oldest-first cue: the top ticket wears a kintsugi ring */
+        .kanban-cards > .order-card:first-child { box-shadow: var(--shadow-paper), 0 0 0 2px var(--kin-hair); }
 
-        .order-card {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border-radius: var(--radius-lg);
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            border: 1px solid var(--glass-border);
-            box-shadow: var(--shadow-card);
-            transition: all var(--duration-normal) var(--ease-out);
-            position: relative;
-            overflow: hidden;
-        }
+        /* Pin the grid: seal | · | timer on row 1, id on row 2, incense bar on row 3
+           (source order is seal, id, timer — auto-placement would push the timer down) */
+        .order-card .card-top { row-gap: 0.5rem; }
+        .order-card .table-badge { grid-row: 1; grid-column: 1; }
+        .order-card .timer       { grid-row: 1; grid-column: 3; }
+        .order-card .order-id    { grid-row: 2; }
 
-        .order-card:hover {
-            transform: translateY(-2px);
-            border-color: var(--glass-border-hover);
-            box-shadow: var(--shadow-card-hover);
-        }
-
-        .order-card::before {
+        /* Incense bar: fills gold → vermilion over 15 min (--mins set by JS on the card) */
+        .order-card .card-top::after {
             content: "";
+            grid-column: 1 / -1;
+            height: 3px;
+            border-radius: 2px;
+            background:
+                linear-gradient(90deg, var(--kin), var(--shu)) left / calc(min(var(--mins, 0), 15) / 15 * 100%) 100% no-repeat,
+                var(--washi-line);
+        }
+        .order-card .order-id { margin-top: -0.2rem; }
+        .item-main .veg-dot { flex-shrink: 0; }
+        .items-list .item-instructions { margin-top: 0.35rem; }
+
+        /* The ember pill never breaks across lines; long names / notes wrap inside the paper */
+        .order-card .timer { white-space: nowrap; }
+        .order-card :is(.item-name, .item-instructions, .order-id) { overflow-wrap: anywhere; }
+
+        /* Legible incense stick (stick + smoke curl + dish) instead of the ⊥-shaped theme glyph */
+        .order-card .timer::before {
+            width: 20px;
+            height: 20px;
+            -webkit-mask-image: var(--mi-incense-uri);
+            mask-image: var(--mi-incense-uri);
+        }
+
+        /* Action row: Cancel stays compact, the commit seal takes the rest and may wrap its label
+           rather than overflow the ticket on a 1024 tablet */
+        .order-card .card-actions { flex-wrap: wrap; }
+        .order-card .action-btn { min-width: 0; padding-left: 0.75rem; padding-right: 0.75rem; white-space: normal; line-height: 1.15; }
+        .order-card .action-btn.btn-cancel { min-width: 0; }
+
+
+        /* Action glyphs: masks via --mi (the JS classes carry no mi-* name, so the hook is local) */
+        .action-btn::before {
+            content: "";
+            display: inline-block;
+            width: 1.1em;
+            height: 1.1em;
+            flex-shrink: 0;
+            background: currentColor;
+            -webkit-mask: var(--mi) center / contain no-repeat;
+            mask: var(--mi) center / contain no-repeat;
+        }
+        .action-btn.btn-start  { --mi: var(--mi-fire-uri); }
+        .action-btn.btn-ready  { --mi: var(--mi-bell-uri); }
+        .action-btn.btn-serve  { --mi: var(--mi-tray-uri); }
+        .action-btn.btn-cancel { --mi: var(--mi-close-uri); }
+        @supports not (mask: url("")) { .action-btn::before { display: none; } }
+
+        .col-empty p { margin: 0; font: 500 0.9375rem/1.4 var(--font-sans); }
+        .col-empty { padding-top: 3rem; }
+
+        /* New ticket: ember ring ×3 (2.4 s ≤ the 3 s JS removal) + a fading 新 seal */
+        .flash-new { animation: HighlightNew 0.8s ease-out 3; }
+        .order-card.flash-new::after {
+            content: "NEW";
             position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 5px;
+            top: 6px;            /* clear of the timer pill (card-top centres the timer on the 56 px seal row) */
+            right: 8px;
+            display: grid;
+            place-items: center;
+            width: 24px;
+            height: 24px;
+            font: 700 0.75rem/1 var(--font-display);
+            color: #fff;
+            background: var(--shu);
+            border: 1.5px solid rgba(255,255,255,0.55);
+            outline: 1px solid var(--shu-deep);
+            border-radius: var(--radius-seal);
+            transform: rotate(-8deg);
+            animation: sealFade 2.4s ease-out forwards;
+            pointer-events: none;
         }
-
-        .order-card.status-pending::before   { background: var(--warning); }
-        .order-card.status-preparing::before  { background: var(--info); }
-        .order-card.status-ready::before      { background: var(--success); }
-
-        .card-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .table-badge {
-            background: var(--text-primary);
-            color: var(--bg-deep);
-            font-weight: 700;
-            font-size: 0.75rem;
-            padding: 0.25rem 0.6rem;
-            border-radius: 0.5rem;
-            letter-spacing: var(--tracking-wide);
-        }
-
-        .order-id {
-            font-family: var(--font-mono);
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            font-weight: 600;
-            letter-spacing: 0.1em;
-        }
-
-        .timer {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            background: var(--bg-surface-variant);
-            padding: 0.2rem 0.5rem;
-            border-radius: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-
-        .timer::before { content: "⏱️"; font-size: 0.8rem; }
-
-        .timer.timer-red {
-            color: var(--danger);
-            background: var(--danger-bg);
-            animation: pluseAlert 2s infinite;
-        }
-
-        /* Items List */
-        .items-list {
-            list-style: none;
-            padding: 0;
-            margin: 0 0 1.25rem 0;
-            font-size: 0.95rem;
-        }
-
-        .items-list li {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-            padding: 0.75rem 0;
-            border-bottom: 1px dashed var(--border);
-        }
-
-        .items-list li:last-child { border-bottom: none; }
-
-        .item-main {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.75rem;
-            width: 100%;
-        }
-
-        .item-instructions {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            background: rgba(255, 255, 255, 0.03);
-            padding: 0.4rem 0.6rem;
-            border-radius: 0.4rem;
-            border-left: 2px solid var(--primary);
-            margin-left: 1.5rem;
-            font-style: italic;
-        }
-
-        .item-qty {
-            font-weight: 700;
-            color: var(--primary);
-            background: var(--primary-glow);
-            padding: 0.1rem 0.4rem;
-            border-radius: 0.3rem;
-            font-size: 0.8rem;
-        }
-
-        .item-name {
-            font-weight: 600;
-            color: var(--text-primary);
-            flex: 1;
-            line-height: 1.2;
-        }
-
-        .veg-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .veg-dot.veg    { background: var(--success); }
-        .veg-dot.nonveg { background: var(--danger); }
-
-        /* Action Buttons */
-        .card-actions {
-            display: flex;
-            gap: 0.75rem;
-            width: 100%;
-        }
-        .action-btn {
-            width: 100%;
-            font-weight: 700;
-            padding: 0.75rem;
-            border-radius: var(--radius-md);
-            transition: all var(--duration-fast) var(--ease-out);
-            font-size: 0.875rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 0.5rem;
-            border: 1px solid transparent;
-            cursor: pointer;
-        }
-
-        .btn-start {
-            background: var(--warning-bg);
-            color: var(--warning);
-            border-color: var(--warning-border);
-        }
-
-        .btn-start:hover { background: rgba(245, 158, 11, 0.2); }
-
-        .btn-cancel {
-            background: var(--danger-bg);
-            color: var(--danger);
-            border-color: var(--danger-border);
-            width: 40%; /* Cancel is smaller than Start */
-        }
-
-        .btn-cancel:hover { background: rgba(239, 68, 68, 0.2); }
-
-        .btn-ready {
-            background: var(--info-bg);
-            color: var(--info);
-            border-color: var(--info-border);
-        }
-
-        .btn-ready:hover { background: rgba(59, 130, 246, 0.2); }
-
-        .btn-serve {
-            background: var(--success-bg);
-            color: var(--success);
-            border-color: var(--success-border);
-        }
-
-        .btn-serve:hover { background: rgba(16, 185, 129, 0.2); }
-
-        /* Animations */
-        @keyframes pluseAlert {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-
-        .flash-new {
-            animation: HighlightNew 3s ease-out;
-        }
-
         @keyframes HighlightNew {
-            0%   { box-shadow: 0 0 0 4px var(--primary-raw); border-color: var(--primary-raw); }
-            100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+            0%   { box-shadow: 0 0 0 0 rgba(214,58,31,0.55); }
+            100% { box-shadow: 0 0 0 14px rgba(214,58,31,0); }
+        }
+        @keyframes sealFade {
+            0%, 70% { opacity: 1; }
+            100%    { opacity: 0; }
+        }
+
+        /* ── Breakpoints ─────────────────────────────────────────────────── */
+        /* Landscape tablet (1024–1279): three norens, ~285 px tickets. Tighten the top row so the
+           ember pill stays on one line and the commit seal keeps its full label. */
+        @media (min-width: 1024px) and (max-width: 1279px) {
+            .order-card .card-top { column-gap: 0.5rem; }
+            .order-card .timer { font-size: 1.25rem; }
+            .order-card .timer.timer-red { padding: 0.1em 0.35em; }
+            .order-card .action-btn { font-size: 0.9375rem; }
+        }
+        /* Column snap under 1024: the next noren peeks in; all three #cards-* stay in the DOM */
+        @media (max-width: 1023px) {
+            .kanban {
+                scroll-snap-type: x mandatory;
+                scroll-padding: 0 1.25rem;
+                padding: 0.85rem 1.25rem 1rem;
+            }
+            /* Fixed basis + cap: a long item name or 備考 note must wrap inside the noren,
+               never grow the column to its max-content width */
+            .kanban-column { flex: 0 0 86vw; width: 86vw; max-width: 86vw; min-width: 0; scroll-snap-align: start; }
+            .kanban-inner { width: max-content; min-width: 100%; }
+        }
+        @media (max-width: 767px) {
+            .kds-header { padding: 0.35rem 0.75rem; gap: 0.5rem; }
+            .kds-clock { padding: 0.2rem 0.6rem; gap: 0.4rem; }
+            #liveClock { font-size: 1.25rem; }
+            .kds-summary { padding: 0.125rem 0.75rem; }
+            .kanban { padding: 0.75rem; }
+            .kanban-column { flex-basis: 88vw; width: 88vw; max-width: 88vw; }
+            /* ~314 px tickets: the ember pill must fit beside the seal even at "125 min ago 急" */
+            .order-card .card-top { column-gap: 0.5rem; }
+            .order-card .timer { font-size: 1.25rem; }
+            .order-card .timer.timer-red { padding: 0.1em 0.35em; }
+        }
+        @media (max-width: 899px) {
+            .legend { display: none; }
+        }
+        @media (max-width: 639px) {
+            .kds-summary { flex-wrap: nowrap; gap: 0.5rem; }
+            .summary-pills { flex-wrap: nowrap; gap: 0.75rem; }
+            /* icon-only refresh: text stays in the tree for screen readers */
+            #refreshBtn { font-size: 0; width: 40px; min-width: 40px; padding: 0; justify-content: center; }
+            #refreshBtn::before { width: 18px; height: 18px; margin: 0; }
+        }
+        @media (max-width: 479px) {
+            .kds-brand h1 small { display: none; }
+            .kds-clock::before { display: none; }
+            #kdsLogoutBtn .jp { display: none; }
+            .summary-pill .jp { display: none; }
+            .summary-pill { font-size: 0.75rem; }
+        }
+
+        /* Wall mode: everything is in rem, so one rule scales the board */
+        @media (min-width: 1600px) {
+            html { font-size: 18px; }
+            .table-badge { width: 72px; height: 72px; font-size: 2.5rem; }
+            .table-badge::before { font-size: 0.6875rem; top: 4px; left: 6px; }
+            .item-name { font-size: 1.3125rem; }
+            .kanban { padding: 1.25rem 1.5rem 1.5rem; }
+            .kanban-inner { gap: 1.5rem; }
+        }
+        @media (min-width: 2200px) {
+            html { font-size: 20px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- ── Top Navbar ──────────────────────────────────────────────────── -->
-    <header class="kds-header">
+    <!-- ── Header — lintel ───────────────────────────────────────────────── -->
+    <header class="kds-header lintel">
         <div class="kds-brand">
-            <span>🍳</span>
-            <h1>Kitchen Display</h1>
+            <svg class="ico ico--lg" aria-hidden="true"><use href="../shared/icons.svg#neko"/></svg>
+            <h1><span class="jp">Kitchen</span><small>Live order board</small></h1>
         </div>
         <div class="kds-clock">
             <span id="liveClock">00:00:00</span>
         </div>
         <div class="kds-status">
             <span class="kds-status-text" id="kdsRestaurantName">Maneki Neko</span>
-            <div class="kds-status-dot"></div>
-            <button id="kdsLogoutBtn" style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border);border-radius:var(--radius-pill);padding:0.35rem 0.85rem;font-weight:700;font-size:0.75rem;cursor:pointer;display:none;" class="kds-status-text">🚪 Logout</button>
+            <div class="kds-status-dot" role="status" aria-label="Connection"></div>
+            <button id="kdsLogoutBtn" class="btn-danger btn-sm" style="display:none;"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-noren"/></svg>Logout </button>
         </div>
     </header>
 
-    <!-- ── Summary Bar ─────────────────────────────────────────────────── -->
+    <!-- ── Summary rail ──────────────────────────────────────────────────── -->
     <div class="kds-summary">
         <div class="summary-pills">
             <div class="summary-pill pill-pending">
-                🟡 Pending: <span id="countPending" class="pill-count">0</span>
+                <i class="col-mark" aria-hidden="true"></i>Pending <span id="countPending" class="pill-count seal-count--kin">0</span>
             </div>
             <div class="summary-pill pill-preparing">
-                🔵 Preparing: <span id="countPreparing" class="pill-count">0</span>
+                <i class="col-mark" aria-hidden="true"></i>Preparing <span id="countPreparing" class="pill-count">0</span>
             </div>
             <div class="summary-pill pill-ready">
-                🟢 Ready: <span id="countReady" class="pill-count">0</span>
+                <i class="col-mark" aria-hidden="true"></i>Ready <span id="countReady" class="pill-count seal-count--matcha">0</span>
             </div>
         </div>
-        <button id="refreshBtn">
-            ↻ Refresh Now
-        </button>
+        <div class="kds-summary-right">
+            <span class="legend"><i class="mark mark-veg" aria-hidden="true"></i>Veg <i class="mark mark-nonveg" aria-hidden="true"></i>Non-veg </span>
+            <button id="refreshBtn" class="btn-ghost btn-sm mi-refresh">Refresh</button>
+        </div>
     </div>
 
-    <!-- ── Kanban Board ─────────────────────────────────────────────────── -->
+    <!-- ── Board — three noren over the pass ─────────────────────────────── -->
     <main class="kanban">
         <div class="kanban-inner">
 
             <!-- Pending Column -->
-            <div class="kanban-column">
+            <div class="kanban-column col-pending">
                 <div class="kanban-column-header">
-                    <span>🟡</span> Pending Orders
+                    <span class="col-mark" aria-hidden="true"></span>
+                    <span class="jp">Pending</span>
+                    <span class="en">Awaiting the kitchen</span>
+                    <span class="col-no" aria-hidden="true">1</span>
                 </div>
                 <div class="kanban-cards" id="cards-pending"></div>
             </div>
 
             <!-- Preparing Column -->
-            <div class="kanban-column">
+            <div class="kanban-column col-preparing">
                 <div class="kanban-column-header">
-                    <span>🔵</span> Now Preparing
+                    <span class="col-mark" aria-hidden="true"></span>
+                    <span class="jp">Preparing</span>
+                    <span class="en">On the fire</span>
+                    <span class="col-no" aria-hidden="true">2</span>
                 </div>
                 <div class="kanban-cards" id="cards-preparing"></div>
             </div>
 
             <!-- Ready Column -->
-            <div class="kanban-column">
+            <div class="kanban-column col-ready">
                 <div class="kanban-column-header">
-                    <span>🟢</span> Ready to Serve
+                    <span class="col-mark" aria-hidden="true"></span>
+                    <span class="jp">Ready</span>
+                    <span class="en">To the table</span>
+                    <span class="col-no" aria-hidden="true">3</span>
                 </div>
                 <div class="kanban-cards" id="cards-ready"></div>
             </div>

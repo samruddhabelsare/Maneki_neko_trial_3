@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" stroke="#6a5f55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<!-- empty obon tray -->
+<ellipse cx="60" cy="60" rx="48" ry="22"/>
+<ellipse cx="60" cy="60" rx="40" ry="15"/>
+<path d="M12 60v6c0 12 21 22 48 22s48-10 48-22v-6"/>
+<path d="M40 52c6-2 13-3 20-3"/>
+</svg>

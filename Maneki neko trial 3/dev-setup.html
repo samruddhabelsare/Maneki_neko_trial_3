@@ -4,255 +4,410 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maneki Neko | Dev Setup</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Kosugi+Maru&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#100d0c">
+<link rel="icon" href="./shared/favicon.svg">
 <link rel="stylesheet" href="./shared/theme.css">
+<link rel="stylesheet" href="./shared/icons.css">
 <style>
-  :root{
-    --ink:#f5f4f9; --ink-soft:#b7b4c8; --ink-mute:#84819a; --ink-faint:#524e69;
-    --void:#08060e; --panel:rgba(255,255,255,.035); --panel-solid:#151220;
-    --field:#1b1728; --line:rgba(255,255,255,.09); --line-soft:rgba(255,255,255,.05);
-
-    --violet:#9a9bf7; --violet-dim:#6d6ef0; --violet-glow:rgba(129,140,248,.16); --violet-deep:#4338ca;
-    --gold:#f0bb56; --gold-glow:rgba(240,187,86,.16); --gold-deep:#8a611f;
-    --sakura:#f591c2; --sakura-glow:rgba(245,145,194,.15);
-
-    --danger:#fb7185; --danger-bg:rgba(251,113,133,.12); --danger-border:rgba(251,113,133,.3);
-    --success:#4ade80; --success-bg:rgba(74,222,128,.12); --success-border:rgba(74,222,128,.3);
-    --amber:#fbbf24; --emerald:#34d399;
-  }
-  *{ box-sizing:border-box; }
-  html,body{ background:var(--void); }
-  body{
-    min-height:100vh; padding:0 0 5rem; color:var(--ink);
-    font-family:'Inter',sans-serif;
-    position:relative; overflow-x:hidden;
-  }
-  body::before{
-    content:''; position:fixed; inset:0; z-index:-2;
-    background-image:radial-gradient(rgba(255,255,255,.045) 1px, transparent 1px);
-    background-size:26px 26px; opacity:.5;
-  }
-  .bg-glow{ position:fixed; z-index:-1; border-radius:50%; filter:blur(90px); pointer-events:none; }
-  .bg-glow-a{ width:520px; height:520px; top:-180px; left:-120px; background:radial-gradient(circle, rgba(129,140,248,.28), transparent 70%); }
-  .bg-glow-b{ width:460px; height:460px; bottom:-160px; right:-100px; background:radial-gradient(circle, rgba(240,187,86,.18), transparent 70%); }
+  /* ── Dev portal — 奥の間 (the back room). Kami to Sumi: paper = document, lacquer = container,
+        red = seal / commit, gold = seam. Page CSS holds layout + page-specific selectors only;
+        tokens, buttons, inputs, hanko, empty states and keyframes come from shared/theme.css. ── */
+  body{ min-height:100vh; padding:0 0 4rem; }
 
   /* ── Shell ─────────────────────────────────────────────────────── */
-  .portal{ max-width:1180px; margin:0 auto; padding:0 1.5rem; }
+  .portal{ position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:0 1.5rem; overflow-x:clip; }   /* lantern pools never widen the page */
 
   .portal-header{
     position:relative;
-    display:flex; align-items:flex-end; justify-content:space-between; gap:1.5rem;
-    flex-wrap:wrap; padding:3rem 0 2.25rem; border-bottom:1px solid var(--line);
-    margin-bottom:2.25rem;
+    padding:3rem 0 2rem; margin-bottom:2rem;
+    border-bottom:1px solid var(--border);
   }
-  .hanko{
-    position:absolute; top:1.6rem; right:0; width:50px; height:50px;
-    border:2px solid var(--danger); color:var(--danger); border-radius:8px;
-    display:flex; align-items:center; justify-content:center;
-    font-family:'Kosugi Maru',sans-serif; font-size:1.15rem; letter-spacing:-.05em;
-    transform:rotate(-7deg); opacity:.8;
+  /* two lantern pools hang over the header (static, never rebuilt) */
+  .portal-header::before, .portal-header::after{
+    content:""; position:absolute; top:-110px; width:300px; height:260px; border-radius:50%;
+    background:radial-gradient(ellipse at center, var(--lantern-glow-strong), var(--lantern-glow) 35%, transparent 70%);
+    opacity:.85; pointer-events:none; z-index:-1;
   }
-  .portal-eyebrow{
-    display:inline-flex; align-items:center; gap:.45rem;
-    color:var(--danger); font-size:.72rem; font-weight:600; letter-spacing:.03em;
-    margin-bottom:.7rem;
-  }
-  .portal-eyebrow .dot{ width:6px; height:6px; border-radius:50%; background:var(--danger); box-shadow:0 0 0 3px var(--danger-bg); }
-  .portal-title{
-    font-size:2rem; font-weight:700; letter-spacing:-.01em; line-height:1.1;
-    font-family:'Kosugi Maru',sans-serif;
-    background:linear-gradient(100deg, var(--ink) 30%, var(--gold) 75%, var(--violet) 100%);
-    -webkit-background-clip:text; background-clip:text; color:transparent;
-  }
-  .portal-sub{ color:var(--ink-soft); margin-top:.5rem; font-size:.95rem; max-width:48ch; }
+  .portal-header::before{ left:-90px; }
+  .portal-header::after{ right:-40px; opacity:.7; }   /* lights the 開発 hanko */
 
-  .stat-row{ display:flex; gap:.6rem; }
-  .stat-coin{
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.05rem;
-    width:74px; height:74px; border-radius:50%;
-    background:radial-gradient(circle at 35% 30%, rgba(240,187,86,.18), var(--panel-solid) 70%);
-    border:1.5px solid var(--gold-deep); box-shadow:0 0 0 4px rgba(240,187,86,.06);
+  .portal-header .hanko{
+    position:absolute; top:2.75rem; right:0;
+    width:64px; height:64px; font-size:1.375rem; line-height:1;
+    writing-mode:vertical-rl; text-orientation:upright;
   }
-  .stat-coin b{ font-size:1.3rem; font-weight:800; font-family:'JetBrains Mono',monospace; line-height:1; color:var(--gold); }
-  .stat-coin span{ font-size:.6rem; color:var(--ink-mute); text-transform:uppercase; letter-spacing:.05em; }
+  .portal-eyebrow{ display:inline-flex; align-items:center; gap:.55rem; margin-bottom:.7rem; }
+  .portal-eyebrow .dot{
+    width:8px; height:8px; border-radius:50%; flex-shrink:0;
+    color:var(--lantern); background:currentColor;
+    animation:lantern 2.4s ease-in-out infinite;
+  }
+  .portal-title{
+    font:600 2rem/1.15 var(--font-display); letter-spacing:var(--tracking-display);
+    color:var(--text-primary); display:flex; flex-wrap:wrap; align-items:baseline; gap:.35rem .8rem;
+    padding-right:84px;
+  }
+  .portal-title .jp{ font-size:.875rem; color:var(--kin); letter-spacing:.14em; }
+  .portal-sub{ color:var(--text-secondary); margin-top:.55rem; font-size:.9375rem; max-width:54ch; }
+  .portal-rule{ width:120px; height:8px; margin:1.1rem 0 1.4rem; background:var(--brush-rule-kin) left / 100% 100% no-repeat; }
+
+  /* koban — the gold coin the cat holds; count of shops on the books */
+  .stat-row{ display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
+  .stat-coin{
+    display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:.15rem;
+    width:98px; height:68px; border-radius:50% / 42%;
+    background:linear-gradient(165deg, var(--kin-bright), var(--kin) 55%, var(--kin-dim));
+    color:var(--sumi-ink); border:1px solid var(--kin-dim);
+    box-shadow:inset 0 0 0 5px rgba(28,24,22,.14), inset 0 0 0 6px rgba(243,213,138,.55),
+               0 2px 0 var(--kin-dim), 0 8px 18px rgba(0,0,0,.4);
+  }
+  .stat-coin b{ font:700 1.5rem/1 var(--font-display); font-variant-numeric:tabular-nums; }
+  .stat-coin span{ font:700 .6875rem/1 var(--font-sans); text-transform:uppercase; letter-spacing:.12em; color:var(--sumi-ink-2); }   /* kin-ink on the kin gradient is 4.05:1 */
+  .stat-caption{ display:grid; gap:.15rem; }
+  .stat-caption .jp{ color:var(--kin); }
+  .stat-caption small{ font-size:.8125rem; color:var(--text-muted); }
 
   /* ── Layout grid ───────────────────────────────────────────────── */
-  .portal-grid{ display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; align-items:start; }
-  @media(max-width:860px){ .portal-grid{ grid-template-columns:1fr; } }
-  .col{ display:flex; flex-direction:column; gap:1.25rem; }
-
-  /* ── Module card ───────────────────────────────────────────────── */
-  .module{
-    background:var(--panel); backdrop-filter:blur(20px);
-    border:1px solid var(--line); border-top:2px solid var(--accent, var(--line));
-    border-radius:1.1rem; overflow:hidden;
+  .portal-grid{ display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; align-items:start; }
+  .col{ display:flex; flex-direction:column; gap:1.5rem; }
+  /* ≥861: the five modules flow row-wise (New restaurant | Add staff login, All restaurants | Staff credentials)
+     and the tatami floor plan takes the full width — form left, tiles right — so no column ends early. */
+  @media (min-width:861px){
+    .col{ display:contents; }
+    .module.mod-gold{ grid-column:1 / -1; }
+    .mod-gold .module-body{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr); column-gap:2rem; align-items:start; }
+    .mod-gold .module-body > :not(#tablesList){ grid-column:1; }
+    .mod-gold .module-body > #tablesList{ grid-column:2; grid-row:1 / span 5; margin-top:0; max-height:none; align-self:stretch; }
   }
-  .module.mod-violet{ --accent:var(--violet); --accent-glow:var(--violet-glow); }
-  .module.mod-sakura{ --accent:var(--sakura); --accent-glow:var(--sakura-glow); }
-  .module.mod-gold{ --accent:var(--gold); --accent-glow:var(--gold-glow); }
+
+  /* ── Module card: kakejiku — a dark wooden rod over the sheet, a coloured cord on top ───
+        .mod-violet / .mod-sakura / .mod-gold keep their names; their accents are now ai / sakura / kin. */
+  .module{ --accent:var(--kin); border-top:4px solid var(--accent); overflow:hidden; }
+  .module.mod-violet{ --accent:var(--ai); }
+  .module.mod-sakura{ --accent:var(--sakura); }
+  .module.mod-gold{ --accent:var(--kin); }
 
   .module-head{
     display:flex; align-items:center; justify-content:space-between; gap:.75rem;
-    padding:1.1rem 1.4rem; border-bottom:1px solid var(--line-soft);
+    padding:.8rem 1.25rem; color:var(--text-primary);
+    background-color:var(--bg-surface-highest);
+    background-image:var(--rule-kin); background-position:bottom; background-size:100% 1px; background-repeat:no-repeat;
+    border-bottom:1px solid var(--border);
   }
-  .module-head-left{ display:flex; align-items:center; gap:.65rem; }
+  .paper > .module-head{ background-color:var(--bg-surface-high); border-bottom-color:rgba(28,24,22,.4); }
+  .module-head-left{ display:flex; align-items:center; gap:.75rem; min-width:0; }
   .module-icon{
-    width:32px; height:32px; border-radius:.6rem; display:flex; align-items:center; justify-content:center;
-    background:var(--accent-glow); color:var(--accent); flex-shrink:0;
+    display:inline-grid; place-items:center; width:34px; height:34px; border-radius:50%;
+    border:1.5px solid var(--kin-hair); color:var(--kin); flex-shrink:0; font-size:0;
   }
-  .module-title{ font-size:.96rem; font-weight:700; letter-spacing:-.01em; }
-  .module-body{ padding:1.4rem; }
+  .module-icon .ico{ width:18px; height:18px; }
+  .module-title{
+    display:flex; align-items:baseline; gap:.6rem; flex-wrap:wrap;
+    font:600 1.0625rem/1.2 var(--font-display); letter-spacing:var(--tracking-display); color:var(--text-primary);
+  }
+  .module-head .module-title{ color:var(--text-primary); }   /* beats .paper :is(h2) on the kakejiku rod */
+  .module-title .jp{ font-size:.8125rem; color:var(--kin); letter-spacing:.1em; }
+  .module-body{ padding:1.25rem 1.25rem 1.4rem; }
 
   /* ── Forms ─────────────────────────────────────────────────────── */
   .form-group{ margin-bottom:1rem; }
-  .form-group:last-of-type{ margin-bottom:0; }
   .form-label{
-    display:flex; align-items:baseline; gap:.4rem;
-    font-size:.77rem; font-weight:600; color:var(--ink-soft); margin-bottom:.4rem;
+    display:flex; align-items:baseline; gap:.45rem;
+    font:600 .75rem/1.3 var(--font-sans); letter-spacing:.04em; color:var(--text-secondary); margin-bottom:.45rem;
   }
-  .form-label small{ font-weight:400; color:var(--ink-faint); font-size:.72rem; }
-  .form-input, .form-select{
-    width:100%; background:var(--field); border:1px solid var(--line);
-    color:var(--ink); border-radius:.65rem; padding:.7rem .85rem;
-    font-family:'Inter',sans-serif; font-size:.92rem; outline:none; transition:border-color .15s, box-shadow .15s;
-  }
-  .form-input:focus, .form-select:focus{ border-color:var(--accent, var(--violet)); box-shadow:0 0 0 3px var(--accent-glow, var(--violet-glow)); }
-  .form-input.mono{ font-family:'JetBrains Mono',monospace; font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
+  .form-label small{ font-weight:500; font-size:.6875rem; letter-spacing:0; color:var(--text-muted); }
+  .form-label .jp{ margin-left:auto; font-size:.6875rem; }
+  .paper .form-label{ color:var(--sumi-ink-2); }
+  .paper .form-label small{ color:var(--sumi-ink-3); }
+  .form-input, .form-select{ width:100%; }
   .form-row{ display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
 
-  .btn{
-    display:inline-flex; align-items:center; justify-content:center; gap:.45rem;
-    padding:.72rem 1.1rem; border-radius:.65rem; font-weight:700; font-size:.85rem;
-    cursor:pointer; border:none; transition:filter .15s, transform .1s; width:100%; margin-top:.85rem;
-    font-family:'Inter',sans-serif;
-  }
-  .btn:active{ transform:translateY(1px); }
-  .btn-primary{ background:linear-gradient(135deg, var(--accent, var(--violet)), var(--violet-deep)); color:#100e1c; font-weight:800; }
-  .btn-primary:hover{ filter:brightness(1.12); }
-  .btn-danger{ background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger-border); }
-  .btn-danger:hover{ background:rgba(251,113,133,.22); }
-  .btn-icon{ width:30px; height:30px; padding:0; margin-top:0; flex-shrink:0; border-radius:.5rem; }
+  /* Buttons: chassis + seal / ume recipes come from theme (.btn-primary, .btn-danger, .btn-icon). */
+  .btn{ font-family:var(--font-sans); }
+  .module .btn-primary, .gate-card .btn-primary{ width:100%; margin-top:1.1rem; }
+  .btn-icon.btn-danger{ position:relative; width:36px; height:36px; min-height:36px; line-height:1; color:var(--ume-light); border-color:rgba(224,122,138,.45); }   /* position:relative keeps the hit-area pseudo inside the button; min-height beats the 44px button base so the seal stays round */
+  .btn-icon.btn-danger::before{ content:""; position:absolute; inset:-4px; border-radius:50%; }   /* 44 px hit area */
+  .btn-icon.btn-danger:hover{ background:rgba(184,74,92,.16); border-color:var(--ume-light); color:var(--ume-light); }
+  .btn-icon .i{ width:16px; height:16px; }
+  .i{ display:inline-block; flex-shrink:0; }
 
-  /* ── Flash message ─────────────────────────────────────────────── */
+  /* ── Flash message — omikuji slip. JS rewrites className to "msg success|error" and toggles
+        style.display between flex and none; the kanji seal is a pseudo-element so it survives innerHTML. */
   .msg{
-    display:none; align-items:center; gap:.5rem;
-    padding:.65rem .85rem; border-radius:.65rem; font-size:.83rem; font-weight:600; margin-bottom:1rem;
+    display:none; align-items:center; gap:.65rem;
+    padding:.55rem .8rem .55rem .7rem; margin-bottom:1rem;
+    background:var(--washi-bright); color:var(--sumi-ink);
+    border:1px solid var(--washi-line-strong); border-left:4px solid var(--kin-dim); border-radius:0 3px 3px 0;
+    font:600 .8125rem/1.35 var(--font-sans); text-align:left;
+    box-shadow:var(--shadow-soft);
+    animation:slideUp .3s var(--ease-out);
   }
-  .msg.success{ background:var(--success-bg); color:var(--success); border:1px solid var(--success-border); }
-  .msg.error{ background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger-border); }
-  .msg svg{ flex-shrink:0; }
+  .msg::before{
+    flex-shrink:0; padding:.2rem .3rem; border:1.5px solid currentColor; border-radius:var(--radius-seal);
+    font:700 .8125rem/1 var(--font-display); letter-spacing:.04em; transform:rotate(-4deg);
+  }
+  .msg.success{ border-left-color:var(--matcha-ink); }
+  .msg.success::before{ content:"OK"; color:var(--matcha-ink); }
+  .msg.error{ border-left-color:var(--ume-ink); }
+  .msg.error::before{ content:"!"; color:var(--ume-ink); }
+  .msg .i{ display:none; }
 
   /* ── Lists ─────────────────────────────────────────────────────── */
-  .list-area{ margin-top:1.25rem; max-height:400px; overflow-y:auto; display:flex; flex-direction:column; gap:.55rem; }
+  .list-area{
+    margin-top:1.25rem; max-height:400px; overflow-y:auto;
+    display:flex; flex-direction:column; gap:.6rem; padding:2px 4px 4px 0;
+  }
   .list-area:empty{ margin-top:0; }
-  .row-item{
-    display:flex; align-items:center; justify-content:space-between; gap:.75rem;
-    background:var(--field); border:1px solid var(--line-soft);
-    border-radius:.75rem; padding:.8rem .95rem; transition:border-color .15s, transform .15s;
-  }
-  .row-item:hover{ border-color:var(--accent, var(--violet)); transform:translateY(-1px); }
-  .row-main{ min-width:0; }
-  .row-name{ font-weight:700; font-size:.92rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .row-meta{
-    font-size:.77rem; color:var(--ink-mute); margin-top:.3rem;
-    display:flex; align-items:center; gap:.4rem; flex-wrap:wrap;
-  }
-  .row-meta .sep{ opacity:.4; }
+  #restaurantList{ margin-top:0; }
+  .row-item{ position:relative; display:flex; align-items:center; justify-content:space-between; gap:.75rem; padding:.8rem .95rem; }
+  .row-main{ min-width:0; flex:1; }
+  .row-name{ font-weight:600; font-size:.9375rem; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .row-meta{ font-size:.8125rem; margin-top:.35rem; display:flex; align-items:center; gap:.45rem; flex-wrap:wrap; }
+  .row-meta .sep{ opacity:.45; }
+  .row-meta .i{ width:12px; height:12px; vertical-align:-1px; }
 
-  .code-badge{
-    display:inline-flex; align-items:center; gap:.3rem;
-    background:var(--accent-glow, var(--violet-glow)); color:var(--accent, var(--violet)); border:1px solid var(--line);
-    border-radius:.4rem; padding:.15rem .55rem; font-family:'JetBrains Mono',monospace; font-size:.78rem; font-weight:700; letter-spacing:.06em;
+  /* Restaurants — short indigo noren strips hung from a gold rod */
+  #restaurantList .row-item{
+    color:var(--text-primary);
+    background-color:var(--ai);
+    background-image:
+      repeating-linear-gradient(90deg, transparent 0 96px, rgba(16,13,12,.22) 96px 98px),
+      linear-gradient(180deg, rgba(255,255,255,.06), transparent 45%);
+    background-size:calc(100% - 72px) 100%, auto;   /* slits stop before the delete seal */
+    background-repeat:no-repeat, repeat;
+    border-top:3px solid var(--kin-dim); border-radius:0 0 4px 4px;
+    box-shadow:0 2px 0 rgba(0,0,0,.3), inset 0 -10px 14px -12px rgba(0,0,0,.6);
   }
+  #restaurantList .row-name{ font:600 1.0625rem/1.25 var(--font-display); letter-spacing:var(--tracking-display); }
+  #restaurantList .row-meta{ color:var(--text-secondary); }
+
+  /* gold mon with the login code */
+  .code-badge{
+    display:inline-flex; align-items:center; gap:.3rem; min-height:22px; padding:.1rem .6rem .1rem .5rem;
+    border-radius:var(--radius-pill); background:var(--kin); color:var(--sumi-ink);
+    font:700 .75rem/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase;
+    box-shadow:inset 0 0 0 1.5px rgba(28,24,22,.2), inset 0 0 0 2.5px rgba(243,213,138,.65);
+  }
+
+  /* Staff — nafuda name plates (hinoki grain, a hole for the cord) */
+  #credentialList .row-item{
+    color:var(--sumi-ink);
+    background-color:var(--washi-2);
+    background-image:
+      var(--washi-fibre),
+      repeating-linear-gradient(90deg, rgba(28,24,22,.04) 0 1px, transparent 1px 11px),
+      linear-gradient(180deg, var(--washi), var(--washi-2));
+    background-size:240px 240px, auto, auto;
+    border:1px solid rgba(28,24,22,.3); border-radius:3px 3px 6px 6px;
+    box-shadow:var(--shadow-paper);
+    padding-top:1rem;
+  }
+  #credentialList .row-item::before{
+    content:""; position:absolute; top:5px; left:50%; width:6px; height:6px; border-radius:50%;
+    background:var(--bg-surface-low); transform:translateX(-50%); box-shadow:inset 0 1px 1px rgba(0,0,0,.6);
+  }
+  #credentialList .row-name{ letter-spacing:.04em; }
+  #credentialList .row-meta{ color:var(--sumi-ink-2); }   /* ink-3 on washi-2 is 4.44:1 (§9) */
+  #credentialList .btn-danger{ color:var(--ume-ink); border-color:rgba(143,49,64,.4); }
+  #credentialList .btn-danger:hover{ color:var(--ume-ink); border-color:var(--ume-ink); background:rgba(184,74,92,.12); }
+
+  /* role crests: kanji + icon + English, ink on wood */
   .role-badge{
     display:inline-flex; align-items:center; gap:.3rem;
-    padding:.2rem .55rem; border-radius:.4rem; font-size:.72rem; font-weight:700;
+    padding:.15rem .5rem .15rem .4rem; border-radius:var(--radius-seal); border:1.5px solid currentColor;
+    font:700 .6875rem/1.2 var(--font-sans); text-transform:uppercase; letter-spacing:.08em;
   }
-  .role-admin{ background:rgba(154,155,247,.14); color:var(--violet); border:1px solid rgba(154,155,247,.25); }
-  .role-kds{ background:rgba(251,191,36,.14); color:var(--amber); border:1px solid rgba(251,191,36,.25); }
-  .role-bot{ background:rgba(52,211,153,.14); color:var(--emerald); border:1px solid rgba(52,211,153,.25); }
+  .role-badge::before{ font:700 .75rem/1 var(--font-jp); text-transform:none; letter-spacing:0; }
+  .role-badge .i{ width:12px; height:12px; }
+  .role-admin{ color:var(--kin-ink); background:rgba(227,181,90,.24); }
+  .role-admin::before{ content:"A"; }
+  .role-kds{ color:var(--shu-deep); background:rgba(214,58,31,.1); }   /* shu-ink on the tinted plate is 3.96:1 */
+  .role-kds::before{ content:"K"; }
+  .role-bot{ color:var(--ume-ink); background:rgba(233,155,176,.3); }
+  .role-bot::before{ content:"B"; }
 
-  .empty-state{
-    display:flex; flex-direction:column; align-items:center; gap:.6rem;
-    text-align:center; color:var(--ink-faint); padding:2.25rem 1rem; font-size:.85rem;
+  /* Tables — tatami floor plan; trash seal appears in the corner on hover / focus (always on touch) */
+  #tablesList{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(76px, 1fr)); gap:.6rem;
+    max-height:300px; padding:6px 4px 4px 0;
   }
-  .empty-state svg{ opacity:.55; }
-
+  #tablesList .empty-state{ grid-column:1 / -1; }
   .table-chip{
-    display:flex; align-items:center; justify-content:space-between; gap:.5rem;
-    background:var(--field); border:1px solid var(--line-soft);
-    border-radius:.6rem; padding:.5rem .55rem .5rem .8rem; transition:border-color .15s;
+    position:relative; aspect-ratio:1; display:grid; place-items:center; align-content:center; padding:.2rem;
+    color:var(--sumi-ink);
+    background-color:var(--washi-2);
+    background-image:repeating-linear-gradient(90deg, rgba(28,24,22,.07) 0 2px, transparent 2px 7px);
+    border:1px solid var(--washi-line-strong); border-left:4px solid var(--sumi-ink-2); border-right:4px solid var(--sumi-ink-2);
+    border-radius:3px; box-shadow:0 1px 2px rgba(0,0,0,.35);
   }
-  .table-chip:hover{ border-color:var(--accent, var(--gold)); }
-  .table-chip .row-meta{ margin-top:.15rem; }
+  .table-chip::before{ content:"T"; position:absolute; top:4px; left:6px; font:500 .6875rem/1 var(--font-jp); color:var(--sumi-ink-2); }
+  .table-chip .row-main{ display:grid; justify-items:center; }
+  .table-chip .code-badge{
+    background:none; box-shadow:none; padding:0; min-height:0; border-radius:0;
+    color:var(--sumi-ink); font:700 .8125rem/1.1 var(--font-display); letter-spacing:0; text-transform:none; white-space:nowrap;
+  }
+  .table-chip .row-meta{ display:none; }   /* label duplicates "Table n" */
+  .table-chip .btn-icon{
+    position:absolute; top:2px; right:2px; width:24px; height:24px; min-height:24px;
+    background:var(--washi); color:var(--ume-ink); border-color:rgba(143,49,64,.45);
+    opacity:0; transition:opacity var(--duration-fast) var(--ease-out);
+  }
+  .table-chip .btn-icon::before{ inset:-10px; }
+  .table-chip:hover .btn-icon, .table-chip:focus-within .btn-icon{ opacity:1; }
+  .table-chip .btn-icon:hover{ color:var(--ume-ink); border-color:var(--ume-ink); background:var(--washi-bright); }
+  .table-chip .btn-icon .i{ width:13px; height:13px; }
+  @media (hover:none), (pointer:coarse){ .table-chip .btn-icon{ opacity:1; } }   /* touch: the seal is always visible */
 
-  /* ── Developer gate ────────────────────────────────────────────── */
+  /* Empty states: theme draws the ensō + kanji; hide the JS icon */
+  .empty-state{ font-size:.875rem; }
+  .empty-state .i{ display:none; }
+  #restaurantList .empty-state::after{ content:none; }
+  #credentialList .empty-state::after{ content:none; }
+  #tablesList .empty-state::after{ content:none; }
+  /* PROMOTE: .empty-state.is-error — an empty state that reports a connection / RLS error keeps the ume signal.
+     The scoped !important exists only to beat theme's own `.empty-state{color:… !important}`; lift into theme.css. */
+  .empty-state.is-error{ color:var(--ume-light) !important; }
+  .empty-state.is-error::after, #restaurantList .empty-state.is-error::after{ content:none; color:inherit; }
+  /* PROMOTE: theme's reduced-motion `.mn-paw{animation:none}` (0,1,0) loses to its own `.mn .mn-paw` (0,2,0); this makes the opt-out stick. */
+  @media (prefers-reduced-motion:reduce){ .mn .mn-paw{ animation:none; } }
+
+  /* ── Developer gate — a closed shop: lantern pools, ensō halo, a paper card under a 準備中 sign ── */
   #devGate{
-    position:fixed; inset:0; background:var(--void); display:flex; align-items:center; justify-content:center;
-    z-index:100; padding:1.5rem;
+    position:fixed; inset:0; z-index:100; overflow:hidden auto;   /* the halo never makes the gate pan sideways; short viewports still scroll */
+    display:flex; align-items:center; justify-content:center; padding:1.5rem;
+    background:var(--bg-deep);
   }
-  .gate-card{
-    position:relative;
-    background:var(--panel-solid); border:1px solid var(--line);
-    border-radius:1.25rem; padding:2.3rem 2rem 2rem; width:100%; max-width:370px; text-align:center;
-    box-shadow:0 30px 80px -25px rgba(0,0,0,.7);
+  #devGate .room-layer{ position:absolute; }
+  #devGate .enso-halo{ width:min(560px, 100vw); height:min(560px, 100vw); }
+  .gate-card{ position:relative; z-index:1; width:100%; max-width:400px; padding:0 1.75rem 1.75rem; text-align:center; }
+  .gate-noren{ position:relative; display:flex; justify-content:center; margin:0 -1.75rem 1rem; padding-top:9px; }
+  .gate-noren::before{ content:""; position:absolute; top:-1px; left:0; right:0; height:3px; background:var(--rule-kin); }
+  .noren-cloth{
+    position:relative; display:grid; justify-items:center; gap:.35rem;
+    padding:.65rem 1.4rem .75rem; color:#fff;
+    background-color:var(--ai);
+    background-image:
+      linear-gradient(180deg, rgba(255,255,255,.08), transparent 45%),
+      repeating-linear-gradient(90deg, transparent 0 11px, rgba(16,13,12,.12) 11px 12px);   /* weave */
+    border-radius:0;
+    filter:drop-shadow(0 3px 0 rgba(0,0,0,.3));   /* follows the scalloped hem */
   }
-  .gate-seal{
-    position:absolute; top:-14px; right:18px; width:44px; height:44px;
-    border:2px solid var(--danger); color:var(--danger); border-radius:50%;
-    display:flex; align-items:center; justify-content:center; background:var(--void);
-    font-family:'Kosugi Maru',sans-serif; font-size:.7rem; font-weight:700; transform:rotate(8deg);
+  .noren-cloth::after{   /* scalloped hem — the cloth hangs, it is not a label */
+    content:""; position:absolute; left:0; right:0; bottom:-6px; height:6px;
+    background:radial-gradient(circle at 6px 0, var(--ai) 5px, transparent 5.5px) 0 0 / 12px 6px repeat-x;
   }
-  .maneki{ margin:0 auto .9rem; display:block; }
-  .maneki .paw{ transform-origin:74px 66px; animation:pawWave 1.7s ease-in-out infinite; }
-  @keyframes pawWave{ 0%,100%{ transform:rotate(-8deg); } 50%{ transform:rotate(14deg); } }
+  .noren-cloth b{ font:700 1.25rem/1 var(--font-display); letter-spacing:.24em; padding-left:.24em; }
+  .noren-cloth small{ font:600 .6875rem/1 var(--font-sans); letter-spacing:.14em; text-transform:uppercase; opacity:.85; }
+  .gate-seal{ position:absolute; top:-12px; right:16px; width:48px; height:48px; font-size:1.5rem; }
+  .maneki{ display:block; width:96px; height:96px; margin:.25rem auto .5rem; }
+  /* paw animation comes from theme (.mn .mn-paw beckon) so its reduced-motion opt-out keeps its say */
+  .gate-eyebrow{ margin-bottom:.35rem; }
+  .gate-title{ font:600 1.5rem/1.2 var(--font-display); letter-spacing:var(--tracking-display); color:var(--sumi-ink); }
+  .gate-sub{ color:var(--sumi-ink-3); font-size:.875rem; margin:.4rem 0 1.25rem; }
+  .gate-card .form-group{ text-align:left; }
+  .gate-hint{ margin-top:1.1rem; font-size:.75rem; }
+  .gate-hint summary{ display:inline-flex; align-items:center; gap:.4rem; cursor:pointer; list-style:none; letter-spacing:.04em; }
+  .gate-hint summary::-webkit-details-marker{ display:none; }
+  .gate-hint summary .ico{ width:12px; height:12px; transition:transform var(--duration-fast) var(--ease-out); }
+  .gate-hint[open] summary .ico{ transform:rotate(90deg); }
+  .gate-hint code{
+    display:inline-block; margin-top:.5rem; padding:.2rem .5rem; border-radius:3px;
+    font:600 .75rem/1.4 var(--font-mono); letter-spacing:.08em; background:var(--washi-2); color:var(--sumi-ink-2);
+  }
 
-  .gate-title{ font-size:1.3rem; font-weight:700; letter-spacing:-.01em; font-family:'Kosugi Maru',sans-serif; }
-  .gate-sub{ color:var(--ink-mute); font-size:.85rem; margin-top:.4rem; margin-bottom:1.4rem; }
-  .gate-hint{ font-size:.72rem; color:var(--ink-faint); margin-top:1rem; font-family:'JetBrains Mono',monospace; }
-  .gate-hint code{ color:var(--ink-mute); background:var(--field); padding:.1rem .4rem; border-radius:.3rem; }
+  /* portal reveal — JS flips display:none → block; opacity 0 + forwards is load-bearing */
+  #devMain{ opacity:0; animation:portalIn .5s var(--ease-out) forwards; }
+  @keyframes portalIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
 
-  #devMain{ opacity:0; animation:portalIn .5s ease-out forwards; }
-  @keyframes portalIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
-
-  @media (prefers-reduced-motion: reduce){
-    #devMain{ animation:none; opacity:1; }
-    .maneki .paw{ animation:none; }
+  .portal-foot{
+    display:flex; align-items:center; justify-content:center; gap:.6rem; flex-wrap:wrap;
+    margin-top:3rem; padding-top:1.25rem; border-top:1px solid var(--border);
+    color:var(--text-muted); font-size:.8125rem;
   }
+  .portal-foot .ico{ width:28px; height:28px; }
+  .portal-foot .jp{ color:var(--kin); font-size:.8125rem; }
+
+  /* ── Breakpoints ───────────────────────────────────────────────── */
+  @media (max-width:860px){ .portal-grid{ grid-template-columns:1fr; } }
+  @media (max-width:639px){
+    .portal{ padding:0 1rem; }
+    .portal-header{ padding:2rem 0 1.5rem; margin-bottom:1.5rem; }
+    .portal-header .hanko{ display:none; }   /* stops the seal colliding with the title */
+    .portal-title{ font-size:1.625rem; padding-right:0; }
+    .module-head{ padding:.7rem 1rem; }
+    .module-body{ padding:1rem 1rem 1.2rem; }
+    .gate-card{ padding:0 1.25rem 1.5rem; }
+    .gate-noren{ margin:0 -1.25rem 1rem; }
+  }
+  @media (max-width:400px){ .form-row{ grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
 
-<div class="bg-glow bg-glow-a"></div>
-<div class="bg-glow bg-glow-b"></div>
-
 <!-- Dev Password Gate -->
 <div id="devGate">
-  <div class="gate-card">
-    <div class="gate-seal">DEV</div>
-    <svg class="maneki" width="72" height="72" viewBox="0 0 100 100" fill="none">
-      <path d="M30 38 L25 18 L44 31 Z" stroke="var(--gold)" stroke-width="3" stroke-linejoin="round"/>
-      <path d="M70 38 L75 18 L56 31 Z" stroke="var(--gold)" stroke-width="3" stroke-linejoin="round"/>
-      <circle cx="50" cy="56" r="27" stroke="var(--gold)" stroke-width="3"/>
-      <circle cx="41" cy="54" r="2.3" fill="var(--gold)"/>
-      <circle cx="59" cy="54" r="2.3" fill="var(--gold)"/>
-      <path d="M46 61 q4 3.5 8 0" stroke="var(--gold)" stroke-width="2.4" stroke-linecap="round"/>
-      <g class="paw"><ellipse cx="76" cy="58" rx="9.5" ry="13" stroke="var(--gold)" stroke-width="3"/></g>
+  <div class="room-layer" aria-hidden="true"></div>
+  <div class="enso-halo" aria-hidden="true"></div>
+  <div class="gate-card paper">
+    <div class="gate-noren" aria-hidden="true">
+      <div class="noren-cloth"><small>Preparing · staff only</small></div>
+    </div>
+    <div class="gate-seal hanko hanko--lg" aria-hidden="true">DEV</div>
+    <svg class="maneki mn mn--washi" viewBox="0 0 120 120" role="img" aria-label="Maneki-neko, the beckoning lucky cat">
+      <g class="mn-shadow"><ellipse cx="60" cy="111" rx="34" ry="4.5" fill="rgba(0,0,0,.28)"/></g><g class="mn-body" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke-width="9.5"/>
+        <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+        <path d="M33 108q-5 0-5-5C28 84 33 72 44 68q16-5 32 0c11 4 16 16 16 35q0 5-5 5z"/>
+      </g><g class="mn-head" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M37 27 42 13l10 12z"/><path d="M83 27 78 13 68 25z"/>
+        <circle cx="60" cy="46" r="27"/>
+      </g><g class="mn-patches" stroke="none">
+        <path d="M66 22c6-4 12-2 15 7-2 6-5 10-9 11-5-2-8-7-6-18z" fill="#c8923e"/>
+        <path d="M83 79c-7 4-13 12-13 19 4 4 11 4 16 2 2-7 1-14-3-21z" fill="#3a332e"/>
+        <path d="M77 17l-6.5 7.5" fill="none" stroke="#c8923e" stroke-width="7" stroke-linecap="round"/>
+      </g>
+      <g class="mn-head-line" fill="none" stroke="#1c1816" stroke-width="1.5"><circle cx="60" cy="46" r="27"/><path d="M83 27 78 13 68 25z"/></g><g class="mn-ears" fill="#f3b9c8" stroke="none"><path d="M41 25 43.5 18l6 7z"/><path d="M79 25l-2.5-7-6 7z"/></g><g class="mn-face" fill="none" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="42" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/><circle cx="78" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/>
+        <path d="M47 47q5-5 10 0M63 47q5-5 10 0" fill="none" stroke="#1c1816" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M57.8 52.2h4.4L60 55.2z" fill="#d63a1f" stroke="#d63a1f" stroke-width="1" stroke-linejoin="round"/>
+        <path d="M54 57q3 3.5 6 0q3 3.5 6 0" stroke-width="1.6"/>
+        <path d="M38 50 23 47M38 54H21M38 58l-15 3M82 50l15-3M82 54h17M82 58l15 3" stroke-width="1"/>
+      </g><g class="mn-collar" fill="#d63a1f" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round">
+        <path d="M43 69q17 8 34 0v5.5q-17 11-34 0z"/>
+      </g>
+      <g class="mn-bell" fill="#e3b55a" stroke="#a8832f" stroke-width="1.5">
+        <circle cx="60" cy="82" r="5.5"/><path d="M57 83h6M60 83v2.4" fill="none" stroke-linecap="round" stroke="#a8832f"/>
+      </g><g class="mn-koban" fill="#e3b55a" stroke="#a8832f" stroke-width="1.2">
+        <ellipse cx="44" cy="97" rx="13" ry="9"/><ellipse cx="44" cy="97" rx="9" ry="5" fill="none"/>
+      </g><g class="mn-paw-rest" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke-width="11"/>
+        <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke="#f3ebdd" stroke-width="8"/>
+        <ellipse cx="38" cy="89.5" rx="6.5" ry="4.5"/>
+      </g><g class="mn-paw" style="transform-origin:82px 66px;transform-box:view-box" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M83 72c12 0 17-12 13-34" fill="none" stroke-width="9.5"/>
+        <path d="M83 72c12 0 17-12 13-34" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+        <circle cx="95" cy="33" r="7.5"/>
+        <g fill="#f3b9c8" stroke="none"><ellipse cx="91" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="28.6" rx="1.6" ry="1.9"/><ellipse cx="99" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="35" rx="3.4" ry="2.6"/></g>
+      </g>
     </svg>
-    <div class="gate-title">The portal is asleep</div>
-    <div class="gate-sub">Enter the developer password to wake it up</div>
+    <p class="eyebrow gate-eyebrow">Developer access</p>
+    <h1 class="gate-title">The portal is asleep</h1>
+    <p class="gate-sub">Enter the developer password to wake it up.</p>
     <div class="msg error" id="gateError">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
       <span>Wrong password. Try again.</span>
     </div>
-    <div class="form-group">
-      <input type="password" id="devPasswordInput" class="form-input" placeholder="Developer password" autocomplete="off">
+    <div class="form-group input-wrap">
+      <svg class="ico input-icon" aria-hidden="true"><use href="./shared/icons.svg#i-lock"/></svg>
+      <input type="password" id="devPasswordInput" class="form-input" placeholder="Developer password" autocomplete="off" aria-label="Developer password">
     </div>
-    <button class="btn btn-primary" id="gateBtn">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
-      Enter portal
+    <button class="btn btn-primary btn-block" id="gateBtn">
+      <svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-noren"/></svg>
+      Enter portal 
     </button>
-    <div class="gate-hint">Default password: <code>devmode123</code></div>
+    <details class="gate-hint text-muted">
+      <summary><svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-chevron-right"/></svg>Default dev password</summary>
+      <code>devmode123</code>
+    </details>
   </div>
 </div>
 
@@ -260,177 +415,188 @@
 <div id="devMain" style="display:none;">
 <div class="portal">
 
-  <div class="portal-header">
-    <div class="hanko">開発</div>
-    <div>
-      <div class="portal-eyebrow"><span class="dot"></span>Developer access only</div>
-      <h1 class="portal-title">Maneki Neko setup portal</h1>
-      <p class="portal-sub">Create restaurants, manage staff logins, and configure tables.</p>
-    </div>
+  <header class="portal-header">
+    <div class="hanko hanko--lg" aria-hidden="true">DEV</div>
+    <p class="eyebrow portal-eyebrow"><span class="dot" aria-hidden="true"></span><span>Developer access only</span></p>
+    <h1 class="portal-title">Maneki Neko setup portal </h1>
+    <p class="portal-sub">The back room of the lucky-cat restaurant: open new shops, hand out staff name plates, and lay out the tables before any waiter greets a guest.</p>
+    <div class="portal-rule" aria-hidden="true"></div>
     <div class="stat-row">
-      <div class="stat-coin"><b id="restStatCount">0</b><span>spots</span></div>
+      <div class="stat-coin"><b id="restStatCount">0</b><span>shops</span></div>
+      <div class="stat-caption">
+        
+        <small>restaurants on the books</small>
+      </div>
     </div>
-  </div>
+  </header>
 
   <div class="portal-grid">
 
     <!-- LEFT: Create Restaurant -->
     <div class="col">
-      <div class="module mod-violet">
+      <section class="module paper mod-violet" aria-labelledby="newRestTitle">
         <div class="module-head">
           <div class="module-head-left">
-            <div class="module-icon">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M9 21V12h6v9"/></svg>
-            </div>
-            <div class="module-title">New restaurant</div>
+            <div class="module-icon"><svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-lantern"/></svg></div>
+            <h2 class="module-title" id="newRestTitle">New restaurant</h2>
           </div>
         </div>
         <div class="module-body">
           <div class="msg success" id="restMsg"></div>
           <div class="form-group">
-            <label class="form-label">Restaurant name</label>
+            <label class="form-label" for="restName">Restaurant name </label>
             <input type="text" id="restName" class="form-input" placeholder="e.g. Maneki Neko Osaka">
           </div>
           <div class="form-group">
-            <label class="form-label">Login code <small>staff type this at login</small></label>
-            <input type="text" id="restCode" class="form-input mono" placeholder="e.g. OSAKA">
+            <label class="form-label" for="restCode">Login code <small>staff type this at login</small></label>
+            <div class="input-wrap is-code">
+              <svg class="ico input-icon" aria-hidden="true"><use href="./shared/icons.svg#i-lantern"/></svg>
+              <input type="text" id="restCode" class="form-input code" placeholder="e.g. OSAKA" autocomplete="off" spellcheck="false">
+            </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Address <small>optional</small></label>
+            <label class="form-label" for="restAddress">Address <small>optional</small></label>
             <input type="text" id="restAddress" class="form-input" placeholder="e.g. 5-10 Dotonbori, Osaka">
           </div>
           <button class="btn btn-primary" id="createRestBtn">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Create restaurant
+            <svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-plus"/></svg>
+            Create restaurant 
           </button>
         </div>
-      </div>
+      </section>
 
       <!-- Restaurant List -->
-      <div class="module mod-violet">
+      <section class="module lacquer mod-violet" aria-labelledby="restListTitle">
         <div class="module-head">
           <div class="module-head-left">
-            <div class="module-icon">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
-            </div>
-            <div class="module-title">All restaurants</div>
+            <div class="module-icon"><svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-scroll"/></svg></div>
+            <h2 class="module-title" id="restListTitle">All restaurants</h2>
           </div>
         </div>
-        <div class="module-body" style="padding-top:1.1rem;">
+        <div class="module-body">
           <div class="list-area" id="restaurantList">
             <div class="empty-state">Loading…</div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
 
     <!-- RIGHT: Create Credential -->
     <div class="col">
-      <div class="module mod-sakura">
+      <section class="module lacquer mod-sakura" aria-labelledby="addCredTitle">
         <div class="module-head">
           <div class="module-head-left">
-            <div class="module-icon">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.5 12.5 19 4l2 2-2 2 2 2-3 3-2-2-2.5 2.5"/></svg>
-            </div>
-            <div class="module-title">Add staff login</div>
+            <div class="module-icon"><svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-user"/></svg></div>
+            <h2 class="module-title" id="addCredTitle">Add staff login</h2>
           </div>
         </div>
         <div class="module-body">
           <div class="msg success" id="credMsg"></div>
           <div class="form-group">
-            <label class="form-label">Restaurant</label>
-            <select id="credRestaurant" class="form-select">
-              <option value="">Select restaurant</option>
-            </select>
+            <label class="form-label" for="credRestaurant">Restaurant </label>
+            <span class="select-wrap block">
+              <select id="credRestaurant" class="form-select">
+                <option value="">Select restaurant</option>
+              </select>
+            </span>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Username</label>
-              <input type="text" id="credUsername" class="form-input" placeholder="e.g. admin">
+              <label class="form-label" for="credUsername">Username </label>
+              <input type="text" id="credUsername" class="form-input" placeholder="e.g. admin" autocomplete="off">
             </div>
             <div class="form-group">
-              <label class="form-label">PIN</label>
-              <input type="text" id="credPin" class="form-input mono" placeholder="1234" inputmode="numeric" maxlength="8">
+              <label class="form-label" for="credPin">PIN <small>4–8 digits</small></label>
+              <input type="text" id="credPin" class="form-input pin" placeholder="1234" inputmode="numeric" maxlength="8" autocomplete="off">
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Role / module</label>
-            <select id="credRole" class="form-select">
-              <option value="admin">Admin dashboard</option>
-              <option value="kds">Kitchen display (KDS)</option>
-              <option value="bot_manager">Bot management</option>
-            </select>
+            <label class="form-label" for="credRole">Role / module </label>
+            <span class="select-wrap block">
+              <select id="credRole" class="form-select">
+                <option value="admin">Admin dashboard</option>
+                <option value="kds">Kitchen display (KDS)</option>
+                <option value="bot_manager">Bot management</option>
+              </select>
+            </span>
           </div>
           <button class="btn btn-primary" id="createCredBtn">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add login
+            <svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-plus"/></svg>
+            Add login 
           </button>
         </div>
-      </div>
+      </section>
 
       <!-- Credentials List -->
-      <div class="module mod-sakura">
+      <section class="module lacquer mod-sakura" aria-labelledby="credListTitle">
         <div class="module-head">
           <div class="module-head-left">
-            <div class="module-icon">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </div>
-            <div class="module-title">Staff credentials</div>
+            <div class="module-icon"><svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-people"/></svg></div>
+            <h2 class="module-title" id="credListTitle">Staff credentials</h2>
           </div>
         </div>
         <div class="module-body">
-          <div class="form-group" style="margin-bottom:.25rem;">
-            <select id="filterRestaurant" class="form-select">
-              <option value="">All restaurants</option>
-            </select>
+          <div class="form-group">
+            <label class="form-label visually-hidden" for="filterRestaurant">Filter by restaurant</label>
+            <span class="select-wrap block">
+              <select id="filterRestaurant" class="form-select">
+                <option value="">All restaurants</option>
+              </select>
+            </span>
           </div>
           <div class="list-area" id="credentialList">
             <div class="empty-state">Pick a restaurant to see its staff</div>
           </div>
         </div>
-      </div>
+      </section>
 
       <!-- Table Management Panel -->
-      <div class="module mod-gold">
+      <section class="module lacquer mod-gold" aria-labelledby="tablesTitle">
         <div class="module-head">
           <div class="module-head-left">
-            <div class="module-icon">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-            </div>
-            <div class="module-title">Restaurant tables</div>
+            <div class="module-icon"><svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-table"/></svg></div>
+            <h2 class="module-title" id="tablesTitle">Restaurant tables</h2>
           </div>
         </div>
         <div class="module-body">
           <div class="msg success" id="tableMsg"></div>
           <div class="form-group">
-            <label class="form-label">Restaurant</label>
-            <select id="tableRestaurant" class="form-select">
-              <option value="">Select restaurant</option>
-            </select>
+            <label class="form-label" for="tableRestaurant">Restaurant </label>
+            <span class="select-wrap block">
+              <select id="tableRestaurant" class="form-select">
+                <option value="">Select restaurant</option>
+              </select>
+            </span>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">From table #</label>
+              <label class="form-label" for="tableFrom">From table # </label>
               <input type="number" id="tableFrom" class="form-input" value="1" min="1" max="99">
             </div>
             <div class="form-group">
-              <label class="form-label">To table #</label>
+              <label class="form-label" for="tableTo">To table # </label>
               <input type="number" id="tableTo" class="form-input" value="10" min="1" max="99">
             </div>
           </div>
           <button class="btn btn-primary" id="createTablesBtn">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Generate table range
+            <svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-table"/></svg>
+            Generate table range 
           </button>
 
-          <div class="list-area" id="tablesList" style="margin-top:1.1rem;max-height:220px;">
+          <div class="list-area" id="tablesList">
             <div class="empty-state">Select a restaurant to view &amp; manage tables</div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
 
   </div>
+
+  <footer class="portal-foot">
+    <svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#neko"/></svg>
+    
+    <span>Maneki Neko · developer back room</span>
+  </footer>
 </div>
 </div>
 
@@ -439,21 +605,21 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
-// ── Icon helper (presentation only) ────────────────────────────────────────
+// ── Icon helper (presentation only) — sprite ids from shared/icons.svg ──────
 const ICONS = {
-    trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>',
-    check: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
-    alert: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
-    xcircle: '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
-    shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
-    kanban: '<rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="10" rx="1"/>',
-    robot: '<rect x="5" y="8" width="14" height="10" rx="2"/><circle cx="9" cy="13" r="1.3"/><circle cx="15" cy="13" r="1.3"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1"/>',
-    hash: '<line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>',
-    pin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
-    table: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>',
+    trash: 'i-trash',
+    check: 'i-check',
+    alert: 'i-warning',
+    xcircle: 'i-close',
+    shield: 'i-soroban',
+    kanban: 'i-knife',
+    robot: 'i-neko-head',
+    hash: 'i-hash',
+    pin: 'i-pin',
+    table: 'i-table',
 };
 function icon(name, size = 14, cls = '') {
-    return `<svg class="i ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ''}</svg>`;
+    return `<svg class="ico i ${cls}" width="${size}" height="${size}" aria-hidden="true"><use href="./shared/icons.svg#${ICONS[name] || 'i-info'}"/></svg>`;
 }
 
 // ── Dev password ─────────────────────────────────────────────────────────
@@ -528,7 +694,7 @@ async function loadRestaurants() {
     if (error) {
         console.error('loadRestaurants error:', error);
         document.getElementById('restaurantList').innerHTML =
-            `<div class="empty-state" style="color:var(--danger)">${icon('alert',20)}DB error: ${error.message}</div>`;
+            `<div class="empty-state is-error">${icon('alert',20)}DB error: ${error.message}</div>`;
         return;
     }
     allRestaurants = data || [];
@@ -552,7 +718,7 @@ function renderRestaurantList() {
                     ${r.address ? `<span class="sep">·</span><span>${icon('pin',11)} ${r.address}</span>` : ''}
                 </div>
             </div>
-            <button class="btn btn-danger btn-icon" onclick="deleteRestaurant('${r.id}','${r.name}')">${icon('trash',14)}</button>
+            <button class="btn btn-danger btn-icon" aria-label="Delete ${r.name}" title="Delete restaurant" onclick="deleteRestaurant('${r.id}','${r.name}')">${icon('trash',14)}</button>
         </div>
     `).join('');
 }
@@ -594,7 +760,7 @@ function renderTablesList(tables, restaurantId) {
                 <span class="code-badge">Table ${t.table_number}</span>
                 <div class="row-meta">${t.label || ''}</div>
             </div>
-            <button class="btn btn-danger btn-icon" onclick="deleteTable('${t.id}','${restaurantId}')">${icon('trash',13)}</button>
+            <button class="btn btn-danger btn-icon" aria-label="Delete table ${t.table_number}" title="Delete table" onclick="deleteTable('${t.id}','${restaurantId}')">${icon('trash',13)}</button>
         </div>
     `).join('');
 }
@@ -747,7 +913,7 @@ function renderCredentialList(creds, restaurantId) {
                 <div class="row-name" style="font-family:'JetBrains Mono',monospace;">${c.username}</div>
                 <div class="row-meta">${roleBadge(c.role)}<span class="sep">·</span><span>Added ${new Date(c.created_at).toLocaleDateString()}</span></div>
             </div>
-            <button class="btn btn-danger btn-icon" onclick="deleteCredential('${c.id}','${c.username}','${restaurantId}')">${icon('trash',14)}</button>
+            <button class="btn btn-danger btn-icon" aria-label="Remove login ${c.username}" title="Remove login" onclick="deleteCredential('${c.id}','${c.username}','${restaurantId}')">${icon('trash',14)}</button>
         </div>
     `).join('');
 }
@@ -758,6 +924,10 @@ async function deleteCredential(id, username, restaurantId) {
     if (error) { alert('Error: ' + error.message); return; }
     await loadCredentials(restaurantId);
 }
+
+// BUG FIX: inline onclick handlers need these on window (only deleteTable was exported before)
+window.deleteRestaurant = deleteRestaurant;
+window.deleteCredential = deleteCredential;
 
 }); // end DOMContentLoaded
 </script>

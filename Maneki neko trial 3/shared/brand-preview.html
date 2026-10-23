@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Maneki Brand Preview</title>
+<link rel="icon" href="favicon.svg">
+<meta name="theme-color" content="#100d0c">
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="icons.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+/* Self-contained QA styles — intentionally independent of theme.css */
+:root{--bg:#100d0c;--surface:#1a1614;--high:#231e1b;--washi:#efe6d6;--washi-bright:#f6efe2;--washi-2:#e4d9c4;--sumi:#1c1816;--sumi-3:#6a5f55;--kin:#e3b55a;--kin-dim:#a8832f;--shu:#d63a1f;--shu-deep:#8f2211;--text:#f7efe4;--muted:#9d9183;--matcha:#9fbf5a;--lantern:#ffb347}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:400 15px/1.5 Inter,system-ui,sans-serif}
+body{padding:24px 16px 64px}
+h1,h2{font-family:'Shippori Mincho',serif;font-weight:600;letter-spacing:.01em;margin:0 0 .5rem}
+h1{font-size:1.75rem}
+h2{font-size:1.25rem;margin-top:2.5rem;padding-bottom:.4rem;border-bottom:1px solid rgba(227,181,90,.32)}
+.eyebrow{font:600 .6875rem Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--kin);margin:0 0 .25rem}
+p.note{color:var(--muted);font-size:.8125rem;margin:.25rem 0 1rem}
+.row{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-end}
+.fig{display:grid;gap:6px;justify-items:center}
+.fig small{font:500 .6875rem 'JetBrains Mono',monospace;color:var(--muted)}
+.paper{background:var(--washi);background-image:linear-gradient(180deg,var(--washi-bright),var(--washi) 60%,var(--washi-2));color:var(--sumi);border:1px solid rgba(28,24,22,.18);border-radius:4px;padding:20px;box-shadow:inset 0 1px 0 rgba(255,250,240,.45),0 1px 2px rgba(0,0,0,.35),0 10px 26px rgba(0,0,0,.3)}
+.paper .eyebrow{color:#b3301a}
+.paper .fig small,.paper code,.paper p.note{color:var(--sumi-3)}
+.lacquer{background:var(--surface);border:1px solid rgba(240,220,190,.08);border-radius:6px;padding:20px;box-shadow:inset 0 1px 0 rgba(255,235,205,.04),0 2px 8px rgba(0,0,0,.35)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px 14px}
+.cell{display:flex;align-items:center;gap:10px;min-height:36px}
+.cell code{font:500 .6875rem 'JetBrains Mono',monospace;color:var(--muted);word-break:break-all}
+.pair{display:inline-flex;align-items:center;gap:8px;flex-shrink:0;padding:4px;border-radius:4px}
+.i24{width:24px;height:24px}
+.i16{width:16px;height:16px}
+.gold{color:var(--kin)}
+.washi{color:var(--text)}
+.sumi{color:var(--sumi)}
+.grid-check .pair{background:rgba(255,255,255,.03)}
+.crests{display:flex;gap:24px;flex-wrap:wrap}
+.crests .fig .ico{width:28px;height:28px}
+.kamon{display:inline-grid;place-items:center;width:28px;height:28px}
+.art{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-end}
+.art img{width:120px;height:120px;display:block}
+.art .dim img{opacity:.55;width:64px;height:64px}
+/* mascot paw animation (local keyframe; theme.css will own 'beckon') */
+@keyframes beckon{0%,55%,100%{transform:rotate(0)}15%{transform:rotate(-22deg)}30%{transform:rotate(6deg)}42%{transform:rotate(-16deg)}}
+.mn .mn-paw{animation:beckon 2.4s ease-in-out infinite}
+.mn--washi{filter:drop-shadow(0 1px 0 rgba(28,24,22,.25))}
+@media (prefers-reduced-motion:reduce){.mn .mn-paw{animation:none;transform:rotate(0)}}
+/* sample buttons for mask icons */
+.btns{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:.55rem 1rem;border-radius:3px;font:600 .9rem Inter;border:1px solid transparent;cursor:pointer}
+.btn-seal{background:linear-gradient(170deg,#e0432a,var(--shu) 55%,#b32a14);color:#fff;border-color:var(--shu-deep);box-shadow:0 2px 0 var(--shu-deep),0 6px 16px rgba(214,58,31,.28)}
+.btn-kin{background:var(--kin);color:var(--sumi)}
+.btn-matcha{background:var(--matcha);color:var(--sumi)}
+.btn-paper{background:var(--washi);color:var(--sumi);border-color:rgba(28,24,22,.22)}
+.btn-ghost{background:transparent;color:#cbbfb0;border-color:rgba(240,220,190,.16)}
+.btn-danger{background:transparent;color:#e07a8a;border-color:currentColor}
+.btn-sumi{background:var(--sumi);color:var(--washi)}
+.timer{font:800 1.5rem Inter;font-variant-numeric:tabular-nums;color:var(--sumi);display:inline-flex;align-items:center}
+.timer::before{color:var(--sumi-3)}
+.toast{display:inline-flex;align-items:center;gap:.6rem;background:var(--washi);color:var(--sumi);padding:.6rem .9rem;border-radius:4px;border-left:4px solid #4a6420;font-size:.875rem}
+.toast.error{border-color:#8f3140}
+.toast.info{border-color:var(--kin-dim)}
+.col-empty{display:grid;justify-items:center;gap:.4rem;color:var(--muted);padding:1.25rem;width:200px;text-align:center;font-size:.875rem}
+.col-empty::before{content:"";width:64px;height:64px;background:url("art/empty-kama.svg") center/contain no-repeat;opacity:.55}
+.lockup{display:inline-flex;gap:.6rem;align-items:center}
+.lockup .stack{display:grid;line-height:1.1}
+.lockup .kanji{font:700 1.125rem 'Shippori Mincho',serif;letter-spacing:.04em}
+.lockup .romaji{font:600 .5625rem Inter;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+.hanko{display:inline-grid;place-items:center;width:18px;height:18px;font:700 .625rem/1 'Shippori Mincho',serif;color:#fff;background:var(--shu);border:2px solid rgba(255,255,255,.55);outline:1px solid var(--shu-deep);border-radius:3px;transform:rotate(-6deg)}
+.fav{display:flex;gap:18px;align-items:flex-end}
+.fav img{display:block;border-radius:3px}
+.caption{font:500 .75rem 'Noto Sans JP',sans-serif;color:var(--muted)}
+.bgsample{display:inline-grid;place-items:center;width:64px;height:64px;border-radius:6px}
+.sheet{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px 4px;justify-items:center}
+.sheet .ico{width:40px;height:40px}
+.sheet16{display:grid;grid-template-columns:repeat(auto-fill,minmax(26px,1fr));gap:8px 4px;justify-items:center}
+.sheet16 .ico{width:16px;height:16px}
+.sheet code,.sheet16 code{font:500 8px 'JetBrains Mono',monospace;color:var(--muted);text-align:center;display:block;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mag-toggle{position:fixed;top:12px;right:16px;z-index:5;background:var(--high);border:1px solid rgba(227,181,90,.32);border-radius:4px;padding:6px 10px;font-size:.8125rem;display:flex;gap:8px;align-items:center}
+body.mag .grid,body.mag .crests,body.mag .btns,body.mag .fav,body.mag .masks{zoom:2.5}
+body.mag .mn .mn-paw,body.mag [class*="mi-"]::before{animation:none}
+body.mag svg:has(> use[href="icons.svg#neko"]){visibility:hidden}
+</style>
+</head>
+<body>
+<label class="mag-toggle"><input type="checkbox" id="mag"> magnify icon grids ×2.5 (QA; pauses motion)</label>
+<script>document.getElementById('mag').addEventListener('change',e=>document.body.classList.toggle('mag',e.target.checked));if(location.hash==='#mag'){document.getElementById('mag').checked=true;document.body.classList.add('mag')}</script>
+<p class="eyebrow">Kami to Sumi</p>
+<h1>Maneki Neko — brand assets QA</h1>
+<p class="note">shared/maneki.svg · shared/icons.svg · shared/icons.css · shared/favicon.svg · shared/art/*.svg — every asset below is referenced relative to <code>shared/</code>.</p>
+
+<h2>0 · Contact sheet (all 61 symbols)</h2>
+<p class="note">40 px in gold on lacquer, then 16 px — the whole set at a glance for consistency checks.</p>
+<div class="lacquer sheet gold">
+<div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-neko-head"/></svg><code>neko-head</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-lantern"/></svg><code>lantern</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-bowl"/></svg><code>bowl</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-scroll"/></svg><code>scroll</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-people"/></svg><code>people</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-ema"/></svg><code>ema</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-soroban"/></svg><code>soroban</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-knife"/></svg><code>knife</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-tray"/></svg><code>tray</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-okamochi"/></svg><code>okamochi</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-user"/></svg><code>user</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-noren"/></svg><code>noren</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-taiko"/></svg><code>taiko</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-crane"/></svg><code>crane</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-check"/></svg><code>check</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-close"/></svg><code>close</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-plus"/></svg><code>plus</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-minus"/></svg><code>minus</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-trash"/></svg><code>trash</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-fude"/></svg><code>fude</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-search"/></svg><code>search</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-arrow-left"/></svg><code>arrow-left</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-arrow-right"/></svg><code>arrow-right</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-arrow-down"/></svg><code>arrow-down</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-chevron-down"/></svg><code>chevron-down</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg><code>chevron-right</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-clock"/></svg><code>clock</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-incense"/></svg><code>incense</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-fire"/></svg><code>fire</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-bell"/></svg><code>bell</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-koban"/></svg><code>koban</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-thermo"/></svg><code>thermo</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-battery"/></svg><code>battery</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-refresh"/></svg><code>refresh</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-enso"/></svg><code>enso</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-daruma"/></svg><code>daruma</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-mask"/></svg><code>mask</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-heart-pulse"/></svg><code>heart-pulse</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-sakura"/></svg><code>sakura</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-sakura-fill"/></svg><code>sakura-fill</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-chili"/></svg><code>chili</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-bill"/></svg><code>bill</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-card"/></svg><code>card</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-upi"/></svg><code>upi</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-lock"/></svg><code>lock</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-eye"/></svg><code>eye</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-eye-off"/></svg><code>eye-off</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-table"/></svg><code>table</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-warning"/></svg><code>warning</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-info"/></svg><code>info</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-home"/></svg><code>home</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg><code>calendar</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-menu"/></svg><code>menu</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-zap"/></svg><code>zap</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-hash"/></svg><code>hash</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-pin"/></svg><code>pin</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-uzumaki"/></svg><code>crest-uzumaki</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-star"/></svg><code>crest-star</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-bell"/></svg><code>crest-bell</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-swirl"/></svg><code>crest-swirl</code></div> <div><svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-hat"/></svg><code>crest-hat</code></div>
+</div>
+<div class="lacquer sheet16 gold" style="margin-top:10px">
+<svg class="ico" aria-hidden="true"><use href="icons.svg#i-neko-head"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-lantern"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-bowl"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-scroll"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-people"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-ema"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-soroban"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-knife"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-tray"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-okamochi"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-user"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-noren"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-taiko"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-crane"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-check"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-close"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-plus"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-minus"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-trash"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-fude"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-search"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-arrow-left"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-arrow-right"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-arrow-down"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-chevron-down"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-clock"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-incense"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-fire"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-bell"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-koban"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-thermo"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-battery"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-refresh"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-enso"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-daruma"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-mask"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-heart-pulse"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-sakura"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-sakura-fill"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-chili"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-bill"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-card"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-upi"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-lock"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-eye"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-eye-off"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-table"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-warning"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-info"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-home"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-menu"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-zap"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-hash"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-pin"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-uzumaki"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-star"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-bell"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-swirl"/></svg> <svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-hat"/></svg>
+</div>
+
+<h2>1 · Mascot</h2>
+<p class="note">Inline copies (paw animated by a local <code>beckon</code> keyframe) at 160 / 72 / 28 px, the mirrored staff variant, the <code>.mn--washi</code> drop-shadow variant on paper, and the sprite <code>#neko</code> via <code>&lt;use&gt;</code> (self-animated, 4 s).</p>
+<div class="row">
+  <div class="fig"><svg class="mn " viewBox="0 0 120 120" width="160" height="160" role="img" aria-label="Maneki-neko"><g class="mn-shadow"><ellipse cx="60" cy="111" rx="34" ry="4.5" fill="rgba(0,0,0,.28)"/></g><g class="mn-body" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke-width="9.5"/>
+    <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+    <path d="M33 108q-5 0-5-5C28 84 33 72 44 68q16-5 32 0c11 4 16 16 16 35q0 5-5 5z"/>
+  </g><g class="mn-head" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M37 27 42 13l10 12z"/><path d="M83 27 78 13 68 25z"/>
+    <circle cx="60" cy="46" r="27"/>
+  </g><g class="mn-patches" stroke="none">
+    <path d="M66 22c6-4 12-2 15 7-2 6-5 10-9 11-5-2-8-7-6-18z" fill="#c8923e"/>
+    <path d="M83 79c-7 4-13 12-13 19 4 4 11 4 16 2 2-7 1-14-3-21z" fill="#3a332e"/>
+    <path d="M77 17l-6.5 7.5" fill="none" stroke="#c8923e" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <g class="mn-head-line" fill="none" stroke="#1c1816" stroke-width="1.5"><circle cx="60" cy="46" r="27"/><path d="M83 27 78 13 68 25z"/></g><g class="mn-ears" fill="#f3b9c8" stroke="none"><path d="M41 25 43.5 18l6 7z"/><path d="M79 25l-2.5-7-6 7z"/></g><g class="mn-face" fill="none" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="42" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/><circle cx="78" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/>
+    <path d="M47 47q5-5 10 0M63 47q5-5 10 0" fill="none" stroke="#1c1816" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M57.8 52.2h4.4L60 55.2z" fill="#d63a1f" stroke="#d63a1f" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M54 57q3 3.5 6 0q3 3.5 6 0" stroke-width="1.6"/>
+    <path d="M38 50 23 47M38 54H21M38 58l-15 3M82 50l15-3M82 54h17M82 58l15 3" stroke-width="1"/>
+  </g><g class="mn-collar" fill="#d63a1f" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round">
+    <path d="M43 69q17 8 34 0v5.5q-17 11-34 0z"/>
+  </g>
+  <g class="mn-bell" fill="#e3b55a" stroke="#a8832f" stroke-width="1.5">
+    <circle cx="60" cy="82" r="5.5"/><path d="M57 83h6M60 83v2.4" fill="none" stroke-linecap="round" stroke="#a8832f"/>
+  </g><g class="mn-koban" fill="#e3b55a" stroke="#a8832f" stroke-width="1.2">
+    <ellipse cx="44" cy="97" rx="13" ry="9"/><ellipse cx="44" cy="97" rx="9" ry="5" fill="none"/>
+  </g><g class="mn-paw-rest" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke-width="11"/>
+    <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke="#f3ebdd" stroke-width="8"/>
+    <ellipse cx="38" cy="89.5" rx="6.5" ry="4.5"/>
+  </g><g class="mn-paw" style="transform-origin:82px 66px;transform-box:view-box" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M83 72c12 0 17-12 13-34" fill="none" stroke-width="9.5"/>
+    <path d="M83 72c12 0 17-12 13-34" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+    <circle cx="95" cy="33" r="7.5"/>
+    <g fill="#f3b9c8" stroke="none"><ellipse cx="91" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="28.6" rx="1.6" ry="1.9"/><ellipse cx="99" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="35" rx="3.4" ry="2.6"/></g>
+  </g></svg><small>inline 160</small></div>
+  <div class="fig"><svg class="mn " viewBox="0 0 120 120" width="72" height="72" role="img" aria-label="Maneki-neko"><g class="mn-shadow"><ellipse cx="60" cy="111" rx="34" ry="4.5" fill="rgba(0,0,0,.28)"/></g><g class="mn-body" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke-width="9.5"/>
+    <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+    <path d="M33 108q-5 0-5-5C28 84 33 72 44 68q16-5 32 0c11 4 16 16 16 35q0 5-5 5z"/>
+  </g><g class="mn-head" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M37 27 42 13l10 12z"/><path d="M83 27 78 13 68 25z"/>
+    <circle cx="60" cy="46" r="27"/>
+  </g><g class="mn-patches" stroke="none">
+    <path d="M66 22c6-4 12-2 15 7-2 6-5 10-9 11-5-2-8-7-6-18z" fill="#c8923e"/>
+    <path d="M83 79c-7 4-13 12-13 19 4 4 11 4 16 2 2-7 1-14-3-21z" fill="#3a332e"/>
+    <path d="M77 17l-6.5 7.5" fill="none" stroke="#c8923e" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <g class="mn-head-line" fill="none" stroke="#1c1816" stroke-width="1.5"><circle cx="60" cy="46" r="27"/><path d="M83 27 78 13 68 25z"/></g><g class="mn-ears" fill="#f3b9c8" stroke="none"><path d="M41 25 43.5 18l6 7z"/><path d="M79 25l-2.5-7-6 7z"/></g><g class="mn-face" fill="none" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="42" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/><circle cx="78" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/>
+    <path d="M47 47q5-5 10 0M63 47q5-5 10 0" fill="none" stroke="#1c1816" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M57.8 52.2h4.4L60 55.2z" fill="#d63a1f" stroke="#d63a1f" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M54 57q3 3.5 6 0q3 3.5 6 0" stroke-width="1.6"/>
+    <path d="M38 50 23 47M38 54H21M38 58l-15 3M82 50l15-3M82 54h17M82 58l15 3" stroke-width="1"/>
+  </g><g class="mn-collar" fill="#d63a1f" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round">
+    <path d="M43 69q17 8 34 0v5.5q-17 11-34 0z"/>
+  </g>
+  <g class="mn-bell" fill="#e3b55a" stroke="#a8832f" stroke-width="1.5">
+    <circle cx="60" cy="82" r="5.5"/><path d="M57 83h6M60 83v2.4" fill="none" stroke-linecap="round" stroke="#a8832f"/>
+  </g><g class="mn-koban" fill="#e3b55a" stroke="#a8832f" stroke-width="1.2">
+    <ellipse cx="44" cy="97" rx="13" ry="9"/><ellipse cx="44" cy="97" rx="9" ry="5" fill="none"/>
+  </g><g class="mn-paw-rest" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke-width="11"/>
+    <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke="#f3ebdd" stroke-width="8"/>
+    <ellipse cx="38" cy="89.5" rx="6.5" ry="4.5"/>
+  </g><g class="mn-paw" style="transform-origin:82px 66px;transform-box:view-box" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M83 72c12 0 17-12 13-34" fill="none" stroke-width="9.5"/>
+    <path d="M83 72c12 0 17-12 13-34" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+    <circle cx="95" cy="33" r="7.5"/>
+    <g fill="#f3b9c8" stroke="none"><ellipse cx="91" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="28.6" rx="1.6" ry="1.9"/><ellipse cx="99" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="35" rx="3.4" ry="2.6"/></g>
+  </g></svg><small>inline 72</small></div>
+  <div class="fig"><svg class="mn " viewBox="0 0 120 120" width="28" height="28" role="img" aria-label="Maneki-neko"><g class="mn-shadow"><ellipse cx="60" cy="111" rx="34" ry="4.5" fill="rgba(0,0,0,.28)"/></g><g class="mn-body" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke-width="9.5"/>
+    <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+    <path d="M33 108q-5 0-5-5C28 84 33 72 44 68q16-5 32 0c11 4 16 16 16 35q0 5-5 5z"/>
+  </g><g class="mn-head" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M37 27 42 13l10 12z"/><path d="M83 27 78 13 68 25z"/>
+    <circle cx="60" cy="46" r="27"/>
+  </g><g class="mn-patches" stroke="none">
+    <path d="M66 22c6-4 12-2 15 7-2 6-5 10-9 11-5-2-8-7-6-18z" fill="#c8923e"/>
+    <path d="M83 79c-7 4-13 12-13 19 4 4 11 4 16 2 2-7 1-14-3-21z" fill="#3a332e"/>
+    <path d="M77 17l-6.5 7.5" fill="none" stroke="#c8923e" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <g class="mn-head-line" fill="none" stroke="#1c1816" stroke-width="1.5"><circle cx="60" cy="46" r="27"/><path d="M83 27 78 13 68 25z"/></g><g class="mn-ears" fill="#f3b9c8" stroke="none"><path d="M41 25 43.5 18l6 7z"/><path d="M79 25l-2.5-7-6 7z"/></g><g class="mn-face" fill="none" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="42" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/><circle cx="78" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/>
+    <path d="M47 47q5-5 10 0M63 47q5-5 10 0" fill="none" stroke="#1c1816" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M57.8 52.2h4.4L60 55.2z" fill="#d63a1f" stroke="#d63a1f" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M54 57q3 3.5 6 0q3 3.5 6 0" stroke-width="1.6"/>
+    <path d="M38 50 23 47M38 54H21M38 58l-15 3M82 50l15-3M82 54h17M82 58l15 3" stroke-width="1"/>
+  </g><g class="mn-collar" fill="#d63a1f" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round">
+    <path d="M43 69q17 8 34 0v5.5q-17 11-34 0z"/>
+  </g>
+  <g class="mn-bell" fill="#e3b55a" stroke="#a8832f" stroke-width="1.5">
+    <circle cx="60" cy="82" r="5.5"/><path d="M57 83h6M60 83v2.4" fill="none" stroke-linecap="round" stroke="#a8832f"/>
+  </g><g class="mn-koban" fill="#e3b55a" stroke="#a8832f" stroke-width="1.2">
+    <ellipse cx="44" cy="97" rx="13" ry="9"/><ellipse cx="44" cy="97" rx="9" ry="5" fill="none"/>
+  </g><g class="mn-paw-rest" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke-width="11"/>
+    <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke="#f3ebdd" stroke-width="8"/>
+    <ellipse cx="38" cy="89.5" rx="6.5" ry="4.5"/>
+  </g><g class="mn-paw" style="transform-origin:82px 66px;transform-box:view-box" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M83 72c12 0 17-12 13-34" fill="none" stroke-width="9.5"/>
+    <path d="M83 72c12 0 17-12 13-34" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+    <circle cx="95" cy="33" r="7.5"/>
+    <g fill="#f3b9c8" stroke="none"><ellipse cx="91" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="28.6" rx="1.6" ry="1.9"/><ellipse cx="99" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="35" rx="3.4" ry="2.6"/></g>
+  </g></svg><small>inline 28</small></div>
+  <div class="fig"><svg class="mn" viewBox="0 0 120 120" width="72" height="72" role="img" aria-label="Maneki-neko, staff variant"><g class="mn-shadow"><ellipse cx="60" cy="111" rx="34" ry="4.5" fill="rgba(0,0,0,.28)"/></g><g class="mn-mirror" transform="matrix(-1 0 0 1 120 0)"><g class="mn-body" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke-width="9.5"/>
+    <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+    <path d="M33 108q-5 0-5-5C28 84 33 72 44 68q16-5 32 0c11 4 16 16 16 35q0 5-5 5z"/>
+  </g><g class="mn-head" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M37 27 42 13l10 12z"/><path d="M83 27 78 13 68 25z"/>
+    <circle cx="60" cy="46" r="27"/>
+  </g><g class="mn-patches" stroke="none">
+    <path d="M66 22c6-4 12-2 15 7-2 6-5 10-9 11-5-2-8-7-6-18z" fill="#c8923e"/>
+    <path d="M83 79c-7 4-13 12-13 19 4 4 11 4 16 2 2-7 1-14-3-21z" fill="#3a332e"/>
+    <path d="M77 17l-6.5 7.5" fill="none" stroke="#c8923e" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <g class="mn-head-line" fill="none" stroke="#1c1816" stroke-width="1.5"><circle cx="60" cy="46" r="27"/><path d="M83 27 78 13 68 25z"/></g><g class="mn-ears" fill="#f3b9c8" stroke="none"><path d="M41 25 43.5 18l6 7z"/><path d="M79 25l-2.5-7-6 7z"/></g><g class="mn-face" fill="none" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="42" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/><circle cx="78" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/>
+    <path d="M47 47q5-5 10 0M63 47q5-5 10 0" fill="none" stroke="#1c1816" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M57.8 52.2h4.4L60 55.2z" fill="#d63a1f" stroke="#d63a1f" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M54 57q3 3.5 6 0q3 3.5 6 0" stroke-width="1.6"/>
+    <path d="M38 50 23 47M38 54H21M38 58l-15 3M82 50l15-3M82 54h17M82 58l15 3" stroke-width="1"/>
+  </g><g class="mn-collar" fill="#d63a1f" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round">
+    <path d="M43 69q17 8 34 0v5.5q-17 11-34 0z"/>
+  </g>
+  <g class="mn-bell" fill="#e3b55a" stroke="#a8832f" stroke-width="1.5">
+    <circle cx="60" cy="82" r="5.5"/><path d="M57 83h6M60 83v2.4" fill="none" stroke-linecap="round" stroke="#a8832f"/>
+  </g><g class="mn-koban" fill="#e3b55a" stroke="#a8832f" stroke-width="1.2">
+    <ellipse cx="44" cy="97" rx="13" ry="9"/><ellipse cx="44" cy="97" rx="9" ry="5" fill="none"/>
+  </g><g class="mn-paw-rest" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke-width="11"/>
+    <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke="#f3ebdd" stroke-width="8"/>
+    <ellipse cx="38" cy="89.5" rx="6.5" ry="4.5"/>
+  </g><g class="mn-paw" style="transform-origin:82px 66px;transform-box:view-box" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M83 72c12 0 17-12 13-34" fill="none" stroke-width="9.5"/>
+    <path d="M83 72c12 0 17-12 13-34" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+    <circle cx="95" cy="33" r="7.5"/>
+    <g fill="#f3b9c8" stroke="none"><ellipse cx="91" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="28.6" rx="1.6" ry="1.9"/><ellipse cx="99" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="35" rx="3.4" ry="2.6"/></g>
+  </g></g></svg><small>mirror 72 (staff)</small></div>
+  <div class="fig"><svg class="mn" viewBox="0 0 120 120" width="160" height="160" role="img" aria-label="Maneki-neko, staff variant"><g class="mn-shadow"><ellipse cx="60" cy="111" rx="34" ry="4.5" fill="rgba(0,0,0,.28)"/></g><g class="mn-mirror" transform="matrix(-1 0 0 1 120 0)"><g class="mn-body" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke-width="9.5"/>
+    <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+    <path d="M33 108q-5 0-5-5C28 84 33 72 44 68q16-5 32 0c11 4 16 16 16 35q0 5-5 5z"/>
+  </g><g class="mn-head" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M37 27 42 13l10 12z"/><path d="M83 27 78 13 68 25z"/>
+    <circle cx="60" cy="46" r="27"/>
+  </g><g class="mn-patches" stroke="none">
+    <path d="M66 22c6-4 12-2 15 7-2 6-5 10-9 11-5-2-8-7-6-18z" fill="#c8923e"/>
+    <path d="M83 79c-7 4-13 12-13 19 4 4 11 4 16 2 2-7 1-14-3-21z" fill="#3a332e"/>
+    <path d="M77 17l-6.5 7.5" fill="none" stroke="#c8923e" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <g class="mn-head-line" fill="none" stroke="#1c1816" stroke-width="1.5"><circle cx="60" cy="46" r="27"/><path d="M83 27 78 13 68 25z"/></g><g class="mn-ears" fill="#f3b9c8" stroke="none"><path d="M41 25 43.5 18l6 7z"/><path d="M79 25l-2.5-7-6 7z"/></g><g class="mn-face" fill="none" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="42" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/><circle cx="78" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/>
+    <path d="M47 47q5-5 10 0M63 47q5-5 10 0" fill="none" stroke="#1c1816" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M57.8 52.2h4.4L60 55.2z" fill="#d63a1f" stroke="#d63a1f" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M54 57q3 3.5 6 0q3 3.5 6 0" stroke-width="1.6"/>
+    <path d="M38 50 23 47M38 54H21M38 58l-15 3M82 50l15-3M82 54h17M82 58l15 3" stroke-width="1"/>
+  </g><g class="mn-collar" fill="#d63a1f" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round">
+    <path d="M43 69q17 8 34 0v5.5q-17 11-34 0z"/>
+  </g>
+  <g class="mn-bell" fill="#e3b55a" stroke="#a8832f" stroke-width="1.5">
+    <circle cx="60" cy="82" r="5.5"/><path d="M57 83h6M60 83v2.4" fill="none" stroke-linecap="round" stroke="#a8832f"/>
+  </g><g class="mn-koban" fill="#e3b55a" stroke="#a8832f" stroke-width="1.2">
+    <ellipse cx="44" cy="97" rx="13" ry="9"/><ellipse cx="44" cy="97" rx="9" ry="5" fill="none"/>
+  </g><g class="mn-paw-rest" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke-width="11"/>
+    <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke="#f3ebdd" stroke-width="8"/>
+    <ellipse cx="38" cy="89.5" rx="6.5" ry="4.5"/>
+  </g><g class="mn-paw" style="transform-origin:82px 66px;transform-box:view-box" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M83 72c12 0 17-12 13-34" fill="none" stroke-width="9.5"/>
+    <path d="M83 72c12 0 17-12 13-34" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+    <circle cx="95" cy="33" r="7.5"/>
+    <g fill="#f3b9c8" stroke="none"><ellipse cx="91" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="28.6" rx="1.6" ry="1.9"/><ellipse cx="99" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="35" rx="3.4" ry="2.6"/></g>
+  </g></g></svg><small>mirror 160</small></div>
+  <div class="fig"><svg class="ico" style="width:28px;height:28px" aria-hidden="true"><use href="icons.svg#neko"/></svg><small>sprite #neko 28</small></div>
+  <div class="fig"><svg class="ico" style="width:96px;height:96px" aria-hidden="true"><use href="icons.svg#neko"/></svg><small>sprite #neko 96</small></div>
+  <div class="fig"><span class="lockup"><svg class="ico" style="width:28px;height:28px" aria-hidden="true"><use href="icons.svg#neko"/></svg><span class="stack"><span class="romaji">Maneki Neko</span></span><span class="hanko">M</span></span><small>.brand-lockup</small></div>
+</div>
+<div class="paper" style="margin-top:20px;display:inline-block">
+  <div class="row">
+    <div class="fig"><svg class="mn mn--washi" viewBox="0 0 120 120" width="72" height="72" role="img" aria-label="Maneki-neko"><g class="mn-shadow"><ellipse cx="60" cy="111" rx="34" ry="4.5" fill="rgba(0,0,0,.28)"/></g><g class="mn-body" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke-width="9.5"/>
+    <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+    <path d="M33 108q-5 0-5-5C28 84 33 72 44 68q16-5 32 0c11 4 16 16 16 35q0 5-5 5z"/>
+  </g><g class="mn-head" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M37 27 42 13l10 12z"/><path d="M83 27 78 13 68 25z"/>
+    <circle cx="60" cy="46" r="27"/>
+  </g><g class="mn-patches" stroke="none">
+    <path d="M66 22c6-4 12-2 15 7-2 6-5 10-9 11-5-2-8-7-6-18z" fill="#c8923e"/>
+    <path d="M83 79c-7 4-13 12-13 19 4 4 11 4 16 2 2-7 1-14-3-21z" fill="#3a332e"/>
+    <path d="M77 17l-6.5 7.5" fill="none" stroke="#c8923e" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <g class="mn-head-line" fill="none" stroke="#1c1816" stroke-width="1.5"><circle cx="60" cy="46" r="27"/><path d="M83 27 78 13 68 25z"/></g><g class="mn-ears" fill="#f3b9c8" stroke="none"><path d="M41 25 43.5 18l6 7z"/><path d="M79 25l-2.5-7-6 7z"/></g><g class="mn-face" fill="none" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="42" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/><circle cx="78" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/>
+    <path d="M47 47q5-5 10 0M63 47q5-5 10 0" fill="none" stroke="#1c1816" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M57.8 52.2h4.4L60 55.2z" fill="#d63a1f" stroke="#d63a1f" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M54 57q3 3.5 6 0q3 3.5 6 0" stroke-width="1.6"/>
+    <path d="M38 50 23 47M38 54H21M38 58l-15 3M82 50l15-3M82 54h17M82 58l15 3" stroke-width="1"/>
+  </g><g class="mn-collar" fill="#d63a1f" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round">
+    <path d="M43 69q17 8 34 0v5.5q-17 11-34 0z"/>
+  </g>
+  <g class="mn-bell" fill="#e3b55a" stroke="#a8832f" stroke-width="1.5">
+    <circle cx="60" cy="82" r="5.5"/><path d="M57 83h6M60 83v2.4" fill="none" stroke-linecap="round" stroke="#a8832f"/>
+  </g><g class="mn-koban" fill="#e3b55a" stroke="#a8832f" stroke-width="1.2">
+    <ellipse cx="44" cy="97" rx="13" ry="9"/><ellipse cx="44" cy="97" rx="9" ry="5" fill="none"/>
+  </g><g class="mn-paw-rest" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke-width="11"/>
+    <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke="#f3ebdd" stroke-width="8"/>
+    <ellipse cx="38" cy="89.5" rx="6.5" ry="4.5"/>
+  </g><g class="mn-paw" style="transform-origin:82px 66px;transform-box:view-box" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M83 72c12 0 17-12 13-34" fill="none" stroke-width="9.5"/>
+    <path d="M83 72c12 0 17-12 13-34" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+    <circle cx="95" cy="33" r="7.5"/>
+    <g fill="#f3b9c8" stroke="none"><ellipse cx="91" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="28.6" rx="1.6" ry="1.9"/><ellipse cx="99" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="35" rx="3.4" ry="2.6"/></g>
+  </g></svg><small>.mn--washi 72 on paper</small></div>
+    <div class="fig"><svg class="mn mn--washi" viewBox="0 0 120 120" width="64" height="64" role="img" aria-label="Maneki-neko"><g class="mn-shadow"><ellipse cx="60" cy="111" rx="34" ry="4.5" fill="rgba(0,0,0,.28)"/></g><g class="mn-body" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke-width="9.5"/>
+    <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+    <path d="M33 108q-5 0-5-5C28 84 33 72 44 68q16-5 32 0c11 4 16 16 16 35q0 5-5 5z"/>
+  </g><g class="mn-head" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M37 27 42 13l10 12z"/><path d="M83 27 78 13 68 25z"/>
+    <circle cx="60" cy="46" r="27"/>
+  </g><g class="mn-patches" stroke="none">
+    <path d="M66 22c6-4 12-2 15 7-2 6-5 10-9 11-5-2-8-7-6-18z" fill="#c8923e"/>
+    <path d="M83 79c-7 4-13 12-13 19 4 4 11 4 16 2 2-7 1-14-3-21z" fill="#3a332e"/>
+    <path d="M77 17l-6.5 7.5" fill="none" stroke="#c8923e" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <g class="mn-head-line" fill="none" stroke="#1c1816" stroke-width="1.5"><circle cx="60" cy="46" r="27"/><path d="M83 27 78 13 68 25z"/></g><g class="mn-ears" fill="#f3b9c8" stroke="none"><path d="M41 25 43.5 18l6 7z"/><path d="M79 25l-2.5-7-6 7z"/></g><g class="mn-face" fill="none" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="42" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/><circle cx="78" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/>
+    <path d="M47 47q5-5 10 0M63 47q5-5 10 0" fill="none" stroke="#1c1816" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M57.8 52.2h4.4L60 55.2z" fill="#d63a1f" stroke="#d63a1f" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M54 57q3 3.5 6 0q3 3.5 6 0" stroke-width="1.6"/>
+    <path d="M38 50 23 47M38 54H21M38 58l-15 3M82 50l15-3M82 54h17M82 58l15 3" stroke-width="1"/>
+  </g><g class="mn-collar" fill="#d63a1f" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round">
+    <path d="M43 69q17 8 34 0v5.5q-17 11-34 0z"/>
+  </g>
+  <g class="mn-bell" fill="#e3b55a" stroke="#a8832f" stroke-width="1.5">
+    <circle cx="60" cy="82" r="5.5"/><path d="M57 83h6M60 83v2.4" fill="none" stroke-linecap="round" stroke="#a8832f"/>
+  </g><g class="mn-koban" fill="#e3b55a" stroke="#a8832f" stroke-width="1.2">
+    <ellipse cx="44" cy="97" rx="13" ry="9"/><ellipse cx="44" cy="97" rx="9" ry="5" fill="none"/>
+  </g><g class="mn-paw-rest" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke-width="11"/>
+    <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke="#f3ebdd" stroke-width="8"/>
+    <ellipse cx="38" cy="89.5" rx="6.5" ry="4.5"/>
+  </g><g class="mn-paw" style="transform-origin:82px 66px;transform-box:view-box" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M83 72c12 0 17-12 13-34" fill="none" stroke-width="9.5"/>
+    <path d="M83 72c12 0 17-12 13-34" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+    <circle cx="95" cy="33" r="7.5"/>
+    <g fill="#f3b9c8" stroke="none"><ellipse cx="91" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="28.6" rx="1.6" ry="1.9"/><ellipse cx="99" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="35" rx="3.4" ry="2.6"/></g>
+  </g></svg><small>overlay 64</small></div>
+    <div class="fig"><span class="lockup sumi"><svg class="ico" style="width:28px;height:28px" aria-hidden="true"><use href="icons.svg#neko"/></svg><span class="stack"><span class="romaji">Maneki Neko</span></span><span class="hanko">M</span></span><small>lockup on paper</small></div>
+  </div>
+</div>
+
+<h2>2 · Sprite icons on lacquer — gold (--kin)</h2>
+<p class="note">24 px and 16 px side by side. 61 symbols + <code>#neko</code>.</p>
+<div class="lacquer grid grid-check gold">
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-neko-head"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-neko-head"/></svg></span><code>i-neko-head</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-lantern"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-lantern"/></svg></span><code>i-lantern</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-bowl"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-bowl"/></svg></span><code>i-bowl</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-scroll"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-scroll"/></svg></span><code>i-scroll</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-people"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-people"/></svg></span><code>i-people</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-ema"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-ema"/></svg></span><code>i-ema</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-soroban"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-soroban"/></svg></span><code>i-soroban</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-knife"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-knife"/></svg></span><code>i-knife</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-tray"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-tray"/></svg></span><code>i-tray</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-okamochi"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-okamochi"/></svg></span><code>i-okamochi</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-user"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-user"/></svg></span><code>i-user</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-noren"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-noren"/></svg></span><code>i-noren</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-taiko"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-taiko"/></svg></span><code>i-taiko</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-crane"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-crane"/></svg></span><code>i-crane</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-check"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span><code>i-check</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-close"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-close"/></svg></span><code>i-close</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-plus"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-plus"/></svg></span><code>i-plus</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-minus"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-minus"/></svg></span><code>i-minus</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-trash"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-trash"/></svg></span><code>i-trash</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-fude"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-fude"/></svg></span><code>i-fude</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-search"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-search"/></svg></span><code>i-search</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-arrow-left"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-arrow-left"/></svg></span><code>i-arrow-left</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-arrow-right"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-arrow-right"/></svg></span><code>i-arrow-right</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-arrow-down"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-arrow-down"/></svg></span><code>i-arrow-down</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-chevron-down"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-chevron-down"/></svg></span><code>i-chevron-down</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span><code>i-chevron-right</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-clock"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-clock"/></svg></span><code>i-clock</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-incense"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-incense"/></svg></span><code>i-incense</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-fire"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-fire"/></svg></span><code>i-fire</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-bell"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-bell"/></svg></span><code>i-bell</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-koban"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-koban"/></svg></span><code>i-koban</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-thermo"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-thermo"/></svg></span><code>i-thermo</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-battery"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-battery"/></svg></span><code>i-battery</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-refresh"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-refresh"/></svg></span><code>i-refresh</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-enso"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-enso"/></svg></span><code>i-enso</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-daruma"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-daruma"/></svg></span><code>i-daruma</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-mask"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-mask"/></svg></span><code>i-mask</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-heart-pulse"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-heart-pulse"/></svg></span><code>i-heart-pulse</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-sakura"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-sakura"/></svg></span><code>i-sakura</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-sakura-fill"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-sakura-fill"/></svg></span><code>i-sakura-fill</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-chili"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-chili"/></svg></span><code>i-chili</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-bill"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-bill"/></svg></span><code>i-bill</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-card"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-card"/></svg></span><code>i-card</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-upi"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-upi"/></svg></span><code>i-upi</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-lock"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-lock"/></svg></span><code>i-lock</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-eye"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-eye"/></svg></span><code>i-eye</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-eye-off"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-eye-off"/></svg></span><code>i-eye-off</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-table"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-table"/></svg></span><code>i-table</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-warning"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-warning"/></svg></span><code>i-warning</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-info"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-info"/></svg></span><code>i-info</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-home"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-home"/></svg></span><code>i-home</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg></span><code>i-calendar</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-menu"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-menu"/></svg></span><code>i-menu</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-zap"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span><code>i-zap</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-hash"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-hash"/></svg></span><code>i-hash</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-pin"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-pin"/></svg></span><code>i-pin</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-crest-uzumaki"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-crest-uzumaki"/></svg></span><code>i-crest-uzumaki</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-crest-star"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-crest-star"/></svg></span><code>i-crest-star</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-crest-bell"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-crest-bell"/></svg></span><code>i-crest-bell</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-crest-swirl"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-crest-swirl"/></svg></span><code>i-crest-swirl</code></div>
+<div class="cell gold"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-crest-hat"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-crest-hat"/></svg></span><code>i-crest-hat</code></div>
+</div>
+
+<h2>3 · Sprite icons on lacquer — washi (--text-primary)</h2>
+<div class="lacquer grid washi">
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-neko-head"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-neko-head"/></svg></span><code>i-neko-head</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-lantern"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-lantern"/></svg></span><code>i-lantern</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-bowl"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-bowl"/></svg></span><code>i-bowl</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-scroll"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-scroll"/></svg></span><code>i-scroll</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-people"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-people"/></svg></span><code>i-people</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-ema"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-ema"/></svg></span><code>i-ema</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-soroban"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-soroban"/></svg></span><code>i-soroban</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-knife"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-knife"/></svg></span><code>i-knife</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-tray"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-tray"/></svg></span><code>i-tray</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-okamochi"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-okamochi"/></svg></span><code>i-okamochi</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-user"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-user"/></svg></span><code>i-user</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-noren"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-noren"/></svg></span><code>i-noren</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-taiko"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-taiko"/></svg></span><code>i-taiko</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-crane"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-crane"/></svg></span><code>i-crane</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-check"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span><code>i-check</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-close"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-close"/></svg></span><code>i-close</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-plus"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-plus"/></svg></span><code>i-plus</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-minus"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-minus"/></svg></span><code>i-minus</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-trash"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-trash"/></svg></span><code>i-trash</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-fude"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-fude"/></svg></span><code>i-fude</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-search"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-search"/></svg></span><code>i-search</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-arrow-left"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-arrow-left"/></svg></span><code>i-arrow-left</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-arrow-right"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-arrow-right"/></svg></span><code>i-arrow-right</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-arrow-down"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-arrow-down"/></svg></span><code>i-arrow-down</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-chevron-down"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-chevron-down"/></svg></span><code>i-chevron-down</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span><code>i-chevron-right</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-clock"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-clock"/></svg></span><code>i-clock</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-incense"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-incense"/></svg></span><code>i-incense</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-fire"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-fire"/></svg></span><code>i-fire</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-bell"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-bell"/></svg></span><code>i-bell</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-koban"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-koban"/></svg></span><code>i-koban</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-thermo"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-thermo"/></svg></span><code>i-thermo</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-battery"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-battery"/></svg></span><code>i-battery</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-refresh"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-refresh"/></svg></span><code>i-refresh</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-enso"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-enso"/></svg></span><code>i-enso</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-daruma"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-daruma"/></svg></span><code>i-daruma</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-mask"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-mask"/></svg></span><code>i-mask</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-heart-pulse"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-heart-pulse"/></svg></span><code>i-heart-pulse</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-sakura"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-sakura"/></svg></span><code>i-sakura</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-sakura-fill"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-sakura-fill"/></svg></span><code>i-sakura-fill</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-chili"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-chili"/></svg></span><code>i-chili</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-bill"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-bill"/></svg></span><code>i-bill</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-card"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-card"/></svg></span><code>i-card</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-upi"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-upi"/></svg></span><code>i-upi</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-lock"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-lock"/></svg></span><code>i-lock</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-eye"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-eye"/></svg></span><code>i-eye</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-eye-off"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-eye-off"/></svg></span><code>i-eye-off</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-table"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-table"/></svg></span><code>i-table</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-warning"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-warning"/></svg></span><code>i-warning</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-info"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-info"/></svg></span><code>i-info</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-home"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-home"/></svg></span><code>i-home</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg></span><code>i-calendar</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-menu"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-menu"/></svg></span><code>i-menu</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-zap"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span><code>i-zap</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-hash"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-hash"/></svg></span><code>i-hash</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-pin"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-pin"/></svg></span><code>i-pin</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-crest-uzumaki"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-crest-uzumaki"/></svg></span><code>i-crest-uzumaki</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-crest-star"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-crest-star"/></svg></span><code>i-crest-star</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-crest-bell"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-crest-bell"/></svg></span><code>i-crest-bell</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-crest-swirl"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-crest-swirl"/></svg></span><code>i-crest-swirl</code></div>
+<div class="cell washi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-crest-hat"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-crest-hat"/></svg></span><code>i-crest-hat</code></div>
+</div>
+
+<h2>4 · Sprite icons on paper — sumi ink</h2>
+<div class="paper grid sumi">
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-neko-head"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-neko-head"/></svg></span><code>i-neko-head</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-lantern"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-lantern"/></svg></span><code>i-lantern</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-bowl"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-bowl"/></svg></span><code>i-bowl</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-scroll"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-scroll"/></svg></span><code>i-scroll</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-people"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-people"/></svg></span><code>i-people</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-ema"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-ema"/></svg></span><code>i-ema</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-soroban"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-soroban"/></svg></span><code>i-soroban</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-knife"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-knife"/></svg></span><code>i-knife</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-tray"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-tray"/></svg></span><code>i-tray</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-okamochi"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-okamochi"/></svg></span><code>i-okamochi</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-user"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-user"/></svg></span><code>i-user</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-noren"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-noren"/></svg></span><code>i-noren</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-taiko"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-taiko"/></svg></span><code>i-taiko</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-crane"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-crane"/></svg></span><code>i-crane</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-check"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-check"/></svg></span><code>i-check</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-close"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-close"/></svg></span><code>i-close</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-plus"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-plus"/></svg></span><code>i-plus</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-minus"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-minus"/></svg></span><code>i-minus</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-trash"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-trash"/></svg></span><code>i-trash</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-fude"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-fude"/></svg></span><code>i-fude</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-search"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-search"/></svg></span><code>i-search</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-arrow-left"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-arrow-left"/></svg></span><code>i-arrow-left</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-arrow-right"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-arrow-right"/></svg></span><code>i-arrow-right</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-arrow-down"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-arrow-down"/></svg></span><code>i-arrow-down</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-chevron-down"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-chevron-down"/></svg></span><code>i-chevron-down</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></span><code>i-chevron-right</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-clock"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-clock"/></svg></span><code>i-clock</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-incense"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-incense"/></svg></span><code>i-incense</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-fire"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-fire"/></svg></span><code>i-fire</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-bell"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-bell"/></svg></span><code>i-bell</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-koban"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-koban"/></svg></span><code>i-koban</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-thermo"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-thermo"/></svg></span><code>i-thermo</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-battery"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-battery"/></svg></span><code>i-battery</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-refresh"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-refresh"/></svg></span><code>i-refresh</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-enso"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-enso"/></svg></span><code>i-enso</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-daruma"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-daruma"/></svg></span><code>i-daruma</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-mask"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-mask"/></svg></span><code>i-mask</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-heart-pulse"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-heart-pulse"/></svg></span><code>i-heart-pulse</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-sakura"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-sakura"/></svg></span><code>i-sakura</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-sakura-fill"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-sakura-fill"/></svg></span><code>i-sakura-fill</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-chili"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-chili"/></svg></span><code>i-chili</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-bill"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-bill"/></svg></span><code>i-bill</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-card"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-card"/></svg></span><code>i-card</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-upi"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-upi"/></svg></span><code>i-upi</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-lock"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-lock"/></svg></span><code>i-lock</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-eye"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-eye"/></svg></span><code>i-eye</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-eye-off"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-eye-off"/></svg></span><code>i-eye-off</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-table"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-table"/></svg></span><code>i-table</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-warning"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-warning"/></svg></span><code>i-warning</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-info"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-info"/></svg></span><code>i-info</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-home"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-home"/></svg></span><code>i-home</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-calendar"/></svg></span><code>i-calendar</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-menu"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-menu"/></svg></span><code>i-menu</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-zap"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-zap"/></svg></span><code>i-zap</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-hash"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-hash"/></svg></span><code>i-hash</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-pin"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-pin"/></svg></span><code>i-pin</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-crest-uzumaki"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-crest-uzumaki"/></svg></span><code>i-crest-uzumaki</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-crest-star"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-crest-star"/></svg></span><code>i-crest-star</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-crest-bell"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-crest-bell"/></svg></span><code>i-crest-bell</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-crest-swirl"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-crest-swirl"/></svg></span><code>i-crest-swirl</code></div>
+<div class="cell sumi"><span class="pair"><svg class="ico i24" aria-hidden="true"><use href="icons.svg#i-crest-hat"/></svg><svg class="ico i16" aria-hidden="true"><use href="icons.svg#i-crest-hat"/></svg></span><code>i-crest-hat</code></div>
+</div>
+
+<h2>5 · Crests (kamon) at 28 px in their --c-* colours</h2>
+<div class="row crests">
+<div class="fig" style="color:#e0772b"><svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-uzumaki"/></svg><small>Naruto</small></div>
+<div class="fig" style="color:#e3b55a"><svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-star"/></svg><small>Goku</small></div>
+<div class="fig" style="color:#7fa3c8"><svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-bell"/></svg><small>Doraemon</small></div>
+<div class="fig" style="color:#e99bb0"><svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-swirl"/></svg><small>Shinchan</small></div>
+<div class="fig" style="color:#ff7a5c"><svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-hat"/></svg><small>Luffy</small></div>
+<div class="paper" style="padding:12px 16px"><div class="row crests"><div class="fig" style="color:#e0772b"><svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-uzumaki"/></svg><small>Naruto</small></div><div class="fig" style="color:#e3b55a"><svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-star"/></svg><small>Goku</small></div><div class="fig" style="color:#7fa3c8"><svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-bell"/></svg><small>Doraemon</small></div><div class="fig" style="color:#e99bb0"><svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-swirl"/></svg><small>Shinchan</small></div><div class="fig" style="color:#ff7a5c"><svg class="ico" aria-hidden="true"><use href="icons.svg#i-crest-hat"/></svg><small>Luffy</small></div></div></div>
+<div class="fig"><span class="kamon" style="color:#7fa3c8;border:2px solid currentColor;border-radius:50%"><svg class="ico" style="width:17px;height:17px" aria-hidden="true"><use href="icons.svg#i-crest-bell"/></svg></span><small>.kamon 60%</small></div>
+</div>
+
+<h2>6 · KDS empty-state drawings (shared/art)</h2>
+<p class="note">120 px at full opacity, then 64 px at opacity .55 as they appear in <code>.col-empty</code>.</p>
+<div class="row art">
+  <div class="fig"><img src="art/empty-neko.svg" alt=""><small>empty-neko.svg</small></div>
+  <div class="fig"><img src="art/empty-kama.svg" alt=""><small>empty-kama.svg</small></div>
+  <div class="fig"><img src="art/empty-obon.svg" alt=""><small>empty-obon.svg</small></div>
+  <div class="fig dim"><img src="art/empty-neko.svg" alt=""><small>64 · .55</small></div>
+  <div class="fig dim"><img src="art/empty-kama.svg" alt=""><small>64 · .55</small></div>
+  <div class="fig dim"><img src="art/empty-obon.svg" alt=""><small>64 · .55</small></div>
+  <div class="lacquer col-empty">No orders are being prepared</div>
+</div>
+
+<h2>7 · Mask icons (icons.css) on sample leaf buttons</h2>
+<p class="note">All 14 <code>mi-*</code> classes; the glyph is a <code>::before</code> mask in <code>currentColor</code>, so a JS <code>textContent</code> rewrite keeps it.</p>
+<div class="btns">
+  <button class="btn btn-seal mi-fire">Start Preparing</button>
+  <button class="btn btn-kin mi-bell">Mark Ready</button>
+  <button class="btn btn-matcha mi-tray">Serve</button>
+  <button class="btn btn-danger mi-close">Cancel</button>
+  <button class="btn btn-ghost mi-refresh">Refresh</button>
+  <button class="btn btn-sumi mi-daruma">Restart</button>
+  <button class="btn btn-sumi mi-daruma restarting">Restarting…</button>
+  <button class="btn btn-seal mi-mask">Apply to all</button>
+  <button class="btn btn-paper mi-check">Done</button>
+  <button class="btn btn-ghost mi-eye" id="togglePin" aria-pressed="false">Show PIN</button>
+  <button class="btn btn-ghost mi-eye-off">Hide PIN</button>
+  <button class="btn btn-seal mi-after-arrow">Next</button>
+  <button class="btn btn-ghost mi-enso">Loading</button>
+</div>
+<div class="row" style="margin-top:14px">
+  <div class="paper" style="padding:12px 16px;display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center">
+    <span class="timer mi-incense">04:32</span>
+    <span class="toast success">Order placed</span>
+    <span class="toast error">Could not reach the kitchen</span>
+    <span class="toast info">Refreshing…</span>
+  </div>
+</div>
+
+<h2>8 · Favicon</h2>
+<div class="fav">
+  <div class="fig"><img src="favicon.svg" width="16" height="16" alt=""><small>16</small></div>
+  <div class="fig"><img src="favicon.svg" width="32" height="32" alt=""><small>32</small></div>
+  <div class="fig"><img src="favicon.svg" width="64" height="64" alt=""><small>64</small></div>
+  <div class="fig"><span class="bgsample" style="background:#fff"><img src="favicon.svg" width="32" height="32" alt=""></span><small>on white tab</small></div>
+</div>
+</body>
+</html>

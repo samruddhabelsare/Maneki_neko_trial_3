@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+<rect x="1" y="1" width="30" height="30" rx="5" fill="#d63a1f"/>
+<rect x="3.5" y="3.5" width="25" height="25" rx="3.5" fill="none" stroke="#ffffff" stroke-opacity=".55" stroke-width="1.5"/>
+<text x="16" y="16" text-anchor="middle" dominant-baseline="central" font-family="'Shippori Mincho',Georgia,serif" font-weight="700" font-size="19" fill="#ffffff" lang="ja">M</text>
+</svg>
