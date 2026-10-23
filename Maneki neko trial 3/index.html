@@ -5,327 +5,542 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maneki Neko | Smart Restaurant AI System</title>
     <meta name="description" content="Agentic AI-powered restaurant management with anime personality bots">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Maneki Noir Design System -->
+    <meta name="theme-color" content="#100d0c">
+    <link rel="icon" href="./shared/favicon.svg">
+    <!-- Kami to Sumi design system (fonts come through theme's @import) -->
     <link rel="stylesheet" href="./shared/theme.css">
+    <link rel="stylesheet" href="./shared/icons.css">
     <style>
-        /* ── Landing Page Specific ───────────────────────────────────── */
-        body {
-            overflow-x: hidden;
+        /* ══════════════════════════════════════════════════════════════
+           Landing — genkan (the front door). Page CSS holds layout and
+           landing-only selectors; every token, surface recipe, seal and
+           keyframe comes from shared/theme.css.
+           ══════════════════════════════════════════════════════════════ */
+        body { overflow-x: hidden; }
+
+        /* ── Site nav: fixed lintel with two noren links ─────────────── */
+        .site-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-h);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0 clamp(1rem, 3vw, 2rem);
+        }
+        .site-nav .brand-lockup .hanko { margin-left: 0.25rem; }
+        /* Lockups are links: pad them to the 44px hit floor (visual size unchanged) */
+        .site-nav .brand-lockup, .site-footer .brand-lockup { min-height: 44px; padding: 0.35rem 0.25rem 0.35rem 0; }
+        .site-nav .noren { padding-top: 4px; }
+        .site-nav .noren-tab {
+            text-decoration: none;
+            gap: 0.5rem;
+            padding: 0.45rem 0.9rem;   /* min-height 44px comes from theme — do not shrink the hit area */
+        }
+        .site-nav .noren-tab .ico { width: 16px; height: 16px; }
+        .site-nav .noren-tab.is-guest { box-shadow: inset 0 -2px 0 var(--sakura); }
+        .site-nav .noren-tab.is-guest:hover { color: var(--sakura); }
+        .site-nav .noren-tab.is-staff:hover { color: var(--kin); }
+        @media (max-width: 480px) {
+            .site-nav .brand-romaji, .site-nav .brand-lockup .hanko { display: none; }
+            .site-nav .noren-tab { padding: 0.45rem 0.6rem; }
+            .site-nav .noren-tab .jp { display: none; }
         }
 
-        /* Hero */
+        /* ── Hero ────────────────────────────────────────────────────── */
         .hero {
             position: relative;
+            z-index: 1;
             min-height: 100vh;
+            min-height: 100svh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 2rem;
+            padding: calc(var(--header-h) + 2rem) 1.5rem 6rem;
             overflow: hidden;
         }
 
+        /* Hinomaru disc (element kept so the stagger child count is unchanged) */
         .hero-orb {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            width: 700px;
-            height: 700px;
-            background: radial-gradient(circle, var(--primary-glow-strong) 0%, transparent 70%);
+            transform: translate(-50%, -54%);
+            width: min(520px, 110vw);
+            height: min(520px, 110vw);
+            background: radial-gradient(circle, rgba(214,58,31,0.22), rgba(214,58,31,0.06) 60%, transparent 70%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 0;
         }
 
+        /* Ensō halo — inline SVG that draws itself once, offset up and to the right.
+           Opacity stays near the theme's .22 so it reads as a halo, not a band. */
+        .hero-enso {
+            background: none;
+            width: min(620px, 140vw);
+            height: min(620px, 140vw);
+            left: 58%;
+            top: 42%;
+            opacity: 0.26;
+            color: var(--kin);
+        }
+        .hero-enso .enso-stroke {
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 4.5;
+            stroke-linecap: round;
+            stroke-dasharray: 300;
+            stroke-dashoffset: 300;
+            animation: enso-draw 1.4s ease-out 0.2s forwards;
+        }
+        .hero-enso .enso-stroke--thin { stroke-width: 1.6; opacity: 0.6; animation-delay: 0.35s; }
+
+        /* Tategaki watermark + omotenashi caption, outside .hero-content */
+        .hero-tategaki {
+            position: absolute;
+            right: clamp(0.5rem, 4vw, 4rem);
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: clamp(4rem, 12vw, 9rem);
+            font-weight: 600;
+            line-height: 1;
+            color: var(--text-ghost);
+            opacity: 0.55;
+            pointer-events: none;
+            user-select: none;
+            z-index: 0;
+        }
+        .hero-omotenashi {
+            position: absolute;
+            left: clamp(0.75rem, 4vw, 4rem);
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-dimmed);
+            letter-spacing: 0.4em;
+            pointer-events: none;
+            user-select: none;
+            z-index: 0;
+        }
+        @media (max-width: 640px) {
+            .hero-omotenashi { display: none; }
+            .hero-enso { width: min(500px, 118vw); height: min(500px, 118vw); opacity: 0.2; }
+            /* Run the watermark down the lower-right, beside the paths and lantern, not behind the title's 招 seal */
+            .hero-tategaki {
+                top: auto;
+                bottom: 4rem;
+                transform: none;
+                right: -0.35rem;
+                opacity: 0.3;
+                font-size: clamp(3.5rem, 11vw, 5rem);
+            }
+        }
+
         .hero-content {
             position: relative;
-            z-index: 1;
-            max-width: 48rem;
+            z-index: 2;
+            max-width: 46rem;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
+        /* The brand cat: inline svg.mn with the paw on the legacy wave */
         .hero-cat {
-            font-size: 5rem;
-            animation: wave 1.5s ease-in-out infinite;
-            filter: drop-shadow(0 0 20px var(--primary-glow));
-            margin-bottom: 1.5rem;
-        }
-
-        .hero-title {
-            font-size: clamp(3rem, 7vw, 5rem);
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            line-height: 1;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero-subtitle {
-            font-size: clamp(1.125rem, 3vw, 1.75rem);
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 1.5rem;
-            letter-spacing: var(--tracking-tight);
-        }
-
-        .hero-desc {
-            font-size: 1.125rem;
-            color: var(--text-muted);
-            max-width: 36rem;
-            line-height: 1.7;
-            margin-bottom: 2.5rem;
-        }
-
-        .scroll-arrow {
-            position: absolute;
-            bottom: 3rem;
-            z-index: 1;
-            animation: float 2.5s ease-in-out infinite;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
-            color: var(--primary);
-            text-decoration: none;
-            transition: all var(--duration-normal) var(--ease-out);
-        }
-
-        .scroll-arrow:hover {
-            border-color: var(--primary-dim);
-            box-shadow: var(--shadow-glow);
-            color: var(--primary);
-        }
-
-        /* Modules Section */
-        .modules-section {
             position: relative;
-            z-index: 1;
-            max-width: 80rem;
-            margin: 0 auto;
-            padding: 6rem 2rem;
-        }
-
-        .section-header {
-            text-align: center;
-            margin-bottom: 4rem;
-        }
-
-        .section-title {
-            font-size: clamp(1.75rem, 4vw, 2.5rem);
-            font-weight: 800;
-            letter-spacing: var(--tracking-tight);
+            width: 160px;
+            height: 160px;
             margin-bottom: 1rem;
         }
-
-        .section-desc {
-            color: var(--text-secondary);
-            font-size: 1.125rem;
-            max-width: 36rem;
-            margin: 0 auto;
+        .hero-cat::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: -6px;
+            width: 180px;
+            height: 44px;
+            transform: translateX(-50%);
+            border-radius: 50%;
+            background: radial-gradient(ellipse at center, var(--lantern-glow-strong), var(--lantern-glow) 40%, transparent 70%);
+            pointer-events: none;
         }
+        .hero-cat .mn { width: 160px; height: 160px; position: relative; }
+        .hero-cat .mn .mn-paw { animation: wave 1.8s ease-in-out infinite; }
+        /* Mascot groups are decorative line art (presentation attributes live in the SVG); no hit-testing */
+        .mn-shadow, .mn-body, .mn-head, .mn-patches, .mn-head-line, .mn-ears, .mn-face,
+        .mn-collar, .mn-bell, .mn-koban, .mn-paw-rest, .mn-koban-text { pointer-events: none; }
 
-        /* Module Cards Grid */
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 2rem;
-            max-width: 64rem;
-            margin: 0 auto 6rem;
-        }
-
-        @media (max-width: 768px) {
-            .cards-grid { grid-template-columns: 1fr; }
-        }
-
-        .module-card {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-xl);
-            padding: 2.5rem;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            transition: all var(--duration-normal) var(--ease-out);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .module-card:hover {
-            border-color: var(--glass-border-hover);
-            box-shadow: var(--shadow-card-hover);
-            transform: translateY(-6px);
-        }
-
-        .module-card-icon {
-            width: 56px;
-            height: 56px;
-            background: var(--bg-surface-highest);
-            border-radius: var(--radius-md);
+        .hero-title {
+            font-size: clamp(2.75rem, 6vw, 4.5rem);
+            font-weight: 600;
+            letter-spacing: var(--tracking-display);
+            line-height: 1.1;
+            color: var(--text-primary);
+            margin-bottom: 0.9rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.75rem;
-            margin-bottom: 2rem;
-            border: 1px solid var(--border);
-            transition: transform var(--duration-normal) var(--ease-spring);
+            flex-wrap: wrap;
+            gap: 0 0.35em;
+        }
+        .hero-title .accent { color: var(--kin); }
+        .hero-title .hanko {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            margin-left: 0.15em;
         }
 
-        .module-card:hover .module-card-icon {
-            transform: scale(1.1);
-            box-shadow: 0 0 16px var(--primary-glow);
-        }
+        .hero-subtitle { margin-bottom: 1.25rem; font-size: 0.75rem; }
+        .hero-subtitle .jp { font-size: 0.9rem; }
 
-        .module-card-title {
-            font-size: 1.5rem;
-            font-weight: 800;
-            margin-bottom: 0.75rem;
-            color: var(--text-primary);
-        }
-
-        .module-card-desc {
+        .hero-desc {
+            font-size: clamp(1rem, 1.6vw, 1.125rem);
             color: var(--text-secondary);
-            line-height: 1.6;
-            margin-bottom: 2rem;
-            flex-grow: 1;
+            max-width: 34rem;
+            line-height: 1.7;
+            margin-bottom: 2.25rem;
         }
+        .hero-desc .jp { display: block; margin-top: 0.6rem; color: var(--text-muted); letter-spacing: 0.12em; }
 
-        .module-card-badge {
-            position: absolute;
-            top: 1.5rem;
-            right: 1.5rem;
-            background: var(--warning-bg);
-            color: var(--warning);
-            font-size: 0.7rem;
-            font-weight: 700;
-            padding: 0.3rem 0.75rem;
-            border-radius: var(--radius-pill);
-            border: 1px solid var(--warning-border);
-            text-transform: uppercase;
-            letter-spacing: var(--tracking-wide);
-        }
-
-        .module-card-cta {
-            display: inline-block;
-            width: 100%;
-            text-align: center;
-            background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
-            color: #fff;
-            font-weight: 700;
-            padding: 1rem 1.5rem;
-            border-radius: var(--radius-md);
-            text-decoration: none;
-            transition: all var(--duration-normal) var(--ease-out);
-            font-size: 0.95rem;
-            box-shadow: var(--shadow-soft);
-        }
-
-        .module-card-cta:hover {
-            box-shadow: var(--shadow-glow), var(--shadow-soft);
-            transform: scale(1.02);
-        }
-
-        .module-card-cta:active {
-            transform: scale(0.97);
-        }
-
-        .module-card-cta.cta-outline {
-            background: transparent;
-            border: 2px solid var(--primary-raw);
-            color: var(--primary);
-            box-shadow: none;
-        }
-
-        .module-card-cta.cta-outline:hover {
-            background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
-            color: #fff;
-            border-color: transparent;
-            box-shadow: var(--shadow-glow);
-        }
-
-        /* Tech Stack */
-        .tech-stack {
-            padding-top: 4rem;
-            border-top: 1px solid var(--border);
-            text-align: center;
-        }
-
-        .tech-label {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--text-dimmed);
-            text-transform: uppercase;
-            letter-spacing: 0.15em;
-            margin-bottom: 2rem;
-        }
-
-        .tech-pills {
+        .hero-paths {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 0.75rem;
         }
+        /* Lacquer-filled so the labels never depend on what the halo draws behind them */
+        .hero-paths .btn-ghost { text-decoration: none; background: rgba(26,22,20,0.88); border-color: var(--border-hover); }
+        .hero-paths .btn-ghost:hover { background: rgba(35,30,27,0.95); }
+        @media (max-width: 480px) {
+            .hero { padding-left: 1.25rem; padding-right: 1.25rem; }
+            .hero-title { gap: 0 0.25em; }
+            .hero-title .hanko { font-size: 0.875rem; }
+        }
 
-        .tech-pill {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            color: var(--text-secondary);
-            padding: 0.6rem 1.25rem;
-            border-radius: var(--radius-pill);
-            font-size: 0.875rem;
+        /* Scroll cue: a small chōchin lantern, floating */
+        .scroll-arrow {
+            position: absolute;
+            bottom: 2.5rem;
+            left: 50%;
+            margin-left: -22px;
+            z-index: 2;
+            width: 44px;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50% / 42%;
+            background:
+                repeating-linear-gradient(0deg, transparent 0 9px, rgba(16,13,12,0.22) 9px 10px),
+                radial-gradient(circle at 50% 30%, #ff7a5c, var(--shu) 55%, var(--primary-dim));
+            border: 1px solid var(--shu-deep);
+            box-shadow: var(--shadow-lantern), 0 2px 0 var(--shu-deep);
+            color: var(--on-primary);
+            text-decoration: none;
+            animation: float 2.5s ease-in-out infinite;
+            transition: box-shadow var(--duration-normal) var(--ease-out);
+        }
+        .scroll-arrow::before,
+        .scroll-arrow::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            width: 22px;
+            height: 5px;
+            transform: translateX(-50%);
+            background: var(--bg-surface-bright);
+            border-radius: 2px;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.5);
+        }
+        .scroll-arrow::before { top: -4px; }
+        .scroll-arrow::after  { bottom: -4px; }
+        .scroll-arrow .ico { width: 20px; height: 20px; stroke-width: 2.25; }
+        .scroll-arrow:hover { box-shadow: 0 0 22px var(--lantern-glow-strong), 0 0 48px var(--lantern-glow), 0 2px 0 var(--shu-deep); }
+        /* The lantern holds still while it is being reached for (stable pointer/keyboard target) */
+        .scroll-arrow:hover, .scroll-arrow:focus-visible { animation-play-state: paused; }
+        @media (max-height: 700px) {
+            .scroll-arrow { position: static; margin: 2rem 0 0; }
+            .hero { padding-bottom: 3rem; }
+        }
+
+        /* ── Modules: the four rooms ─────────────────────────────────── */
+        .modules-section {
+            position: relative;
+            z-index: 1;
+            max-width: 80rem;
+            margin: 0 auto;
+            padding: 5rem 1.25rem 4rem;
+            scroll-margin-top: 72px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3.5rem;
+            display: grid;
+            justify-items: center;
+            gap: 0.6rem;
+        }
+        .section-title {
+            font-size: clamp(1.75rem, 4vw, 2.5rem);
             font-weight: 600;
-            transition: all var(--duration-normal) var(--ease-out);
-            cursor: default;
-            backdrop-filter: var(--glass-blur);
+            letter-spacing: var(--tracking-display);
+            line-height: 1.2;
+        }
+        .section-desc {
+            color: var(--text-secondary);
+            font-size: 1.0625rem;
+            max-width: 36rem;
+            margin: 0 auto;
+        }
+        .section-header .rule-kin { width: min(320px, 70%); margin-top: 0.75rem; }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            max-width: 64rem;
+            margin: 0 auto 5rem;
+        }
+        @media (max-width: 768px) {
+            .cards-grid { grid-template-columns: 1fr; }
         }
 
-        .tech-pill:hover {
-            border-color: var(--glass-border-hover);
+        /* Card = lacquer room with a tategaki washi strip at the left edge */
+        .module-card {
+            padding: 2rem 2rem 2rem 4rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            position: relative;
+            overflow: hidden;
+            transition: border-color var(--duration-normal) var(--ease-out),
+                        box-shadow var(--duration-normal) var(--ease-out);
+        }
+        .module-card::before {
+            content: attr(data-kanji);
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 32px;
+            display: grid;
+            place-items: center;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            font: 700 0.9375rem/1 var(--font-display);
+            letter-spacing: 0.3em;
+            background-color: var(--washi);
+            background-image: var(--washi-fibre), linear-gradient(180deg, var(--washi-bright), var(--washi) 60%, var(--washi-2));
+            background-size: 240px 240px, auto;
+            color: var(--sumi-ink);
+            border-right: 1px solid rgba(28,24,22,0.25);
+            box-shadow: 2px 0 8px rgba(0,0,0,0.25);
+        }
+        .module-card.lacquer:hover { border-color: var(--kin-dim); box-shadow: var(--shadow-card-hover); }
+        .module-card.paper::before {
+            background: var(--sumi-ink);
+            color: var(--washi);
+            border-right-color: var(--sumi-ink);
+        }
+
+        .module-card-kind {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .module-card-icon {
+            width: 44px;
+            height: 44px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            border: 1.5px solid var(--kin-hair);
+            color: var(--kin);
+            margin-bottom: 1.25rem;
+            transition: border-color var(--duration-normal) var(--ease-out), box-shadow var(--duration-normal) var(--ease-out);
+        }
+        .module-card-icon .ico { width: 22px; height: 22px; }
+        .module-card:hover .module-card-icon { border-color: var(--kin); box-shadow: 0 0 14px var(--lantern-glow); }
+        .module-card.paper .module-card-icon { border-color: var(--washi-line-strong); color: var(--sumi-ink-2); }
+        .module-card.paper:hover .module-card-icon { border-color: var(--shu-ink); color: var(--shu-ink); box-shadow: none; }
+
+        .module-card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: var(--tracking-display);
+            margin-bottom: 0.6rem;
             color: var(--text-primary);
-            box-shadow: var(--shadow-glow);
+        }
+        .module-card-desc {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1.75rem;
+            flex-grow: 1;
+        }
+        .module-card.paper .module-card-desc { color: var(--sumi-ink-2); }
+
+        /* Priority badge → 推 hanko (element + absolute position kept) */
+        .module-card-badge {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            width: 40px;
+            height: 40px;
+            font-size: 0;
+            line-height: 0;
+            z-index: 1;
+        }
+        .module-card-badge::before {
+            content: "★";
+            font: 700 1.125rem/1 var(--font-display);
+            color: var(--on-primary);
         }
 
-        /* Footer */
+        .module-card-cta { width: 100%; }
+        .module-card-cta.btn-paper:hover { filter: none; transform: none; }
+        .module-card-cta .ico { width: 18px; height: 18px; }
+        .module-card-cta .arrow { margin-left: auto; }
+
+        /* ── Tech strip: paper tags on a kintsugi rope ───────────────── */
+        .tech-stack {
+            padding-top: 3.5rem;
+            text-align: center;
+            display: grid;
+            justify-items: center;
+            gap: 1.5rem;
+        }
+        .tech-label { margin: 0; }
+        .tech-pills {
+            position: relative;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.75rem 1rem;      /* row-gap leaves air for each wrapped row's own rope */
+            padding-top: 18px;
+            width: 100%;
+            max-width: 56rem;
+        }
+        /* Full-width kintsugi rope only where the five tags sit on one row */
+        .tech-pills::before { display: none; }
+        @media (min-width: 641px) {
+            .tech-pills::before {
+                content: "";
+                display: block;
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 1px;
+                background: var(--rule-kin);
+            }
+        }
+        .tech-pill {
+            position: relative;
+            display: inline-grid;
+            justify-items: center;
+            gap: 0.2rem;
+            min-width: 104px;
+            padding: 0.95rem 0.9rem 0.65rem;
+            font: 600 0.8125rem/1.3 var(--font-sans);
+            color: var(--sumi-ink);
+            cursor: default;
+        }
+        .tech-pill::before {   /* punched hole */
+            content: "";
+            position: absolute;
+            top: 6px;
+            left: 50%;
+            width: 6px;
+            height: 6px;
+            transform: translateX(-50%);
+            border-radius: 50%;
+            background: var(--bg-deep);
+            box-shadow: inset 0 1px 1px rgba(0,0,0,0.6);
+        }
+        .tech-pill::after {    /* each tag carries its own rope segment + cord, so wrapped rows hang from their own rope */
+            content: "";
+            position: absolute;
+            top: -18px;
+            left: -0.5rem;      /* ±.5rem bleed bridges the 1rem gap: segments join into one rope per row */
+            right: -0.5rem;
+            height: 18px;
+            background:
+                linear-gradient(var(--kin-dim), var(--kin-dim)) center top / 100% 1px no-repeat,
+                linear-gradient(var(--kin-dim), var(--kin-dim)) center / 1px 100% no-repeat;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+        .tech-pill .jp {
+            font: 700 1.25rem/1 var(--font-display);
+            color: var(--shu-ink);
+            letter-spacing: 0;
+            margin-top: 0.25rem;
+        }
+        .tech-pill small { font: 500 0.6875rem var(--font-sans); color: var(--sumi-ink-3); letter-spacing: 0.04em; }
+        .tech-pill:nth-child(odd)  { transform: rotate(-1.2deg); }
+        .tech-pill:nth-child(even) { transform: rotate(1deg); }
+
+        /* ── Footer ──────────────────────────────────────────────────── */
         .site-footer {
-            border-top: 1px solid var(--border);
-            margin-top: 3rem;
-            padding: 3rem 2rem;
+            position: relative;
+            z-index: 1;
+            margin-top: 2rem;
+            background: var(--bg-surface-low);
             text-align: center;
         }
-
-        .footer-brand {
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
+        .site-footer .rule-kin { width: 100%; }
+        .footer-band {
+            height: 56px;
+            background-image: var(--seigaiha);
+            background-size: 56px 28px;
+            opacity: 0.9;   /* the token's own stroke is .14, so this lands at ~13% gold — the same weight as the hero waves */
+            -webkit-mask-image: linear-gradient(to bottom, #000, transparent);
+            mask-image: linear-gradient(to bottom, #000, transparent);
         }
-
-        .footer-sub {
-            font-size: 0.875rem;
+        .footer-inner {
+            padding: 1rem 1.25rem 3rem;
+            display: grid;
+            justify-items: center;
+            gap: 1.25rem;
+        }
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem 1.75rem;
+        }
+        .footer-links a {
+            font: 700 0.6875rem/1.4 var(--font-sans);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
             color: var(--text-muted);
+            text-decoration: none;
+            min-height: 44px;
+            padding: 0.75rem 0.35rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: color var(--duration-fast) var(--ease-out);
         }
+        .footer-links a .ico { width: 14px; height: 14px; }
+        .footer-links a:hover { color: var(--kin); }
+        .footer-brand {
+            font: 600 1.125rem/1.4 var(--font-display);
+            color: var(--text-primary);
+            letter-spacing: var(--tracking-display);
+        }
+        .footer-brand .jp { display: block; font: 500 1rem var(--font-jp); color: var(--kin); letter-spacing: 0.1em; margin-bottom: 0.2rem; }
+        .footer-sub { font-size: 0.8125rem; color: var(--text-muted); }
 
-        /* Stagger animation for cards */
-        .module-card { opacity: 0; animation: fadeInUp 0.6s var(--ease-out) forwards; }
-        .module-card:nth-child(1) { animation-delay: 0.1s; }
-        .module-card:nth-child(2) { animation-delay: 0.2s; }
-        .module-card:nth-child(3) { animation-delay: 0.3s; }
-        .module-card:nth-child(4) { animation-delay: 0.4s; }
-
+        /* ── Entrance motion ─────────────────────────────────────────── */
         .hero-content > * {
             opacity: 0;
             animation: fadeInUp 0.8s var(--ease-out) forwards;
@@ -334,96 +549,242 @@
         .hero-content > *:nth-child(2) { animation-delay: 0.2s; }
         .hero-content > *:nth-child(3) { animation-delay: 0.3s; }
         .hero-content > *:nth-child(4) { animation-delay: 0.4s; }
+        .hero-content > *:nth-child(5) { animation-delay: 0.5s; }
+
+        /* Cards: load stagger as the baseline … */
+        .module-card { opacity: 0; animation: fadeInUp 0.6s var(--ease-out) forwards; }
+        .module-card:nth-child(1) { animation-delay: 0.1s; }
+        .module-card:nth-child(2) { animation-delay: 0.2s; }
+        .module-card:nth-child(3) { animation-delay: 0.3s; }
+        .module-card:nth-child(4) { animation-delay: 0.4s; }
+        /* … and on-scroll entry where the browser can drive it (hover transform stays free afterwards) */
+        @supports (animation-timeline: view()) {
+            .module-card {
+                opacity: 1;
+                animation: fadeInUp linear backwards;
+                animation-timeline: view();
+                animation-range: entry 0% entry 35%;
+                animation-delay: 0s;
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .hero-content > *, .module-card { opacity: 1; animation: none; }
+            .hero-enso .enso-stroke { stroke-dashoffset: 0; animation: none; }
+            .scroll-arrow, .hero-cat .mn .mn-paw { animation: none; }
+        }
+        @media (max-width: 480px) {
+            .sakura-drift { display: none; }
+        }
     </style>
 </head>
-<body>
+<body class="unmasked">
+    <div class="room-layer" aria-hidden="true"></div>
 
-    <!-- ── Hero Section ────────────────────────────────────────── -->
+    <!-- ── Site nav (lintel) ───────────────────────────────────────── -->
+    <header class="site-nav lintel">
+        <a class="brand-lockup" href="./index.html" aria-label="Maneki Neko home">
+            <svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#neko"/></svg>
+            <span class="brand-stack">
+                
+                <span class="brand-kanji">Maneki Neko</span><span class="brand-romaji">Smart Restaurant</span>
+            </span>
+            <span class="hanko hanko--sm" aria-hidden="true">M</span>
+        </a>
+        <nav class="noren" aria-label="Entrances">
+            <a class="noren-tab is-staff" href="./login.html">
+                <svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-noren"/></svg>
+                Staff 
+            </a>
+            <a class="noren-tab is-guest" href="./customer-login.html">
+                <svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-tray"/></svg>
+                Guests 
+            </a>
+        </nav>
+    </header>
+
+    <!-- ── Hero ────────────────────────────────────────────────────── -->
     <section class="hero">
         <div class="hero-orb"></div>
+        <svg class="enso-halo hero-enso" viewBox="0 0 100 100" aria-hidden="true">
+            <path class="enso-stroke" d="M50 8a42 42 0 1 0 31 13"/>
+            <path class="enso-stroke enso-stroke--thin" d="M50 8a42 42 0 1 0 31 13" transform="rotate(6 50 50)"/>
+        </svg>
+        <div class="sakura-drift" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        
+        
 
         <div class="hero-content">
-            <div class="hero-cat">🐱</div>
-            <h1 class="hero-title">Maneki Neko</h1>
-            <h2 class="hero-subtitle">Smart Restaurant AI System</h2>
+            <div class="hero-cat">
+                <svg class="mn" viewBox="0 0 120 120" role="img" aria-label="Maneki-neko, the beckoning lucky cat">
+                    <g class="mn-shadow"><ellipse cx="60" cy="111" rx="34" ry="4.5" fill="rgba(0,0,0,.28)"/></g>
+                    <g class="mn-body" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+                        <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke-width="9.5"/>
+                        <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+                        <path d="M33 108q-5 0-5-5C28 84 33 72 44 68q16-5 32 0c11 4 16 16 16 35q0 5-5 5z"/>
+                    </g>
+                    <g class="mn-head" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+                        <path d="M37 27 42 13l10 12z"/><path d="M83 27 78 13 68 25z"/>
+                        <circle cx="60" cy="46" r="27"/>
+                    </g>
+                    <g class="mn-patches" stroke="none">
+                        <path d="M66 22c6-4 12-2 15 7-2 6-5 10-9 11-5-2-8-7-6-18z" fill="#c8923e"/>
+                        <path d="M83 79c-7 4-13 12-13 19 4 4 11 4 16 2 2-7 1-14-3-21z" fill="#3a332e"/>
+                        <path d="M77 17l-6.5 7.5" fill="none" stroke="#c8923e" stroke-width="7" stroke-linecap="round"/>
+                    </g>
+                    <g class="mn-head-line" fill="none" stroke="#1c1816" stroke-width="1.5"><circle cx="60" cy="46" r="27"/><path d="M83 27 78 13 68 25z"/></g>
+                    <g class="mn-ears" fill="#f3b9c8" stroke="none"><path d="M41 25 43.5 18l6 7z"/><path d="M79 25l-2.5-7-6 7z"/></g>
+                    <g class="mn-face" fill="none" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="42" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/><circle cx="78" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/>
+                        <path d="M47 47q5-5 10 0M63 47q5-5 10 0" fill="none" stroke="#1c1816" stroke-width="2.2" stroke-linecap="round"/>
+                        <path d="M57.8 52.2h4.4L60 55.2z" fill="#d63a1f" stroke="#d63a1f" stroke-width="1" stroke-linejoin="round"/>
+                        <path d="M54 57q3 3.5 6 0q3 3.5 6 0" stroke-width="1.6"/>
+                        <path d="M38 50 23 47M38 54H21M38 58l-15 3M82 50l15-3M82 54h17M82 58l15 3" stroke-width="1"/>
+                    </g>
+                    <g class="mn-collar" fill="#d63a1f" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round">
+                        <path d="M43 69q17 8 34 0v5.5q-17 11-34 0z"/>
+                    </g>
+                    <g class="mn-bell" fill="#e3b55a" stroke="#a8832f" stroke-width="1.5">
+                        <circle cx="60" cy="82" r="5.5"/><path d="M57 83h6M60 83v2.4" fill="none" stroke-linecap="round" stroke="#a8832f"/>
+                    </g>
+                    <g class="mn-koban" fill="#e3b55a" stroke="#a8832f" stroke-width="1.2">
+                        <ellipse cx="44" cy="97" rx="13" ry="9"/><ellipse cx="44" cy="97" rx="9" ry="5" fill="none"/>
+                    </g>
+                    <g class="mn-paw-rest" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke-width="11"/>
+                        <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke="#f3ebdd" stroke-width="8"/>
+                        <ellipse cx="38" cy="89.5" rx="6.5" ry="4.5"/>
+                    </g>
+                    
+                    <g class="mn-paw" style="transform-origin:82px 66px;transform-box:view-box" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M83 72c12 0 17-12 13-34" fill="none" stroke-width="9.5"/>
+                        <path d="M83 72c12 0 17-12 13-34" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+                        <circle cx="95" cy="33" r="7.5"/>
+                        <g fill="#f3b9c8" stroke="none"><ellipse cx="91" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="28.6" rx="1.6" ry="1.9"/><ellipse cx="99" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="35" rx="3.4" ry="2.6"/></g>
+                    </g>
+                </svg>
+            </div>
+            <h1 class="hero-title">
+                <span>Maneki <span class="accent">Neko</span></span>
+                <span class="hanko" aria-hidden="true">M</span>
+            </h1>
+            <p class="hero-subtitle eyebrow">Smart Restaurant AI</p>
             <p class="hero-desc">
-                Agentic AI-powered restaurant management featuring highly capable anime personality bots. Refined for the premium dining experience.
+                An AI waiter with a personality at every table, a kitchen pass that reads itself, and a lucky cat watching the till.
+                
             </p>
+            <div class="hero-paths">
+                <a class="btn-ghost" href="./customer-login.html">
+                    <svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-tray"/></svg>
+                    I'm a guest 
+                </a>
+                <a class="btn-ghost" href="./login.html">
+                    <svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-noren"/></svg>
+                    I work here 
+                </a>
+            </div>
         </div>
-        
+
         <a href="#modules" class="scroll-arrow" aria-label="Scroll down">
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+            <svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-arrow-down"/></svg>
         </a>
     </section>
 
-    <!-- ── Modules / Cards ─────────────────────────────────────── -->
+    <!-- ── Modules / the four rooms ────────────────────────────────── -->
     <section id="modules" class="modules-section">
         <div class="section-header">
-            <h2 class="section-title">System Modules</h2>
-            <p class="section-desc">Select a module to access different parts of the platform</p>
+            <p class="eyebrow">Four rooms</p>
+            <h2 class="section-title">Choose your entrance</h2>
+            <p class="section-desc">Three rooms for the house, one for the guests. Staff doors ask for a sign-in; the guest door asks for a table.</p>
+            <hr class="rule-kin">
         </div>
-        
+
         <div class="cards-grid">
             <!-- 1. Admin -->
-            <div class="module-card">
-                <div class="module-card-icon">📊</div>
+            <div class="module-card lacquer" data-kanji="">
+                <p class="module-card-kind eyebrow">Staff </p>
+                <div class="module-card-icon"><svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-lantern"/></svg></div>
                 <h3 class="module-card-title">Admin Dashboard</h3>
-                <p class="module-card-desc">Centralize control over the menu, orders, customer insights, analytics, and your entire bot fleet management gracefully.</p>
-                <a href="./admin/index.html" class="module-card-cta">
-                    Launch Admin Dashboard
+                <p class="module-card-desc">Menu, orders, guests, feedback and the whole bot fleet from one quiet desk. Today in the house, at a glance.</p>
+                <a href="./admin/index.html" class="module-card-cta btn-paper">
+                    <svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-soroban"/></svg>
+                    Open Admin Dashboard
+                    <svg class="ico arrow" aria-hidden="true"><use href="./shared/icons.svg#i-arrow-right"/></svg>
                 </a>
             </div>
 
             <!-- 2. KDS -->
-            <div class="module-card">
-                <div class="module-card-icon">🍳</div>
+            <div class="module-card lacquer" data-kanji="">
+                <p class="module-card-kind eyebrow">Staff </p>
+                <div class="module-card-icon"><svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-knife"/></svg></div>
                 <h3 class="module-card-title">Kitchen Display</h3>
-                <p class="module-card-desc">Real-time order queue for back-of-house staff featuring a streamlined, Kanban-style status tracking interface.</p>
-                <a href="./kds/index.html" class="module-card-cta">
-                    Open KDS View
+                <p class="module-card-desc">A pass that reads itself. Tickets move from pending to preparing to ready, legible from across the kitchen.</p>
+                <a href="./kds/index.html" class="module-card-cta btn-paper">
+                    <svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-fire"/></svg>
+                    Open Kitchen Display
+                    <svg class="ico arrow" aria-hidden="true"><use href="./shared/icons.svg#i-arrow-right"/></svg>
                 </a>
             </div>
 
             <!-- 3. Bot Management -->
-            <div class="module-card">
-                <div class="module-card-icon">🤖</div>
-                <h3 class="module-card-title">Bot Management</h3>
-                <p class="module-card-desc">Monitor and control all operational Maneki Neko bots, switch character modes, and view live communication logs.</p>
-                <a href="./bot-management/index.html" class="module-card-cta">
-                    Manage AI Bots
+            <div class="module-card lacquer" data-kanji="">
+                <p class="module-card-kind eyebrow">Staff </p>
+                <div class="module-card-icon"><svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-neko-head"/></svg></div>
+                <h3 class="module-card-title">Bot Control</h3>
+                <p class="module-card-desc">Every table's cat in one room: switch personalities, read live conversations, watch battery and temperature.</p>
+                <a href="./bot-management/index.html" class="module-card-cta btn-paper">
+                    <svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-mask"/></svg>
+                    Open Bot Control
+                    <svg class="ico arrow" aria-hidden="true"><use href="./shared/icons.svg#i-arrow-right"/></svg>
                 </a>
             </div>
 
-            <!-- 4. Customer Ordering -->
-            <div class="module-card">
-                <div class="module-card-badge">Priority UX</div>
-                <div class="module-card-icon">🛒</div>
+            <!-- 4. Customer Ordering (the only paper card) -->
+            <div class="module-card paper" data-kanji="">
+                <div class="module-card-badge hanko" role="img" title="Recommended" aria-label="Recommended">Priority UX</div>
+                <p class="module-card-kind eyebrow">Guests </p>
+                <div class="module-card-icon"><svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-tray"/></svg></div>
                 <h3 class="module-card-title">Customer Panel</h3>
-                <p class="module-card-desc">A next-generation ordering experience elevated by voice context, face recognition, and rich anime personalities.</p>
-                <a href="./customer/index.html" class="module-card-cta cta-outline">
-                    Enter Customer UX
+                <p class="module-card-desc">Order by voice or by hand with an AI waiter who remembers your taste, then watch your dishes move through the kitchen.</p>
+                <a href="./customer/index.html" class="module-card-cta btn-seal">
+                    <svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-tray"/></svg>
+                    Enter as a guest 
                 </a>
             </div>
         </div>
 
-        <!-- ── Tech Stack ──────────────────────────────────────── -->
+        <!-- ── Tech strip ──────────────────────────────────────────── -->
         <div class="tech-stack">
-            <h2 class="tech-label">Powered By Cutting Edge Tech</h2>
+            <p class="eyebrow tech-label">Powered by</p>
             <div class="tech-pills">
-                <span class="tech-pill">🧠 Nvidia NIM</span>
-                <span class="tech-pill">🎙️ Meta Llama</span>
-                <span class="tech-pill">👁️ Supabase</span>
-                <span class="tech-pill">⚡ Vanilla JS</span>
-                <span class="tech-pill">🎨 Tailwind CSS</span>
+                <span class="tech-pill paper">NVIDIA NIM<small>inference</small></span>
+                <span class="tech-pill paper">Nemotron 30B<small>the waiter's mind</small></span>
+                <span class="tech-pill paper">ElevenLabs<small>voice</small></span>
+                <span class="tech-pill paper">Supabase<small>storehouse</small></span>
+                <span class="tech-pill paper">Express + Vanilla JS<small>no framework</small></span>
             </div>
         </div>
     </section>
 
-    <!-- ── Footer ──────────────────────────────────────────────── -->
+    <!-- ── Footer ──────────────────────────────────────────────────── -->
     <footer class="site-footer">
-        <div>
-            <p class="footer-brand">Maneki Neko Smart Restaurant System</p>
-            <p class="footer-sub">Built with ❤️ using Agentic AI • Project Genesis</p>
+        <hr class="rule-kin">
+        <div class="footer-band" aria-hidden="true"></div>
+        <div class="footer-inner">
+            <a class="brand-lockup" href="./index.html" aria-label="Maneki Neko home">
+                <svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#neko"/></svg>
+                <span class="brand-stack">
+                    
+                    <span class="brand-kanji">Maneki Neko</span><span class="brand-romaji">Smart Restaurant</span>
+                </span>
+                <span class="hanko hanko--sm" aria-hidden="true">M</span>
+            </a>
+            <nav class="footer-links" aria-label="Footer">
+                <a href="./login.html"><svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-noren"/></svg>Staff login</a>
+                <a href="./customer-login.html"><svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-tray"/></svg>Guest login</a>
+                <a href="./dev-setup.html"><svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-scroll"/></svg>Dev portal </a>
+            </nav>
+            <p class="footer-brand">Thank you for visiting</p>
+            <p class="footer-sub">Maneki Neko Smart Restaurant System · Built with Agentic AI · Project Genesis</p>
         </div>
     </footer>
 

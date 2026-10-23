@@ -66,5 +66,6 @@ Once the server is running, open these URLs:
 *   `/customer`: The customer-facing ordering website (Chat + Manual).
 *   `/admin`: Dashboard for restaurant managers to view orders/revenue.
 *   `/kds`: Kitchen Display System for chefs to track active orders.
-*   `/shared`: Shared utilities and Supabase database logic.
+*   `/shared`: Shared utilities, Supabase database logic, and the **"Kami to Sumi"** design system (`theme.css`, `icons.svg`, `maneki.svg`). Open `/shared/brand-preview.html` on the running server to see every token, icon and the mascot.
+*   `/SQL`: Database migrations — run `order_status_cancelled_migration.sql` once so the KDS Cancel action is accepted by the `orders` status constraint.
 *   `server.js`: The Node.js backend that proxies AI requests to bypass CORS.

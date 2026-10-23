@@ -3,770 +3,893 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maneki Neko | Bot Control Center</title>
-    <meta name="description" content="Maneki Neko Smart Restaurant — Bot Management Panel">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Maneki Neko | Bot Control</title>
+    <meta name="description" content="Maneki Neko Smart Restaurant — the bot control room">
+    <link rel="icon" href="../shared/favicon.svg">
+    <meta name="theme-color" content="#100d0c">
     <link rel="stylesheet" href="../shared/theme.css">
+    <link rel="stylesheet" href="../shared/icons.css">
     <style>
-        /* ── Bot Management Specific ─────────────────────────────────── */
+        /* ══════════════════════════════════════════════════════════════════
+           猫の間 · Neko no Ma — Bot Control (Kami to Sumi)
+           Page CSS holds layout + page-specific selectors only. Shared
+           recipes live in ../shared/theme.css and ../shared/icons.css.
+           ══════════════════════════════════════════════════════════════════ */
+
         body {
+            --header-h: 72px;                 /* navbar height; body padding + tab rail depend on it */
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding-top: 72px;
+            padding-top: var(--header-h);
         }
 
-        /* ── Fixed Navbar ────────────────────────────────────────────── */
+        /* ── Navbar — lintel with lantern pools ─────────────────────────── */
         .bot-navbar {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             z-index: 50;
-            height: 72px;
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur);
-            border-bottom: 1px solid var(--border);
-            padding: 0 1.5rem;
+            height: var(--header-h);
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 1rem;
+            padding: 0 1rem;
         }
-
-        @media (min-width: 1024px) {
-            .bot-navbar { padding: 0 2.5rem; }
-        }
+        @media (min-width: 640px)  { .bot-navbar { padding: 0 1.5rem; } }
+        @media (min-width: 1024px) { .bot-navbar { padding: 0 2.5rem; } }
 
         .navbar-brand {
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            min-width: 0;
+            flex: 1 1 auto;
         }
-
-        .navbar-brand span:first-child { font-size: 1.5rem; }
+        .navbar-brand > .ico { width: 28px; height: 28px; color: var(--text-primary); flex-shrink: 0; }
+        .navbar-brand .brand-stack { gap: 0.1rem; min-width: 0; }
 
         .navbar-brand-text {
-            font-weight: 800;
-            font-size: 1.25rem;
-            letter-spacing: var(--tracking-tight);
-            display: none;
+            font: 600 1rem/1.2 var(--font-display);
+            letter-spacing: var(--tracking-display);
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
         }
 
-        @media (min-width: 640px) {
-            .navbar-brand-text { display: block; }
+        .navbar-eyebrow { white-space: nowrap; }
+        /* Phones: the restaurant name + fleet count outrank the decorative eyebrow. The JS-written
+           name ("Bot Control — Maneki Neko Tokyo") gets two clamped lines instead of one crushed one,
+           and the row tightens so the name keeps ~110px beside the fleet tag, bell and logout. */
+        @media (max-width: 559px) {
+            .bot-navbar { padding: 0 0.75rem; gap: 0.5rem; }
+            .navbar-brand { gap: 0.5rem; }
+            .navbar-eyebrow { display: none; }
+            .navbar-brand-text {
+                display: -webkit-box;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 2;
+                white-space: normal;
+                font-size: 0.9375rem;
+                line-height: 1.15;
+            }
         }
 
-        .navbar-center {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            display: none;
-        }
+        /* Clock: in flow from 900px (brand truncates), true-centred once there is room */
+        .navbar-center { display: none; flex-shrink: 0; }
+        @media (min-width: 900px)  { .navbar-center { display: block; } }
+        @media (min-width: 1100px) { .navbar-center { position: absolute; left: 50%; transform: translateX(-50%); } }
 
-        @media (min-width: 768px) {
-            .navbar-center { display: block; }
+        /* Wadokei clock frame; JS rewrites only #liveClock's text */
+        .bot-clock {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            border: 1.5px solid var(--kin-hair);
+            border-radius: var(--radius-seal);
+            padding: 0.25rem 1rem;
+            background: rgba(16,13,12,0.35);
         }
-
+        .bot-clock::before {
+            content: none;
+            font: 500 0.6875rem/1 var(--font-jp);
+            color: var(--text-dimmed);
+            letter-spacing: 0.1em;
+        }
         #liveClock {
-            font-family: var(--font-mono);
-            font-size: 1.125rem;
-            font-weight: 700;
-            color: var(--text-secondary);
-            background: var(--bg-surface-variant);
-            padding: 0.375rem 1rem;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border);
-            letter-spacing: 0.15em;
+            font: 700 1.25rem/1 var(--font-sans);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.08em;
+            color: var(--kin);
         }
 
         .navbar-actions {
             display: flex;
             align-items: center;
-            gap: 1rem;
-        }
-
-        #botCountDisplay {
-            font-weight: 700;
-            font-size: 0.85rem;
-            background: var(--primary-glow);
-            color: var(--primary);
-            padding: 0.375rem 0.75rem;
-            border-radius: var(--radius-pill);
-            border: 1px solid rgba(99, 102, 241, 0.2);
-        }
-
-        #alertBell {
-            font-size: 1.25rem;
-            cursor: help;
-            user-select: none;
-        }
-
-        .bell-alert {
-            animation: shakeRing 0.5s infinite;
-            color: var(--danger);
-            filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.5));
-        }
-
-        @keyframes shakeRing {
-            0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(15deg); }
-            75% { transform: rotate(-15deg); }
-        }
-
-        /* ── Tab Bar ────────────────────────────────────────────────── */
-        .tab-bar {
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border);
-            padding: 0.75rem 1.5rem;
-            display: flex;
             gap: 0.5rem;
-            overflow-x: auto;
-            position: sticky;
-            top: 72px;
-            z-index: 40;
             flex-shrink: 0;
         }
+        @media (min-width: 640px) { .navbar-actions { gap: 0.75rem; } }
 
-        @media (min-width: 1024px) {
-            .tab-bar { padding: 0.75rem 2.5rem; }
-        }
-
-        .tab-btn {
-            padding: 0.625rem 1.25rem;
-            border-radius: var(--radius-pill);
-            font-weight: 700;
-            font-size: 0.875rem;
-            transition: all var(--duration-fast) var(--ease-out);
-            white-space: nowrap;
+        /* Fleet tag (JS leaf: "5 Bots | 3 Online") */
+        #botCountDisplay {
+            display: inline-flex;
+            align-items: center;
+            min-height: 36px;
+            padding: 0.3rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-paper);
+            font: 600 0.8125rem/1.2 var(--font-sans);
             color: var(--text-secondary);
-            background: transparent;
-            border: 1px solid transparent;
-            cursor: pointer;
+            white-space: nowrap;
+        }
+        #botCountDisplay::before { font-size: 0.75rem; }
+        @media (max-width: 559px) {
+            .navbar-actions { gap: 0.35rem; }
+            #botCountDisplay { padding: 0.25rem 0.45rem; font-size: 0.6875rem; }
+            #botCountDisplay::before { display: none; }   /* 猫 ghost prefix yields its width to the name */
         }
 
-        .tab-btn:hover {
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--text-primary);
+        /* Suzu bell — JS toggles .bell-alert on the span only */
+        #alertBell {
+            display: inline-grid;
+            place-items: center;
+            width: 44px;
+            height: 44px;
+            color: var(--text-secondary);
+            cursor: help;
+            user-select: none;
+            border-radius: 50%;
+        }
+        .bell-alert {
+            animation: shakeRing 0.5s infinite;
+            color: var(--primary);
+            filter: drop-shadow(0 0 6px rgba(214,58,31,0.5));
+        }
+        #alertBell:not(.bell-alert) + .bell-live { display: none; }
+        @keyframes shakeRing {
+            0%, 100% { transform: rotate(0deg); }
+            25%      { transform: rotate(15deg); }
+            75%      { transform: rotate(-15deg); }
         }
 
-        .tab-btn.active {
-            background: var(--primary-raw);
-            color: #fff;
-            border-color: var(--primary-raw);
-            box-shadow: 0 0 16px var(--primary-glow);
+        #botLogoutBtn { gap: 0.4rem; min-height: 44px; }
+        #botLogoutBtn .jp { color: inherit; opacity: 0.75; }
+        @media (max-width: 639px) {
+            #botLogoutBtn { width: 44px; min-height: 44px; padding: 0; border-radius: 50%; }
+            #botLogoutBtn .logout-label, #botLogoutBtn .jp { display: none; }
+            #botLogoutBtn .ico { width: 20px; height: 20px; }
         }
 
-        /* ── Tab Content ────────────────────────────────────────────── */
-        .tab-content {
-            display: none;
-            padding-top: 2rem;
-            animation: fadeInUp 0.3s var(--ease-out);
+        /* ── Noren tab rail (sticky under the lintel) ───────────────────── */
+        .tab-rail {
+            position: sticky;
+            top: var(--header-h);
+            z-index: 40;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 1rem 2px;
+            flex-shrink: 0;
         }
+        @media (min-width: 640px)  { .tab-rail { padding: 0 1.5rem 2px; } }
+        @media (min-width: 1024px) { .tab-rail { padding: 0 2.5rem 2px; } }
+        .tab-bar { max-width: 1400px; margin: 0 auto; }
+        .tab-btn .ico { width: 18px; height: 18px; opacity: 0.85; }
+        .tab-btn.active .ico { color: var(--shu-ink); opacity: 1; }
 
-        .tab-content.active-tab { display: block; }
+        /* ── Tab content ────────────────────────────────────────────────── */
+        .tab-content { display: none; padding-top: 1.75rem; }
+        .tab-content.active-tab { display: block; animation: ink-in 0.35s var(--ease-out); }
 
         .bot-main {
             flex: 1;
-            max-width: 1600px;
-            margin: 0 auto;
+            max-width: 1400px;
+            margin: 0 auto 2.5rem;
             width: 100%;
-            padding: 1.5rem;
-            margin-bottom: 2.5rem;
+            padding: 0 1rem 1.5rem;
             overflow-x: hidden;
         }
-
-        @media (min-width: 1024px) {
-            .bot-main { padding: 2.5rem; }
+        @media (min-width: 640px)  { .bot-main { padding: 0 1.5rem 2rem; } }
+        @media (min-width: 1024px) { .bot-main { padding: 0 2.5rem 2.5rem; } }
+        /* >=1280 the tanzaku strip appears (theme); widen the gutter so it floats 16px off the edge
+           instead of touching it, keeping navbar / tab rail / main aligned */
+        @media (min-width: 1280px) {
+            .bot-navbar, .tab-rail { padding-left: 3.5rem; padding-right: 3.5rem; }
+            .bot-main { padding-left: 3.5rem; padding-right: 3.5rem; }
         }
 
-        /* ── Section Header ─────────────────────────────────────────── */
-        .section-header {
-            margin-bottom: 2rem;
-        }
-
-        .section-header h1 {
-            font-size: 2rem;
-            font-weight: 800;
-            letter-spacing: var(--tracking-tight);
-        }
-
-        .section-header .text-secondary {
-            color: var(--text-secondary);
-            font-weight: 500;
-            margin-top: 0.5rem;
-        }
-
+        /* ── Section headers ────────────────────────────────────────────── */
+        .section-header { margin-bottom: 1.75rem; }
+        .section-header .page-header { margin-bottom: 0; }
+        .section-header .text-secondary { color: var(--text-muted); font-size: 0.9375rem; }
         .flex-header {
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: flex-end;
-            gap: 1.5rem;
+            gap: 1rem 1.5rem;
         }
+        .header-controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .tanzaku-label { left: -40px; }
+        .section-sub { margin: 2.5rem 0 1.25rem; display: grid; gap: 0.5rem; }
+        .section-sub h3 { font-size: 1.375rem; }
 
-        /* ── Bot Cards Grid ─────────────────────────────────────────── */
+        /* ── Overview: ema name plates (rebuilt every 15 s: fade only) ───── */
         .bot-cards-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
+            gap: 1.5rem 1.25rem;
+            max-width: 1280px;
         }
+        #botCardsGrid > .empty-state { grid-column: 1 / -1; }
 
         .bot-card {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border-radius: var(--radius-xl);
-            padding: 1.5rem;
-            border: 1px solid var(--glass-border);
-            box-shadow: var(--shadow-card);
-            transition: all var(--duration-normal) var(--ease-out);
+            /* Page-local ema recipe: `.bot-card` could receive the theme `.ema` recipe (paper + roof + status cord by
+               .online/.charging/.offline) the way `.order-card`/`.stat-card` do — the JS sets className,
+               so the recipe is inlined here for now. */
+            background-color: var(--washi);
+            background-image: var(--washi-fibre), linear-gradient(180deg, var(--washi-bright), var(--washi) 60%, var(--washi-2));
+            background-size: 240px 240px, auto;
+            box-shadow: var(--shadow-paper);
+            border: 1px solid rgba(28,24,22,0.18);
+            border-top: 4px solid var(--nezumi);
+            border-radius: var(--radius-paper);
+            color: var(--sumi-ink);
             position: relative;
-            overflow: hidden;
+            margin-top: 10px;
+            padding: 1rem 1.25rem 1.15rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.6rem 0.75rem;
+            animation: fadeIn 0.35s var(--ease-out);
+            transition: border-color var(--duration-fast) var(--ease-out);
         }
-
-        .bot-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--glass-border-hover);
-            box-shadow: var(--shadow-card-hover);
-        }
-
-        .bot-card::before {
+        .bot-card::before,                 /* ema roof: kin seam underneath … */
+        .bot-card::after {                 /* … lacquer roof inset on top */
             content: "";
             position: absolute;
+            top: -14px;
             left: 0;
             right: 0;
-            top: 0;
-            height: 4px;
+            height: 12px;
+            background: var(--kin-dim);
+            clip-path: polygon(0 100%, 50% 0, 100% 100%);
+            pointer-events: none;
         }
+        .bot-card::after {
+            top: -12px;
+            left: 4px;
+            right: 4px;
+            height: 10px;
+            background: var(--bg-surface-bright);
+        }
+        .bot-card:hover { border-color: var(--kin-dim); border-top-color: inherit; }
+        .bot-card.online   { border-top-color: var(--matcha); }
+        .bot-card.charging { border-top-color: var(--kuchiba); }
+        .bot-card.offline  { border-top-color: var(--nezumi); }
+        .bot-card.online:hover   { border-top-color: var(--matcha); }
+        .bot-card.charging:hover { border-top-color: var(--kuchiba); }
+        .bot-card.offline:hover  { border-top-color: var(--nezumi); }
 
-        .bot-card.online::before  { background: var(--success); }
-        .bot-card.offline::before { background: var(--danger); }
-        .bot-card.charging::before { background: var(--warning); }
+        .bot-card-header,
+        .battery-bar-wrap,
+        .bot-actions { flex-basis: 100%; }
+        .bot-table, .last-seen { margin-left: auto; white-space: nowrap; }
 
         .bot-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
+            gap: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--washi-line);
         }
-
         .bot-name {
-            font-weight: 800;
-            font-size: 1.125rem;
-            color: var(--text-primary);
+            font: 600 1.125rem/1.2 var(--font-display);
+            letter-spacing: var(--tracking-display);
+            color: var(--sumi-ink);
         }
+        .bot-card .status-dot.grey { color: var(--nezumi); background-color: var(--nezumi); }
 
-        /* Character Badges */
-        .character-badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: var(--radius-pill);
-            font-weight: 700;
-            font-size: 0.75rem;
+        /* Kamon chip on paper: text in ink, crest in the character colour */
+        .bot-card .character-badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            padding: 0.2rem 0.6rem 0.2rem 0.45rem;
+            background: var(--washi-bright);
+            border: 1px solid var(--washi-line);
+            border-radius: var(--radius-seal);
+            font: 700 0.6875rem/1.2 var(--font-sans);
             text-transform: uppercase;
-            letter-spacing: var(--tracking-wide);
-            margin-bottom: 0.75rem;
+            letter-spacing: 0.08em;
+            color: var(--sumi-ink);
         }
-
-        .char-naruto   { background: rgba(234, 88, 12, 0.12); color: #fb923c; border: 1px solid rgba(234, 88, 12, 0.25); }
-        .char-goku     { background: rgba(202, 138, 4, 0.12);  color: #fbbf24; border: 1px solid rgba(202, 138, 4, 0.25); }
-        .char-doraemon  { background: rgba(37, 99, 235, 0.12);  color: #60a5fa; border: 1px solid rgba(37, 99, 235, 0.25); }
-        .char-shinchan  { background: rgba(220, 38, 38, 0.12);  color: #f87171; border: 1px solid rgba(220, 38, 38, 0.25); }
-        .char-luffy     { background: rgba(192, 38, 211, 0.12); color: #e879f9; border: 1px solid rgba(192, 38, 211, 0.25); }
+        .bot-card .character-badge::before { width: 1.35em; height: 1.35em; background: var(--crest, currentColor); }
+        .bot-card .char-naruto   { --crest: var(--daidai); }
+        .bot-card .char-goku     { --crest: var(--kin-ink); }
+        .bot-card .char-doraemon { --crest: var(--ai); }
+        .bot-card .char-shinchan { --crest: var(--momo); }
+        .bot-card .char-luffy    { --crest: var(--shu-ink); }
 
         .bot-table {
-            font-weight: 600;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            margin-bottom: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            font: 600 0.8125rem/1 var(--font-sans);
+            color: var(--sumi-ink-2);
         }
+        .bot-table .hanko { font-size: 0.6875rem; }
+        .bot-table .jp { color: var(--sumi-ink-3); }
 
-        /* Battery Bar */
+        /* Koban battery: five coin segments; the JS inline width still drives the fill */
         .battery-bar-wrap {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
+            gap: 0.6rem;
+            font: 700 0.8125rem/1 var(--font-sans);
+            font-variant-numeric: tabular-nums;
+            color: var(--sumi-ink-2);
+            margin-top: 0.15rem;
         }
-
+        .battery-bar-wrap > .ico { width: 18px; height: 18px; color: var(--sumi-ink-3); }
         .battery-bar-track {
             flex: 1;
-            height: 6px;
-            background: var(--bg-surface-bright);
-            border-radius: var(--radius-pill);
+            height: 10px;
+            background: var(--washi-line);
+            border-radius: 2px;
             overflow: hidden;
+            -webkit-mask: repeating-linear-gradient(90deg, #000 0 18%, transparent 18% 20%);
+            mask: repeating-linear-gradient(90deg, #000 0 18%, transparent 18% 20%);
         }
-
-        .battery-bar {
-            height: 100%;
-            border-radius: var(--radius-pill);
-            transition: width 0.3s;
-        }
+        .battery-bar { height: 100%; transition: width 0.4s var(--ease-out); }
+        .battery-bar-wrap > span { min-width: 3.2ch; text-align: right; }
 
         .temp-reading {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font: 600 0.8125rem/1 var(--font-sans);
+            font-variant-numeric: tabular-nums;
+            color: var(--sumi-ink-2);
         }
-
-        .temp-hot { color: var(--danger); }
+        .temp-reading .ico { width: 16px; height: 16px; color: var(--sumi-ink-3); }
+        .temp-hot { color: var(--shu-ink); }
+        .temp-hot .ico { color: var(--shu-ink); }
 
         .last-seen {
-            font-size: 0.75rem;
-            color: var(--text-dimmed);
-            font-weight: 500;
-            font-style: italic;
-            margin-bottom: 1.25rem;
+            font: 500 0.6875rem/1.2 var(--font-mono);
+            letter-spacing: 0.04em;
+            color: var(--sumi-ink-3);
         }
 
-        /* Bot Actions */
         .bot-actions {
-            display: flex;
-            flex-direction: column;
+            display: grid;
             gap: 0.5rem;
-            border-top: 1px dashed var(--border);
-            padding-top: 1rem;
+            border-top: 1px dotted var(--washi-line-strong);
+            padding-top: 0.85rem;
+            margin-top: 0.25rem;
         }
-
-        .character-select {
-            width: 100%;
-            background: var(--bg-surface-variant);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            padding: 0.5rem;
-            font-size: 0.875rem;
-            color: var(--text-primary);
+        /* Ruled-line select on paper (no .paper on the JS-built card) */
+        .bot-card select {
+            background: var(--washi-bright);
+            border: 0;
+            border-bottom: 1.5px solid rgba(28,24,22,0.35);
+            border-radius: 3px 3px 0 0;
+            color: var(--sumi-ink);
+            box-shadow: none;
+            padding: 0.55rem 2.25rem 0.55rem 0.8rem;
+            font-size: 0.9375rem;
             font-weight: 500;
-            outline: none;
-            transition: border-color var(--duration-fast) var(--ease-out);
         }
+        .bot-card select:focus { background: var(--washi-bright); border-bottom: 2px solid var(--shu-ink); box-shadow: 0 1px 0 var(--shu-ink); }
+        .bot-card .select-wrap::after { background: var(--shu-ink); }
+        .bot-card option { background: var(--bg-surface-high); color: var(--text-primary); }
+        .bot-card :focus-visible { outline-color: var(--shu-ink); }
 
-        .character-select:focus {
-            border-color: rgba(99, 102, 241, 0.4);
+        .bot-btn-row { display: flex; gap: 0.5rem; }
+        .bot-btn-row > button { flex: 1; min-height: 44px; }
+        /* Touch floor (spec §9): every select / action on this page is at least 44px tall */
+        .btn-row-apply,
+        .bot-card select, .char-row-select, .header-controls select, .override-controls select { min-height: 44px; }
+        /* JS-built selects fill their .select-wrap (one .character-select per card, one .char-row-select per row) */
+        .character-select { width: 100%; }
+        .char-row-select  { width: 100%; min-width: 140px; }
+        /* Daruma / check masks come from ../shared/icons.css; only the gap is tuned here */
+        .btn-restart.mi-daruma::before, .btn-row-apply.mi-check::before { margin-right: 0.4em; }
+        .btn-restart.restarting { --mi: var(--mi-enso-uri); opacity: 0.75; cursor: wait; }
+        .bot-card .btn-view-logs { gap: 0.4rem; }
+
+        /* ── Live logs — kakejiku scroll ────────────────────────────────── */
+        .scroll-frame { position: relative; padding: 12px 0; }
+        .scroll-frame::before,
+        .scroll-frame::after {
+            content: "";
+            position: absolute;
+            left: -6px;
+            right: -6px;
+            height: 10px;
+            border-radius: 5px;
+            background: linear-gradient(90deg, var(--kin-dim) 0 16px, var(--bg-surface-bright) 16px calc(100% - 16px), var(--kin-dim) calc(100% - 16px));
+            box-shadow: 0 1px 2px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,235,205,0.08);
         }
-
-        .bot-btn-row {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .bot-btn-row button {
-            flex: 1;
-            padding: 0.5rem;
-            border-radius: var(--radius-md);
-            font-weight: 600;
-            font-size: 0.8rem;
-            transition: all var(--duration-fast) var(--ease-out);
-            border: 1px solid transparent;
-            cursor: pointer;
-        }
-
-        .btn-restart {
-            background: var(--danger-bg);
-            color: var(--danger);
-            border-color: var(--danger-border);
-        }
-
-        .btn-restart:hover { background: rgba(239, 68, 68, 0.2); }
-        .btn-restart.restarting { background: var(--bg-surface-bright); color: var(--text-muted); cursor: wait; }
-
-        .btn-view-logs {
-            background: var(--primary-glow);
-            color: var(--primary);
-            border-color: rgba(99, 102, 241, 0.2);
-        }
-
-        .btn-view-logs:hover { background: rgba(99, 102, 241, 0.2); }
-
-        /* ── Logs Tab ───────────────────────────────────────────────── */
-        .log-bot-select {
-            padding: 0.6rem 1rem;
-            border-radius: var(--radius-pill);
-            border: 1px solid var(--border);
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            background: var(--bg-surface-variant);
-            outline: none;
-        }
-
-        .btn-control {
-            padding: 0.6rem 1.2rem;
-            border-radius: var(--radius-pill);
-            border: 1px solid var(--border);
-            font-size: 0.875rem;
-            font-weight: 600;
-            background: var(--bg-surface-variant);
-            color: var(--text-secondary);
-            transition: all var(--duration-fast) var(--ease-out);
-            cursor: pointer;
-        }
-
-        .btn-control:hover { background: var(--bg-surface-bright); color: var(--text-primary); }
-
-        .btn-control.active-ctrl {
-            background: var(--primary-raw);
-            color: #fff;
-            border-color: var(--primary-raw);
-        }
+        .scroll-frame::before { top: 0; }
+        .scroll-frame::after  { bottom: 0; }
 
         #logFeed {
-            background: var(--bg-surface);
-            border-radius: var(--radius-xl);
-            border: 1px solid var(--border);
-            padding: 0.5rem;
+            height: clamp(360px, calc(100vh - 340px), 720px);
             overflow-y: auto;
-            height: 600px;
-            scroll-behavior: smooth;
+            padding: 1rem 1rem 1rem 3.25rem;
+            background: var(--bg-surface-low);
+            background-image: var(--seigaiha);
+            background-size: 56px 28px;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+        }
+        #logFeed .log-placeholder { height: 100%; align-content: center; }
+
+        /* Furin toggle (leaf: JS rewrites the text and toggles .active-ctrl via e.target) */
+        #autoRefreshToggle::before { transform-origin: top center; }
+        #autoRefreshToggle.active-ctrl { color: var(--matcha-bright); border-color: var(--matcha); }
+        #autoRefreshToggle.active-ctrl::before { animation: sway 2s ease-in-out infinite; }
+        .header-controls .select-wrap { min-width: 200px; }
+        .header-controls select { padding: 0.5rem 2.25rem 0.5rem 0.8rem; font-size: 0.9375rem; }
+        .header-controls .btn-control { min-height: 44px; }   /* touch floor (spec §9) for Refresh / Auto */
+        @media (max-width: 479px) {
+            .header-controls { width: 100%; }
+            .header-controls .select-wrap { flex: 1 1 100%; }
+            .header-controls .btn-control { flex: 1 1 0; }
         }
 
         .log-entry {
-            padding: 1rem;
-            border-bottom: 1px dashed var(--border);
-            font-size: 0.9rem;
-            line-height: 1.5;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.35rem 0.6rem;
+            position: relative;
         }
-
-        .log-entry.user { background: var(--bg-surface-variant); border-radius: var(--radius-sm); margin-bottom: 2px; }
-        .log-entry.bot  { background: transparent; }
+        .log-entry.bot  { margin-right: auto; max-width: min(70%, 560px); width: fit-content; min-width: min(220px, 100%); }
+        .log-entry.user { margin-left: auto;  max-width: min(70%, 560px); width: fit-content; min-width: min(220px, 100%); }
+        /* PROMOTE: theme §6.14 fills `.log-entry.user` with the customer's shu gradient; the bots blueprint
+           (§7.7) calls for a *sumi* bubble — red stays on the 猫 seal and the Apply-to-all commit. */
+        #logFeed .log-entry.user {
+            background: linear-gradient(160deg, var(--bg-surface-bright), var(--sumi-ink-2));
+            color: var(--text-primary);
+            border: 1px solid var(--border-hover);
+            box-shadow: 0 2px 0 var(--bg-deep);
+        }
+        .log-avatar {
+            position: absolute;
+            left: -38px;
+            bottom: 2px;
+            display: grid;
+            place-items: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1.5px solid var(--kin-dim);
+            background: var(--bg-surface-high);
+        }
+        .log-avatar .ico { width: 22px; height: 22px; }
+        .log-entry.user .log-avatar { display: none; }
 
         .log-time {
-            font-size: 0.75rem;
-            color: var(--text-dimmed);
-            font-family: var(--font-mono);
-            margin-right: 0.75rem;
+            font: 500 0.6875rem/1 var(--font-mono);
+            letter-spacing: 0.04em;
+            color: var(--sumi-ink-3);
+            order: 2;
         }
-
+        .log-entry.user .log-time { color: var(--text-muted); }
         .log-role {
-            font-weight: 800;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            padding: 0.2rem 0.5rem;
-            border-radius: 0.25rem;
-            margin-right: 0.75rem;
+            order: 1;
+            display: inline-grid;
+            place-items: center;
+            width: 18px;
+            height: 18px;
+            border-radius: var(--radius-seal);
+            transform: rotate(-6deg);
+            font-size: 0;
+            line-height: 1;
         }
+        .log-role::before { font: 700 0.6875rem/1 var(--font-display); }
+        .log-role.bot  { background: var(--shu); color: #fff; outline: 1px solid var(--shu-deep); }
+        .log-role.bot::before  { content: "B"; }
+        .log-role.user { border: 1.5px solid var(--kin-dim); color: var(--kin); }
+        .log-role.user::before { content: "G"; }
+        .log-message { order: 3; flex-basis: 100%; font-weight: 500; }
 
-        .log-role.user { background: var(--primary-glow); color: var(--primary); }
-        .log-role.bot  { background: var(--success-bg); color: var(--success); }
-        .log-message { color: var(--text-primary); font-weight: 500; }
-        .log-placeholder { text-align: center; color: var(--text-dimmed); font-style: italic; padding: 3rem; }
-
-        /* ── Character Control Tab ──────────────────────────────────── */
+        /* ── Character control — torii override card ────────────────────── */
         .global-override-card {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            padding: 1.5rem;
-            border-radius: var(--radius-xl);
-            border: 1px solid var(--glass-border);
+            position: relative;
             display: flex;
             flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            gap: 1.25rem 2rem;
+            padding: 1.5rem 2.25rem;
+            margin-bottom: 1.75rem;
+            border-top: 3px solid var(--kin);
         }
-
-        .char-select-global {
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border);
-            font-weight: 600;
-            background: var(--bg-surface-variant);
-            color: var(--text-primary);
+        .global-override-card::before,
+        .global-override-card::after {       /* torii posts */
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+            background: linear-gradient(180deg, var(--shu), var(--primary-dim));
+            box-shadow: 0 0 0 1px var(--shu-deep);
         }
+        .global-override-card::before { left: 12px; }
+        .global-override-card::after  { right: 12px; }
+        .override-copy { display: grid; gap: 0.25rem; min-width: 0; }
+        .override-copy h3 { display: flex; align-items: center; gap: 0.5rem; font-size: 1.125rem; }
+        .override-copy h3 .ico { width: 20px; height: 20px; color: var(--kin); }
+        .override-copy p { font-size: 0.875rem; color: var(--text-muted); }
+        .override-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+        .override-controls .select-wrap { min-width: 180px; }
+        #applyAllBtn { gap: 0.4rem; }
 
-        #applyAllBtn {
-            background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
-            color: #fff;
-            font-weight: 700;
-            padding: 0.625rem 1.5rem;
-            border-radius: var(--radius-md);
-            border: none;
-            transition: all var(--duration-normal) var(--ease-out);
-            white-space: nowrap;
-            cursor: pointer;
+        /* Stamp impression: a fresh impression pressed on the torii lintel, centred, straddling the
+           top edge so it never collides with the copy or the controls (no layout jump at any width).
+           JS toggles #applyAllMsg's inline display:none ↔ block; the stamp animation restarts each time. */
+        .apply-msg-slot {
+            position: absolute;
+            top: -17px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 2;
         }
-
-        #applyAllBtn:hover {
-            box-shadow: var(--shadow-glow);
-        }
-
         .apply-msg {
-            margin-top: 1rem;
-            padding: 0.75rem;
-            background: var(--success-bg);
-            color: var(--success);
-            font-weight: 600;
-            border-radius: var(--radius-md);
+            padding: 0.4rem 0.75rem;
             text-align: center;
-            border: 1px solid var(--success-border);
+            max-width: min(92%, 420px);
+            background: var(--kin);
+            color: var(--sumi-ink);
+            font: 700 0.8125rem/1.2 var(--font-sans);
+            border: 2px solid rgba(255,250,240,0.6);
+            outline: 1px solid var(--kin-dim);
+            border-radius: var(--radius-seal);
+            box-shadow: 0 2px 0 var(--kin-dim);
+            animation: stamp 0.32s var(--ease-spring) both;
         }
 
-        .table-container {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border-radius: var(--radius-xl);
-            padding: 1.5rem;
-            border: 1px solid var(--glass-border);
-            overflow-x: auto;
+        .table-panel { padding: 0.5rem 0.25rem; margin-bottom: 1rem; }
+        .table-container { padding: 0 0.75rem; }
+        @media (max-width: 1023px) {   /* tables overflow here: let the theme edge fade reach the panel edge */
+            .table-panel { padding-right: 0; }
+            .table-panel .table-container { padding-right: 0; }
         }
-
-        .char-row-select {
-            padding: 0.4rem;
-            border-radius: 0.5rem;
-            border: 1px solid var(--border);
-            font-size: 0.85rem;
-            background: var(--bg-surface-variant);
-            color: var(--text-primary);
+        @media (max-width: 767px) {    /* sticky first column (theme): give it an edge so the scroll reads */
+            .table-panel .table-container th:first-child,
+            .table-panel .table-container td:first-child { box-shadow: 1px 0 0 var(--kin-hair); }
+            /* keep the critical tint on the sticky cell (theme paints it opaque lacquer); pre-mixed so it
+               still covers the cells scrolling beneath it */
+            #healthTable tr.health-critical td:first-child {
+                background: #2c1d1d;
+                background: color-mix(in srgb, var(--bg-surface-container), var(--ume) 10%);
+            }
         }
-
-        .btn-row-apply {
-            background: var(--primary-glow);
-            color: var(--primary);
-            font-weight: 700;
-            padding: 0.4rem 1rem;
-            border-radius: 0.5rem;
-            transition: all var(--duration-fast) var(--ease-out);
-            font-size: 0.85rem;
-            border: 1px solid rgba(99, 102, 241, 0.2);
-            cursor: pointer;
+        #characterTable, #healthTable { min-width: 680px; }
+        .table-panel .character-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.2rem 0.55rem 0.2rem 0.4rem;
+            background: rgba(240,220,190,0.06);
+            border: 1px solid var(--border-hover);
+            border-radius: var(--radius-seal);
+            font: 700 0.6875rem/1.2 var(--font-sans);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
         }
+        .table-panel .character-badge::before { width: 1.35em; height: 1.35em; }
+        .table-panel .select-wrap { min-width: 160px; }
+        .table-panel select { padding: 0.5rem 2.25rem 0.5rem 0.8rem; font-size: 0.9375rem; }
+        .table-panel td strong { font-weight: 600; }
+        .btn-row-apply.success { background: var(--matcha-bright); color: var(--sumi-ink); border-color: var(--matcha); }
+        .btn-row-apply:disabled { opacity: 0.7; }
 
-        .btn-row-apply:hover { background: rgba(99, 102, 241, 0.2); }
-        .btn-row-apply.success { background: var(--success-bg); color: var(--success); border-color: var(--success-border); }
-
-        /* Personality Dictionary Cards */
+        /* Personality dictionary — tanzaku strips */
         .personality-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1.25rem 1rem;
         }
+        .personality-card { padding: 1.5rem 1.25rem 1.25rem; display: grid; gap: 0.5rem; justify-items: start; }
+        .pc-naruto   { border-top-color: var(--c-naruto); }
+        .pc-goku     { border-top-color: var(--c-goku); }
+        .pc-doraemon { border-top-color: var(--c-doraemon); }
+        .pc-shinchan { border-top-color: var(--c-shinchan); }
+        .pc-luffy    { border-top-color: var(--c-luffy); }
+        .personality-card-emoji { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid var(--washi-line); }
+        .personality-card-emoji .ico { width: 36px; height: 36px; }
+        .personality-card h4 { display: flex; align-items: baseline; gap: 0.5rem; font: 600 1.125rem/1.2 var(--font-display); letter-spacing: var(--tracking-display); }
+        .personality-card h4 .jp { font-size: 0.75rem; }
+        .personality-card p { color: var(--sumi-ink-2); font-size: 0.875rem; line-height: 1.6; }
 
-        .personality-card {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            padding: 1.5rem;
-            border-radius: var(--radius-xl);
-            border: 1px solid var(--glass-border);
-            transition: all var(--duration-normal) var(--ease-out);
-        }
-
-        .personality-card:hover {
-            border-color: var(--glass-border-hover);
-            transform: translateY(-2px);
-        }
-
-        .personality-card-emoji { font-size: 2.5rem; margin-bottom: 1rem; }
-        .personality-card h4 { font-size: 1.125rem; font-weight: 800; margin-bottom: 0.5rem; }
-        .personality-card p { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; }
-
-        /* ── Health Monitor ──────────────────────────────────────────── */
+        /* ── Health — shide tags on a shimenawa rope ────────────────────── */
         .health-summary-row {
             display: flex;
-            gap: 0.75rem;
             flex-wrap: wrap;
+            gap: 0.6rem;
+            position: relative;
+            padding-top: 10px;
         }
-
+        .health-summary-row::before {
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 0;
+            right: 0;
+            border-top: 2px dashed var(--kin-dim);
+        }
+        /* Page-local: `.health-pill` compact paper tag with the shide zig-zag bottom (spec §6.12 names it
+           as a shared stat-tile variant) */
         .health-pill {
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius-pill);
-            font-weight: 600;
-            font-size: 0.875rem;
-            border: 1px solid transparent;
+            display: grid;
+            gap: 0.15rem;
+            min-width: 84px;
+            padding: 0.55rem 0.8rem 0.9rem;
+            background-color: var(--washi);
+            background-image: var(--washi-fibre), linear-gradient(180deg, var(--washi-bright), var(--washi) 60%, var(--washi-2));
+            background-size: 240px 240px, auto;
+            color: var(--sumi-ink);
+            border: 1px solid rgba(28,24,22,0.18);
+            border-radius: 3px 3px 0 0;
+            box-shadow: var(--shadow-soft);
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), 83.3% 100%, 66.6% calc(100% - 7px), 50% 100%, 33.3% calc(100% - 7px), 16.6% 100%, 0 calc(100% - 7px));
         }
-
-        .total-pill    { background: var(--bg-surface-variant); color: var(--text-secondary); border-color: var(--border); }
-        .online-pill   { background: var(--success-bg); color: var(--success); border-color: var(--success-border); }
-        .offline-pill  { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
-        .critical-pill { background: var(--warning-bg); color: var(--warning); border-color: var(--warning-border); }
-
-        .health-critical td { background: var(--danger-bg); }
-
-        .badge-status {
-            font-size: 0.7rem;
-            font-weight: 800;
-            padding: 0.25rem 0.6rem;
-            border-radius: var(--radius-pill);
+        .hp-label {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 0.35rem;
+            font: 700 0.6875rem/1.2 var(--font-sans);
             text-transform: uppercase;
-            letter-spacing: var(--tracking-wide);
+            letter-spacing: 0.1em;
+            color: var(--sumi-ink-3);
+            white-space: nowrap;
         }
+        .hp-label .jp { color: var(--shu-ink); font-size: 0.75rem; }
+        .health-pill strong {
+            font: 700 1.25rem/1 var(--font-display);
+            font-variant-numeric: tabular-nums;
+            color: var(--sumi-ink);
+        }
+        .online-pill   strong { color: var(--matcha-ink); }
+        .offline-pill  strong { color: var(--nezumi-ink); }
+        .critical-pill strong { color: var(--ume-ink); }
+        #mcpServerStatus { font: 600 0.8125rem/1.2 var(--font-sans); display: inline-flex; align-items: center; gap: 0.4rem; min-height: 1.25rem; }
+        #mcpServerStatus::before {           /* kagaribi lantern: lit / smouldering / dark */
+            content: "";
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--nezumi);
+            flex-shrink: 0;
+        }
+        #mcpServerPill.is-online   #mcpServerStatus { color: var(--matcha-ink); }
+        #mcpServerPill.is-online   #mcpServerStatus::before { background: var(--lantern); color: var(--lantern); animation: lantern 2.4s ease-in-out infinite; }
+        #mcpServerPill.is-degraded #mcpServerStatus { color: var(--kuchiba-ink); }
+        #mcpServerPill.is-degraded #mcpServerStatus::before { background: var(--kuchiba); }
+        #mcpServerPill.is-down     #mcpServerStatus { color: var(--nezumi-ink); }
 
-        .badge-status.online   { background: var(--success-bg); color: var(--success); }
-        .badge-status.offline  { background: var(--danger-bg);  color: var(--danger); }
-        .badge-status.charging { background: var(--warning-bg); color: var(--warning); }
-        .badge-status.unknown  { background: var(--bg-surface-variant); color: var(--text-muted); }
+        #healthTable td .ico { width: 16px; height: 16px; margin-right: 0.3rem; vertical-align: -3px; color: var(--text-muted); }
+        #healthTable .text-ok, #healthTable .text-danger, #healthTable .text-warn { font-weight: 700; }
+        #healthTable .text-ok .ico, #healthTable .text-danger .ico { color: currentColor; }
 
-        .text-danger { color: var(--danger); font-weight: 700; }
-        .text-warn   { color: var(--warning); font-weight: 700; }
+        /* ── Responsive ─────────────────────────────────────────────────── */
+        @media (max-width: 479px) {
+            /* single column; tighter plates so a phone viewport stays under the §1 paper share */
+            .bot-cards-grid { grid-template-columns: 1fr; gap: 1.25rem 1rem; }
+            .bot-card { padding: 0.85rem 1rem 1rem; }
+            .global-override-card { padding: 1.75rem 1.5rem 1.25rem; }
+            .override-controls, .override-controls .select-wrap, #applyAllBtn { width: 100%; }
+        }
     </style>
 </head>
 <body>
+    <a class="skip" href="#main">Skip to content</a>
 
-    <!-- ── Fixed Navbar ─────────────────────────────────────────────────── -->
-    <nav class="bot-navbar">
+    <!-- ── Navbar: lintel ──────────────────────────────────────────────── -->
+    <nav class="bot-navbar lintel" aria-label="Bot control">
         <div class="navbar-brand">
-            <span>🤖</span>
-            <span class="navbar-brand-text" id="botNavRestaurantName">Bot Control Center</span>
+            <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#neko"/></svg>
+            <div class="brand-stack">
+                <span class="navbar-brand-text" id="botNavRestaurantName">Bot Control</span>
+                <span class="eyebrow navbar-eyebrow">Fleet control</span>
+            </div>
         </div>
         <div class="navbar-center">
-            <span id="liveClock">00:00:00</span>
+            <span class="bot-clock"><span id="liveClock">00:00:00</span></span>
         </div>
         <div class="navbar-actions">
-            <span id="botCountDisplay">Loading...</span>
-            <span id="alertBell" title="Bot Alerts">🔔</span>
-            <button id="botLogoutBtn" style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border);border-radius:var(--radius-pill);padding:0.375rem 0.875rem;font-weight:700;font-size:0.8rem;cursor:pointer;transition:all var(--duration-fast) var(--ease-out);">🚪 Logout</button>
+            <span id="botCountDisplay" class="bi">Loading...</span>
+            <span id="alertBell" title="Bot alerts"><svg class="ico ico--md" aria-hidden="true"><use href="../shared/icons.svg#i-bell"/></svg></span>
+            <span class="visually-hidden bell-live" aria-live="polite">A bot is critical — check Health</span>
+            <button id="botLogoutBtn" class="btn-danger btn-sm"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-noren"/></svg><span class="logout-label">Logout</span></button>
         </div>
     </nav>
 
-    <!-- ── Tab Bar ───────────────────────────────────────────────────────── -->
-    <div class="tab-bar">
-        <button class="tab-btn active" data-tab="overview">🤖 Overview</button>
-        <button class="tab-btn" data-tab="live-logs">📋 Live Logs</button>
-        <button class="tab-btn" data-tab="character-control">🎭 Character Control</button>
-        <button class="tab-btn" data-tab="health-monitor">❤️ Health Monitor</button>
+    <!-- ── Noren tabs ──────────────────────────────────────────────────── -->
+    <div class="tab-rail">
+        <div class="tab-bar" role="tablist" aria-label="Sections">
+            <button class="tab-btn active" data-tab="overview" role="tab" aria-selected="true" aria-controls="tab-overview"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-neko-head"/></svg>Overview</button>
+            <button class="tab-btn" data-tab="live-logs" role="tab" aria-selected="false" aria-controls="tab-live-logs"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-scroll"/></svg>Live Logs</button>
+            <button class="tab-btn" data-tab="character-control" role="tab" aria-selected="false" aria-controls="tab-character-control"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-mask"/></svg>Character</button>
+            <button class="tab-btn" data-tab="health-monitor" role="tab" aria-selected="false" aria-controls="tab-health-monitor"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-heart-pulse"/></svg>Health</button>
+        </div>
     </div>
 
-    <!-- ── Tab Content ───────────────────────────────────────────────────── -->
-    <main class="bot-main">
+    <!-- ── Tab content ─────────────────────────────────────────────────── -->
+    <main class="bot-main" id="main">
 
         <!-- ══ Tab 1: Overview ══ -->
-        <div id="tab-overview" class="tab-content active-tab">
-            <div class="section-header">
-                <h1>🤖 Bot Fleet Overview</h1>
-                <p class="text-secondary">Live fleet status — all bots at a glance</p>
+        <div id="tab-overview" class="tab-content active-tab" role="tabpanel">
+            <div class="section-header page-header">
+                
+                <p class="eyebrow">Overview</p>
+                <h1 class="page-title">The fleet</h1>
+                <p class="text-secondary page-subtitle">Every table's cat at a glance — personality, charge and temperature.</p>
             </div>
             <div id="botCardsGrid" class="bot-cards-grid"></div>
         </div>
 
         <!-- ══ Tab 2: Live Logs ══ -->
-        <div id="tab-live-logs" class="tab-content">
+        <div id="tab-live-logs" class="tab-content" role="tabpanel">
             <div class="section-header flex-header">
-                <div>
-                    <h1>📋 Live Conversation Logs</h1>
-                    <p class="text-secondary">Real-time bot–customer interactions</p>
+                <div class="page-header">
+                    
+                    <p class="eyebrow">Live logs</p>
+                    <h1 class="page-title">Conversations</h1>
+                    <p class="text-secondary page-subtitle">What the cats and the guests are saying, as it happens.</p>
                 </div>
-                <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
-                    <select id="logBotSelect" class="log-bot-select">
-                        <option value="">-- Select a Bot --</option>
-                    </select>
-                    <button id="refreshLogs" class="btn-control">↻ Refresh</button>
-                    <button id="autoRefreshToggle" class="btn-control active-ctrl">⏱ Auto ON</button>
+                <div class="header-controls">
+                    <span class="select-wrap">
+                        <select id="logBotSelect" class="log-bot-select" aria-label="Choose a bot">
+                            <option value="">-- Select a Bot --</option>
+                        </select>
+                    </span>
+                    <button id="refreshLogs" class="btn-control btn-paper btn-sm"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-refresh"/></svg>Refresh</button>
+                    <button id="autoRefreshToggle" class="btn-control btn-ghost btn-sm mi-bell active-ctrl">Auto ON</button>
                 </div>
             </div>
-            <div id="logFeed">
-                <div class="log-placeholder">Select a bot to view logs 📋</div>
+            <div class="scroll-frame">
+                <div id="logFeed">
+                    <div class="log-placeholder">Select a bot to view logs</div>
+                </div>
             </div>
         </div>
 
         <!-- ══ Tab 3: Character Control ══ -->
-        <div id="tab-character-control" class="tab-content">
-            <div class="section-header">
-                <h1>🎭 Character Control</h1>
-                <p class="text-secondary">Switch bot personalities individually or globally</p>
+        <div id="tab-character-control" class="tab-content" role="tabpanel">
+            <div class="section-header page-header">
+                
+                <p class="eyebrow">Character control</p>
+                <h1 class="page-title">Personalities</h1>
+                <p class="text-secondary page-subtitle">Give one table a new character, or set the whole house at once.</p>
             </div>
 
-            <!-- Global Apply -->
-            <div class="global-override-card">
-                <div>
-                    <h3 style="font-weight: 700; font-size: 1.125rem; margin-bottom: 0.25rem;">⚡ Global Override</h3>
-                    <p style="font-size: 0.875rem; color: var(--text-secondary);">Apply a single character to all bots simultaneously.</p>
+            <!-- Global apply: torii frame -->
+            <div class="global-override-card lacquer">
+                <div class="override-copy">
+                    <h3><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-mask"/></svg>Set every table </h3>
+                    <p>Apply a single character to all bots simultaneously.</p>
                 </div>
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <select id="globalCharacterSelect" class="char-select-global">
-                        <option value="Naruto">Naruto 🍥</option>
-                        <option value="Goku">Goku 🐉</option>
-                        <option value="Doraemon">Doraemon 🔔</option>
-                        <option value="Shinchan">Shinchan 😜</option>
-                        <option value="Luffy">Luffy ☠️</option>
-                    </select>
-                    <button id="applyAllBtn">🎭 Apply to All</button>
+                <div class="override-controls">
+                    <span class="select-wrap">
+                        <select id="globalCharacterSelect" class="char-select-global" aria-label="Character for all bots">
+                            <option value="Naruto">Naruto</option>
+                            <option value="Goku">Goku</option>
+                            <option value="Doraemon">Doraemon</option>
+                            <option value="Shinchan">Shinchan</option>
+                            <option value="Luffy">Luffy</option>
+                        </select>
+                    </span>
+                    <button id="applyAllBtn" class="btn-seal mi-mask">Apply to all</button>
+                </div>
+                <div class="apply-msg-slot"><div id="applyAllMsg" class="apply-msg" style="display:none;" role="status"></div></div>
+            </div>
+
+            <!-- Per-bot table -->
+            <div class="lacquer table-panel">
+                <div class="table-container">
+                    <table id="characterTable">
+                        <thead>
+                            <tr>
+                                <th>Bot Name </th>
+                                <th>Table </th>
+                                <th>Current Mode </th>
+                                <th>Change To </th>
+                                <th>Action </th>
+                            </tr>
+                        </thead>
+                        <tbody id="characterTableBody"></tbody>
+                    </table>
                 </div>
             </div>
-            <div id="applyAllMsg" class="apply-msg" style="display:none;"></div>
 
-            <!-- Per-Bot Table -->
-            <div class="table-container" style="margin-bottom: 3rem;">
-                <table id="characterTable">
-                    <thead>
-                        <tr>
-                            <th>Bot Name</th>
-                            <th>Table</th>
-                            <th>Current Mode</th>
-                            <th>Change To</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="characterTableBody"></tbody>
-                </table>
+            <!-- Personality dictionary -->
+            <div class="section-sub">
+                <p class="eyebrow">Personality dictionary</p>
+                <h3>Dictionary</h3>
+                <hr class="rule-kin">
             </div>
-
-            <!-- Personality Cards -->
-            <div>
-                <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);">Dictionary</h3>
-                <div class="personality-grid">
-                    <div class="personality-card" style="border-color: rgba(234, 88, 12, 0.15);">
-                        <div class="personality-card-emoji">🍥</div>
-                        <h4>Naruto</h4>
-                        <p>Energetic, loud, never gives up. Uses "Dattebayo!" catchphrase. Treats every order like a ninja mission.</p>
-                    </div>
-                    <div class="personality-card" style="border-color: rgba(202, 138, 4, 0.15);">
-                        <div class="personality-card-emoji">🐉</div>
-                        <h4>Goku</h4>
-                        <p>Innocent, cheerful, always hungry. Loves food more than fighting. Will go Super Saiyan over ramen.</p>
-                    </div>
-                    <div class="personality-card" style="border-color: rgba(37, 99, 235, 0.15);">
-                        <div class="personality-card-emoji">🔔</div>
-                        <h4>Doraemon</h4>
-                        <p>Friendly, helpful, polite. Has a gadget for every problem. Takes every request very seriously.</p>
-                    </div>
-                    <div class="personality-card" style="border-color: rgba(220, 38, 38, 0.15);">
-                        <div class="personality-card-emoji">😜</div>
-                        <h4>Shinchan</h4>
-                        <p>Naughty, funny, unpredictable. Says the most unexpected things. Keeps customers entertained.</p>
-                    </div>
-                    <div class="personality-card" style="border-color: rgba(192, 38, 211, 0.15);">
-                        <div class="personality-card-emoji">☠️</div>
-                        <h4>Luffy</h4>
-                        <p>Loud, adventurous, pirate-style. Everything is an adventure. Will become King of the Pirates — right after your order.</p>
-                    </div>
+            <div class="personality-grid">
+                <div class="personality-card paper tanzaku pc-naruto">
+                    <div class="personality-card-emoji char-naruto"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-crest-uzumaki"/></svg></div>
+                    <h4>Naruto </h4>
+                    <p>Energetic, loud, never gives up. Uses "Dattebayo!" catchphrase. Treats every order like a ninja mission.</p>
+                </div>
+                <div class="personality-card paper tanzaku pc-goku">
+                    <div class="personality-card-emoji char-goku"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-crest-star"/></svg></div>
+                    <h4>Goku </h4>
+                    <p>Innocent, cheerful, always hungry. Loves food more than fighting. Will go Super Saiyan over ramen.</p>
+                </div>
+                <div class="personality-card paper tanzaku pc-doraemon">
+                    <div class="personality-card-emoji char-doraemon"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-crest-bell"/></svg></div>
+                    <h4>Doraemon </h4>
+                    <p>Friendly, helpful, polite. Has a gadget for every problem. Takes every request very seriously.</p>
+                </div>
+                <div class="personality-card paper tanzaku pc-shinchan">
+                    <div class="personality-card-emoji char-shinchan"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-crest-swirl"/></svg></div>
+                    <h4>Shinchan </h4>
+                    <p>Naughty, funny, unpredictable. Says the most unexpected things. Keeps customers entertained.</p>
+                </div>
+                <div class="personality-card paper tanzaku pc-luffy">
+                    <div class="personality-card-emoji char-luffy"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-crest-hat"/></svg></div>
+                    <h4>Luffy </h4>
+                    <p>Loud, adventurous, pirate-style. Everything is an adventure. Will become King of the Pirates — right after your order.</p>
                 </div>
             </div>
         </div>
 
         <!-- ══ Tab 4: Health Monitor ══ -->
-        <div id="tab-health-monitor" class="tab-content">
+        <div id="tab-health-monitor" class="tab-content" role="tabpanel">
             <div class="section-header flex-header">
-                <div>
-                    <h1>❤️ Health Monitor</h1>
-                    <p class="text-secondary">Auto-refresh every 15 seconds</p>
+                <div class="page-header">
+                    
+                    <p class="eyebrow">Health monitor</p>
+                    <h1 class="page-title">Health</h1>
+                    <p class="text-secondary page-subtitle">Refreshes every 15 seconds.</p>
                 </div>
                 <div class="health-summary-row">
-                    <div class="health-pill total-pill">Total: <strong id="hTotal">0</strong></div>
-                    <div class="health-pill online-pill">Online: <strong id="hOnline">0</strong></div>
-                    <div class="health-pill offline-pill">Offline: <strong id="hOffline">0</strong></div>
-                    <div class="health-pill critical-pill">Critical: <strong id="hCritical">0</strong></div>
-                    <div class="health-pill" id="mcpServerPill" style="border-color:rgba(255,255,255,0.18)">AI Server: <strong id="mcpServerStatus" style="color:var(--text-secondary)">Checking...</strong></div>
+                    <div class="health-pill total-pill"><span class="hp-label">Total</span><strong id="hTotal">0</strong></div>
+                    <div class="health-pill online-pill"><span class="hp-label">Online</span><strong id="hOnline">0</strong></div>
+                    <div class="health-pill offline-pill"><span class="hp-label">Offline</span><strong id="hOffline">0</strong></div>
+                    <div class="health-pill critical-pill"><span class="hp-label">Critical</span><strong id="hCritical">0</strong></div>
+                    <div class="health-pill" id="mcpServerPill"><span class="hp-label"><span class="jp">AI</span>Server</span><strong id="mcpServerStatus">Checking...</strong></div>
                 </div>
             </div>
-            <div class="table-container">
-                <table id="healthTable">
-                    <thead>
-                        <tr>
-                            <th>Bot Name</th>
-                            <th>Table</th>
-                            <th>Status</th>
-                            <th>Battery</th>
-                            <th>Temperature</th>
-                            <th>Last Seen</th>
-                            <th>Condition</th>
-                        </tr>
-                    </thead>
-                    <tbody id="healthTableBody"></tbody>
-                </table>
+            <div class="lacquer table-panel">
+                <div class="table-container">
+                    <table id="healthTable">
+                        <thead>
+                            <tr>
+                                <th>Bot Name </th>
+                                <th>Table </th>
+                                <th>Status </th>
+                                <th>Battery </th>
+                                <th>Temperature </th>
+                                <th>Registered </th>
+                                <th>Condition </th>
+                            </tr>
+                        </thead>
+                        <tbody id="healthTableBody"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 

@@ -5,254 +5,234 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maneki Neko | Staff Login</title>
     <meta name="description" content="Maneki Neko Smart Restaurant — Staff Portal Login">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#100d0c">
+    <link rel="icon" href="./shared/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="./shared/theme.css">
+    <link rel="stylesheet" href="./shared/icons.css">
     <style>
-        /* ── Login Page Layout ───────────────────────────────────────── */
+        /* ══════════════════════════════════════════════════════════════
+           Staff login — Kami to Sumi (§7.2)
+           Scene: dark lacquered room, two lantern pools, ensō halo,
+           one washi card (the only paper on screen).
+           ══════════════════════════════════════════════════════════════ */
+
+        /* ── Room ─────────────────────────────────────────────────────── */
         body {
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 1.5rem;
-            overflow: hidden;
+            padding: 1.5rem 1rem;
+            overflow-y: auto;
+            overflow-x: hidden;
             position: relative;
         }
 
-        /* Animated background orbs */
+        .room-layer,
+        .enso-halo { position: fixed; }
+        .enso-halo { width: 560px; height: 560px; }
+
+        /* Lantern pools: no filter:blur — pure radial gradients, slow float */
         .bg-orb {
             position: fixed;
             border-radius: 50%;
             pointer-events: none;
-            filter: blur(80px);
-            opacity: 0.18;
             z-index: 0;
         }
-
         .bg-orb-1 {
-            width: 600px;
-            height: 600px;
-            background: var(--primary-raw);
-            top: -200px;
-            left: -200px;
-            animation: orbFloat1 12s ease-in-out infinite;
+            width: 640px; height: 640px;
+            top: -260px; left: -220px;
+            background: radial-gradient(circle, var(--lantern-glow) 0%, rgba(255,179,71,.08) 38%, transparent 68%);
+            animation: float 9s ease-in-out infinite;
         }
-
         .bg-orb-2 {
-            width: 500px;
-            height: 500px;
-            background: #a855f7;
-            bottom: -150px;
-            right: -150px;
-            animation: orbFloat2 15s ease-in-out infinite;
+            width: 560px; height: 560px;
+            bottom: -240px; right: -200px;
+            background: radial-gradient(circle, rgba(214,58,31,.26) 0%, rgba(214,58,31,.08) 40%, transparent 68%);
+            animation: float 12s ease-in-out infinite reverse;
         }
 
-        @keyframes orbFloat1 {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(60px, 40px) scale(1.1); }
-        }
-
-        @keyframes orbFloat2 {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(-50px, -30px) scale(1.08); }
-        }
-
-        /* ── Login Card ──────────────────────────────────────────────── */
+        /* ── Card (washi) ─────────────────────────────────────────────── */
         .login-card {
             position: relative;
             z-index: 1;
             width: 100%;
             max-width: 420px;
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-xl);
-            padding: 2.5rem;
-            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.04);
+            margin: auto;
+            padding: 2rem;
             animation: fadeInUp 0.6s var(--ease-out) both;
         }
 
-        /* ── Brand ───────────────────────────────────────────────────── */
+        /* Tategaki ribbon hanging outside the right edge */
+        .card-ribbon {
+            position: absolute;
+            top: 1.25rem;
+            right: -2.4rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--kin-dim);
+            opacity: 0.9;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        /* 招 seal in the card corner */
+        .card-seal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 34px;
+            height: 34px;
+            font-size: 1rem;
+        }
+
+        /* ── Brand ────────────────────────────────────────────────────── */
         .login-brand {
             text-align: center;
-            margin-bottom: 2.25rem;
+            margin-bottom: 1.1rem;
+            display: grid;
+            justify-items: center;
+            gap: 0.2rem;
         }
-
         .login-cat {
-            font-size: 3.5rem;
-            animation: wave 1.8s ease-in-out infinite;
-            filter: drop-shadow(0 0 18px var(--primary-glow));
-            display: block;
-            margin-bottom: 1rem;
+            width: 72px;
+            height: 72px;
+            margin-bottom: 0.1rem;
         }
+        .login-cat .mn-paw { animation: wave 1.8s ease-in-out infinite; }
+        /* decorative groups never catch the pointer (the svg is role=img) */
+        .login-cat :is(.mn-shadow, .mn-mirror, .mn-body, .mn-head, .mn-patches, .mn-head-line, .mn-ears,
+                       .mn-collar, .mn-bell, .mn-koban, .mn-paw-rest, .mn-koban-text) { pointer-events: none; }
+
+        .login-eyebrow { margin: 0; }
 
         .login-title {
-            font-size: 1.75rem;
-            font-weight: 800;
-            letter-spacing: var(--tracking-tight);
-            background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.375rem;
+            font-family: var(--font-display);
+            font-size: 1.625rem;
+            font-weight: 600;
+            letter-spacing: var(--tracking-display);
+            line-height: 1.15;
+            color: var(--sumi-ink);
+            margin: 0;
         }
+        .login-brand .rule-sumi { margin: 0.1rem auto 0.35rem; }
 
         .login-subtitle {
             font-size: 0.875rem;
-            color: var(--text-muted);
+            color: var(--sumi-ink-3);
             font-weight: 500;
+            margin: 0;
         }
 
-        /* ── Role Selector Tabs ──────────────────────────────────────── */
+        /* ── Role selector: three fuda plaques ────────────────────────── */
         .role-tabs {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 0.5rem;
-            margin-bottom: 1.75rem;
-            background: var(--bg-surface-variant);
-            border-radius: var(--radius-md);
-            padding: 0.375rem;
-            border: 1px solid var(--border);
-        }
-
-        .role-tab {
-            padding: 0.5rem 0.25rem;
-            border-radius: var(--radius-sm);
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-align: center;
-            cursor: pointer;
-            color: var(--text-muted);
-            transition: all var(--duration-fast) var(--ease-out);
-            border: none;
-            background: transparent;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.2rem;
-            letter-spacing: 0.03em;
-            text-transform: uppercase;
-            line-height: 1.2;
-        }
-
-        .role-tab .role-icon {
-            font-size: 1.125rem;
-        }
-
-        .role-tab:hover {
-            color: var(--text-secondary);
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        .role-tab.active {
-            background: var(--primary-raw);
-            color: #fff;
-            box-shadow: 0 0 14px var(--primary-glow-strong);
-        }
-
-        /* ── Form Fields ─────────────────────────────────────────────── */
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-secondary);
             margin-bottom: 0.5rem;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
         }
-
-        .input-wrapper {
-            position: relative;
-        }
-
-        .input-icon {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1rem;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .form-input {
-            width: 100%;
-            background: var(--bg-surface-highest);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            border-radius: var(--radius-md);
-            padding: 0.875rem 1rem 0.875rem 2.75rem;
+        .role-tab {
+            display: grid;
+            justify-items: center;
+            gap: 0.15rem;
+            padding: 0.5rem 0.25rem 0.45rem;
+            min-height: 44px;
+            background: var(--washi-2);
+            border: 1px solid var(--washi-line);
+            border-radius: var(--radius-paper);
+            color: var(--sumi-ink-2);
             font-family: var(--font-sans);
-            font-size: 1rem;
-            font-weight: 500;
-            outline: none;
-            transition: all var(--duration-fast) var(--ease-out);
-            box-sizing: border-box;
-        }
-
-        .form-input::placeholder {
-            color: var(--text-dimmed);
-            font-weight: 400;
-        }
-
-        .form-input:focus {
-            border-color: rgba(99, 102, 241, 0.5);
-            box-shadow: 0 0 0 3px var(--primary-glow);
-            background: var(--bg-surface-bright);
-        }
-
-        /* PIN input — monospace for visual clarity */
-        #pinInput {
-            font-family: var(--font-mono);
-            font-size: 1.25rem;
-            letter-spacing: 0.3em;
-        }
-
-        /* Toggle PIN visibility button */
-        .toggle-pin {
-            position: absolute;
-            right: 0.875rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: var(--text-muted);
+            font-size: 0.6875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            line-height: 1.2;
             cursor: pointer;
-            padding: 0.25rem;
-            font-size: 1rem;
-            transition: color var(--duration-fast);
-            z-index: 1;
+            box-shadow: inset 0 1px 0 rgba(255,250,240,.5), 0 1px 2px rgba(0,0,0,.18);
+            transition: background-color var(--duration-fast) var(--ease-out),
+                        color var(--duration-fast) var(--ease-out),
+                        border-color var(--duration-fast) var(--ease-out),
+                        box-shadow var(--duration-fast) var(--ease-out);
+        }
+        .role-tab .role-icon {
+            width: 16px;
+            height: 16px;
+            color: var(--sumi-ink-3);
+            transition: color var(--duration-fast) var(--ease-out);
+        }
+        .role-tab .role-kanji {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: 0;
+            text-transform: none;
+            color: var(--sumi-ink);
+            transition: color var(--duration-fast) var(--ease-out);
+        }
+        .role-tab:hover:not(.active) {
+            background: var(--washi-bright);
+            border-color: var(--washi-line-strong);
+            color: var(--sumi-ink);
+        }
+        .role-tab.active,
+        .role-tab[aria-selected="true"] {
+            background: var(--shu);
+            color: #fff;
+            border: 1px solid var(--shu-deep);
+            box-shadow: var(--shadow-seal);
+            transform: rotate(-1deg);
+            animation: stamp 0.32s var(--ease-spring);
+        }
+        .role-tab.active .role-icon,
+        .role-tab.active .role-kanji,
+        .role-tab[aria-selected="true"] .role-icon,
+        .role-tab[aria-selected="true"] .role-kanji { color: #fff; }
+
+        .role-hint {
+            font-size: 0.8125rem;
+            color: var(--sumi-ink-3);
+            text-align: center;
+            min-height: 1.5rem;
+            margin: 0 0 0.5rem;
         }
 
-        .toggle-pin:hover {
-            color: var(--text-secondary);
-        }
-
-        /* ── Error Banner ────────────────────────────────────────────── */
+        /* ── Error banner: torn washi strip, ume ink ──────────────────── */
         .error-banner {
             display: none;
-            background: var(--danger-bg);
-            border: 1px solid var(--danger-border);
-            color: var(--danger);
-            border-radius: var(--radius-md);
-            padding: 0.75rem 1rem;
+            position: relative;
+            background: var(--washi-bright);
+            border-left: 3px solid var(--ume-ink);
+            border-radius: 0 3px 3px 0;
+            box-shadow: var(--shadow-soft);
+            color: var(--ume-ink);
+            padding: 0.65rem 0.9rem;
             font-size: 0.875rem;
             font-weight: 600;
-            margin-bottom: 1.25rem;
+            line-height: 1.4;
+            margin: 0.25rem 0 1.25rem;
             animation: shakeX 0.4s var(--ease-out);
         }
-
+        /* deckled top edge (::before is taken by the mi-warning glyph) */
+        .error-banner::after {
+            content: "";
+            position: absolute;
+            top: -6px;
+            left: 0;
+            right: 0;
+            height: 7px;
+            background: var(--washi-bright);
+            -webkit-mask: var(--deckle) 0 0 / 18px 7px repeat-x;
+            mask: var(--deckle) 0 0 / 18px 7px repeat-x;
+            pointer-events: none;
+        }
+        .error-banner.mi-warning::before { flex-shrink: 0; width: 1.2em; height: 1.2em; margin-right: 0; }
         .error-banner.visible {
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
-
         @keyframes shakeX {
             0%, 100% { transform: translateX(0); }
             20%       { transform: translateX(-8px); }
@@ -261,132 +241,186 @@
             80%       { transform: translateX(5px); }
         }
 
-        /* ── Submit Button ───────────────────────────────────────────── */
-        .login-btn {
-            width: 100%;
-            background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
-            color: #fff;
-            font-weight: 700;
-            font-size: 1rem;
-            padding: 1rem;
-            border: none;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            transition: all var(--duration-normal) var(--ease-out);
-            position: relative;
-            overflow: hidden;
+        /* ── Form fields (paper ruled-line inputs come from theme) ────── */
+        .form-group { margin-bottom: 0.9rem; }
+
+        .form-label {
             display: flex;
-            align-items: center;
-            justify-content: center;
+            align-items: baseline;
             gap: 0.5rem;
-            margin-top: 0.5rem;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            color: var(--sumi-ink-2);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 0.4rem;
         }
+        .form-label .lbl-jp { text-transform: none; letter-spacing: 0.06em; }
 
-        .login-btn:hover:not(:disabled) {
-            box-shadow: var(--shadow-glow), 0 8px 24px rgba(99, 102, 241, 0.3);
-            transform: translateY(-1px);
+        .form-input { width: 100%; }
+        #pinInput { font-size: 1.125rem; padding-right: 3rem; }
+
+        /* PIN visibility toggle (JS flips aria-pressed; glyph is a CSS mask) */
+        .toggle-pin {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            display: grid;
+            place-items: center;
+            background: none;
+            border: 0;
+            border-radius: 3px;
+            color: var(--sumi-ink-3);
+            cursor: pointer;
+            padding: 0;
+            z-index: 1;
+            transition: color var(--duration-fast) var(--ease-out);
         }
+        .toggle-pin.mi-eye::before { width: 20px; height: 20px; margin: 0; }
+        .toggle-pin:hover { color: var(--shu-ink); }
+        #togglePin[aria-pressed="true"] { --mi: var(--mi-eye-off-uri); color: var(--shu-ink); }
 
-        .login-btn:active:not(:disabled) {
-            transform: translateY(0) scale(0.98);
-        }
-
-        .login-btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-
-        /* Loading spinner */
-        .btn-spinner {
-            display: none;
-            width: 18px;
-            height: 18px;
-            border: 2.5px solid rgba(255,255,255,0.3);
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
+        /* ── Sign In seal ─────────────────────────────────────────────── */
+        .login-btn { margin-top: 0.4rem; font-size: 1rem; min-height: 48px; }
+        .login-btn .btn-kanji { margin-left: 0.1rem; }
         .login-btn.loading .btn-text { display: none; }
         .login-btn.loading .btn-spinner { display: block; }
+        /* While signing in the seal stays vermilion (theme's disabled recipe would grey the one commit) */
+        .login-btn.loading:disabled {
+            background: linear-gradient(170deg, #e0432a, var(--shu) 55%, var(--primary-dim));
+            border-color: var(--shu-deep);
+            color: #fff;
+            cursor: progress;
+            opacity: 0.85;
+        }
 
-        /* ── Divider & Back Link ─────────────────────────────────────── */
+        /* ── Footer ───────────────────────────────────────────────────── */
         .login-footer {
             text-align: center;
-            margin-top: 1.5rem;
+            margin-top: 1rem;
+            padding-top: 0.6rem;
+            border-top: 2px dashed var(--washi-line);
         }
-
         .back-link {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color var(--duration-fast);
             display: inline-flex;
             align-items: center;
-            gap: 0.375rem;
+            gap: 0.4rem;
+            min-height: 44px;
+            padding: 0 0.75rem;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--sumi-ink-3);
+            text-decoration: none;
+            border-radius: 3px;
+            transition: color var(--duration-fast) var(--ease-out);
+        }
+        .back-link .ico { width: 16px; height: 16px; }
+        .back-link .jp { color: inherit; font-size: 0.75rem; }
+        .back-link:hover { color: var(--shu-ink); }
+
+        /* ── Short laptop viewports: keep the whole card (and Home) above the fold ── */
+        @media (max-height: 820px) and (min-width: 481px) {
+            .login-cat { width: 60px; height: 60px; }
         }
 
-        .back-link:hover {
-            color: var(--primary);
+        /* ── Small screens ────────────────────────────────────────────── */
+        @media (max-width: 480px) {
+            body { padding: 1rem; }
+            .login-card { padding: 1.5rem 1.25rem; }
+            .card-ribbon { display: none; }
+            .card-seal { top: 0.75rem; right: 0.75rem; width: 30px; height: 30px; font-size: 0.875rem; }
+            .role-tab { padding: 0.5rem 0.2rem 0.45rem; font-size: 0.6875rem; letter-spacing: 0.04em; }
         }
-
-        /* ── Hint tooltip ────────────────────────────────────────────── */
-        .role-hint {
-            font-size: 0.75rem;
-            color: var(--text-dimmed);
-            text-align: center;
-            margin-top: -0.75rem;
-            margin-bottom: 1.25rem;
-            font-style: italic;
-        }
-
     </style>
 </head>
 <body>
 
-    <!-- Background orbs -->
-    <div class="bg-orb bg-orb-1"></div>
-    <div class="bg-orb bg-orb-2"></div>
+    <!-- Room: lantern pools + asanoha lattice, ensō halo -->
+    <div class="room-layer" aria-hidden="true"></div>
+    <div class="bg-orb bg-orb-1" aria-hidden="true"></div>
+    <div class="bg-orb bg-orb-2" aria-hidden="true"></div>
+    <div class="enso-halo" aria-hidden="true"></div>
 
     <!-- ── Login Card ───────────────────────────────────────────────── -->
-    <div class="login-card">
+    <div class="login-card paper">
+
+        
+        <span class="hanko card-seal" aria-hidden="true">M</span>
 
         <!-- Brand -->
         <div class="login-brand">
-            <span class="login-cat">🐱</span>
+            <!-- Staff variant: mirrored, the raised paw beckons fortune -->
+            <svg class="mn mn--washi login-cat" viewBox="0 0 120 120" width="72" height="72" role="img" aria-label="Maneki-neko, the beckoning lucky cat"><g class="mn-shadow"><ellipse cx="60" cy="111" rx="34" ry="4.5" fill="rgba(0,0,0,.28)"/></g><g class="mn-mirror" transform="matrix(-1 0 0 1 120 0)"><g class="mn-body" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+                <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke-width="9.5"/>
+                <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+                <path d="M33 108q-5 0-5-5C28 84 33 72 44 68q16-5 32 0c11 4 16 16 16 35q0 5-5 5z"/>
+              </g><g class="mn-head" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+                <path d="M37 27 42 13l10 12z"/><path d="M83 27 78 13 68 25z"/>
+                <circle cx="60" cy="46" r="27"/>
+              </g><g class="mn-patches" stroke="none">
+                <path d="M66 22c6-4 12-2 15 7-2 6-5 10-9 11-5-2-8-7-6-18z" fill="#c8923e"/>
+                <path d="M83 79c-7 4-13 12-13 19 4 4 11 4 16 2 2-7 1-14-3-21z" fill="#3a332e"/>
+                <path d="M77 17l-6.5 7.5" fill="none" stroke="#c8923e" stroke-width="7" stroke-linecap="round"/>
+              </g>
+              <g class="mn-head-line" fill="none" stroke="#1c1816" stroke-width="1.5"><circle cx="60" cy="46" r="27"/><path d="M83 27 78 13 68 25z"/></g><g class="mn-ears" fill="#f3b9c8" stroke="none"><path d="M41 25 43.5 18l6 7z"/><path d="M79 25l-2.5-7-6 7z"/></g><g class="mn-face" fill="none" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="42" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/><circle cx="78" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/>
+                <path d="M47 47q5-5 10 0M63 47q5-5 10 0" fill="none" stroke="#1c1816" stroke-width="2.2" stroke-linecap="round"/>
+                <path d="M57.8 52.2h4.4L60 55.2z" fill="#d63a1f" stroke="#d63a1f" stroke-width="1" stroke-linejoin="round"/>
+                <path d="M54 57q3 3.5 6 0q3 3.5 6 0" stroke-width="1.6"/>
+                <path d="M38 50 23 47M38 54H21M38 58l-15 3M82 50l15-3M82 54h17M82 58l15 3" stroke-width="1"/>
+              </g><g class="mn-collar" fill="#d63a1f" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round">
+                <path d="M43 69q17 8 34 0v5.5q-17 11-34 0z"/>
+              </g>
+              <g class="mn-bell" fill="#e3b55a" stroke="#a8832f" stroke-width="1.5">
+                <circle cx="60" cy="82" r="5.5"/><path d="M57 83h6M60 83v2.4" fill="none" stroke-linecap="round" stroke="#a8832f"/>
+              </g><g class="mn-koban" fill="#e3b55a" stroke="#a8832f" stroke-width="1.2">
+                <ellipse cx="44" cy="97" rx="13" ry="9"/><ellipse cx="44" cy="97" rx="9" ry="5" fill="none"/>
+              </g><g class="mn-paw-rest" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke-width="11"/>
+                <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke="#f3ebdd" stroke-width="8"/>
+                <ellipse cx="38" cy="89.5" rx="6.5" ry="4.5"/>
+              </g><g class="mn-paw" style="transform-origin:82px 66px;transform-box:view-box" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M83 72c12 0 17-12 13-34" fill="none" stroke-width="9.5"/>
+                <path d="M83 72c12 0 17-12 13-34" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+                <circle cx="95" cy="33" r="7.5"/>
+                <g fill="#f3b9c8" stroke="none"><ellipse cx="91" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="28.6" rx="1.6" ry="1.9"/><ellipse cx="99" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="35" rx="3.4" ry="2.6"/></g>
+              </g></g></svg>
+
+            <p class="eyebrow login-eyebrow">Staff entrance</p>
             <h1 class="login-title">Staff Portal</h1>
+            <span class="rule-sumi" aria-hidden="true"></span>
             <p class="login-subtitle">Maneki Neko Smart Restaurant</p>
         </div>
 
-        <!-- Role Selector -->
+        <!-- Role Selector: fuda plaques -->
         <div class="role-tabs" role="tablist" aria-label="Select your module">
-            <button class="role-tab active" id="tab-admin" data-role="admin"
-                    role="tab" aria-selected="true" aria-controls="login-form">
-                <span class="role-icon">📊</span>
+            <button type="button" class="role-tab active" id="tab-admin" data-role="admin"
+                    role="tab" aria-selected="true" aria-controls="loginForm">
+                <svg class="ico role-icon" aria-hidden="true"><use href="./shared/icons.svg#i-soroban"/></svg>
+                
                 Admin
             </button>
-            <button class="role-tab" id="tab-kds" data-role="kds"
-                    role="tab" aria-selected="false" aria-controls="login-form">
-                <span class="role-icon">🍳</span>
+            <button type="button" class="role-tab" id="tab-kds" data-role="kds"
+                    role="tab" aria-selected="false" aria-controls="loginForm">
+                <svg class="ico role-icon" aria-hidden="true"><use href="./shared/icons.svg#i-knife"/></svg>
+                
                 Kitchen
             </button>
-            <button class="role-tab" id="tab-bot" data-role="bot_manager"
-                    role="tab" aria-selected="false" aria-controls="login-form">
-                <span class="role-icon">🤖</span>
+            <button type="button" class="role-tab" id="tab-bot" data-role="bot_manager"
+                    role="tab" aria-selected="false" aria-controls="loginForm">
+                <svg class="ico role-icon" aria-hidden="true"><use href="./shared/icons.svg#i-neko-head"/></svg>
+                
                 Bots
             </button>
         </div>
 
         <p class="role-hint" id="roleHint">Admin Dashboard access</p>
 
-        <!-- Error Banner -->
-        <div class="error-banner" id="errorBanner" role="alert">
-            <span>⚠️</span>
+        <!-- Error Banner (torn washi strip; JS toggles .visible and re-triggers shakeX) -->
+        <div class="error-banner mi-warning" id="errorBanner" role="alert">
             <span id="errorMsg">Invalid username or PIN.</span>
         </div>
 
@@ -394,27 +428,26 @@
         <form id="loginForm" novalidate>
 
             <div class="form-group">
-                <label class="form-label" for="restaurantCodeInput">Restaurant Code</label>
-                <div class="input-wrapper">
-                    <span class="input-icon">🏮</span>
+                <label class="form-label lbl" for="restaurantCodeInput"><span class="lbl-en">Restaurant Code</span></label>
+                <div class="input-wrap is-code">
+                    <svg class="ico input-icon" aria-hidden="true"><use href="./shared/icons.svg#i-lantern"/></svg>
                     <input
                         type="text"
                         id="restaurantCodeInput"
-                        class="form-input"
-                        placeholder="e.g. TOKYO"
+                        class="form-input code"
+                        placeholder="TOKYO"
                         autocomplete="organization"
                         autocapitalize="characters"
                         maxlength="20"
                         required
-                        style="text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700;"
                     >
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="usernameInput">Username</label>
-                <div class="input-wrapper">
-                    <span class="input-icon">👤</span>
+                <label class="form-label lbl" for="usernameInput"><span class="lbl-en">Username</span></label>
+                <div class="input-wrap">
+                    <svg class="ico input-icon" aria-hidden="true"><use href="./shared/icons.svg#i-user"/></svg>
                     <input
                         type="text"
                         id="usernameInput"
@@ -428,27 +461,25 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="pinInput">PIN</label>
-                <div class="input-wrapper">
-                    <span class="input-icon">🔑</span>
+                <label class="form-label lbl" for="pinInput"><span class="lbl-en">PIN</span></label>
+                <div class="input-wrap">
+                    <svg class="ico input-icon" aria-hidden="true"><use href="./shared/icons.svg#i-lock"/></svg>
                     <input
                         type="password"
                         id="pinInput"
-                        class="form-input"
+                        class="form-input pin"
                         placeholder="••••"
                         autocomplete="current-password"
                         inputmode="numeric"
                         maxlength="8"
                         required
                     >
-                    <button type="button" class="toggle-pin" id="togglePin" aria-label="Show/hide PIN">
-                        👁️
-                    </button>
+                    <button type="button" class="toggle-pin mi-eye" id="togglePin" aria-label="Show/hide PIN" aria-pressed="false"></button>
                 </div>
             </div>
 
-            <button type="submit" class="login-btn" id="loginBtn">
-                <span class="btn-text">🔓 Sign In</span>
+            <button type="submit" class="login-btn btn-seal btn-block" id="loginBtn">
+                <span class="btn-text">Sign In </span>
                 <span class="btn-spinner"></span>
             </button>
 
@@ -456,7 +487,7 @@
 
         <!-- Back to Home -->
         <div class="login-footer">
-            <a href="./index.html" class="back-link">← Back to Home</a>
+            <a href="./index.html" class="back-link"><svg class="ico" aria-hidden="true"><use href="./shared/icons.svg#i-arrow-left"/></svg>Home </a>
         </div>
 
     </div>
@@ -521,11 +552,11 @@
                 restaurantEl.setSelectionRange(pos, pos);
             });
 
-            // ── Show / hide PIN ─────────────────────────────────────────
+            // ── Show / hide PIN (glyph is a CSS mask keyed off aria-pressed) ──
             togglePin.addEventListener('click', () => {
                 const isPassword = pinEl.type === 'password';
                 pinEl.type = isPassword ? 'text' : 'password';
-                togglePin.textContent = isPassword ? '🙈' : '👁️';
+                togglePin.setAttribute('aria-pressed', String(isPassword));
             });
 
             // ── Error helpers ────────────────────────────────────────────
@@ -589,7 +620,8 @@
                 const redirect = params.get('redirect');
                 const target   = ROLE_CONFIG[session.role]?.redirect || './index.html';
 
-                window.location.href = redirect || target;
+                // Short pause so the cat beckons once before the door opens
+                setTimeout(() => { window.location.href = redirect || target; }, 400);
             });
 
             // ── Auto-focus restaurant code field ─────────────────────────

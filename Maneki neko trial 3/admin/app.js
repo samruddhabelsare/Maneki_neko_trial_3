@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
         restaurantId: null   // set after auth
     };
 
+    // Escape DB strings before interpolating them into markup/attributes
+    const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
+
     // ── MCP Server Config ──────────────────────────────────────────────────
     const MCP_BASE = 'https://mcp-server-for-maneki-neko.onrender.com';
     const ADMIN_API_KEY = window.ADMIN_API_KEY || localStorage.getItem('mneko_admin_key') || 'maneki-admin-secret-2026';
@@ -73,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // ── Init ──────────────────────────────────────────────────────────
         async init() {
-            console.log('🐱 Maneki Neko Admin OS Loaded');
+            console.log('Maneki Neko Admin loaded');
 
             // ── Auth guard: admin role only ────────────────────────────
             const session = window.RestaurantAuth.requireAuth(['admin']);
@@ -277,6 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ]);
 
                 const onlineBots = (botsRes?.data || []).filter(b => b.status === 'online').length;
+                this.renderBotOverview(botsRes?.data || []);
                 this._setText('stat-orders', sales.total_orders || 0);
                 this._setText('stat-revenue', `₹${parseFloat(sales.total_revenue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
                 this._setText('stat-bots', onlineBots);
@@ -315,6 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const bots     = botsRes?.data     || [];
                 const feedback = feedbackRes?.data || [];
 
+                this.renderBotOverview(bots);
                 this._setText('stat-orders',  orders.length);
                 this._setText('stat-revenue', `₹${orders.reduce((acc, o) => acc + parseFloat(o.total_amount || 0), 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
                 this._setText('stat-bots',    bots.filter(b => b.status === 'online').length);
@@ -341,6 +346,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
+        },
+
+        // Bot fleet overview (dashboard) — rows from the bots already fetched above
+        renderBotOverview(bots) {
+            const list = document.getElementById('botOverviewList');
+            if (!list) return;
+            const dot = { online: 'green', charging: 'yellow' };
+            list.innerHTML = (bots || []).map(b => `
+                <div class="bot-item">
+                    <span class="status-dot ${dot[b.status] || 'grey'}" aria-hidden="true"></span>
+                    <div class="bot-main">
+                        <div class="bot-name">${esc(b.name || 'Bot')}</div>
+                        <div class="bot-meta">${esc(b.character_mode || 'No persona')} · ${esc(b.status || 'offline')}</div>
+                    </div>
+                    <span class="bot-table"><b class="hanko hanko--sm" aria-label="Table ${b.table_number ?? '—'}">${b.table_number ?? '—'}</b></span>
+                </div>
+            `).join('');
         },
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -441,8 +463,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${item.name}</td>
                     <td>${item.category}</td>
                     <td>₹${parseFloat(item.price || 0).toFixed(2)}</td>
-                    <td>${item.is_veg ? '🟢 Veg' : '🔴 Non-Veg'}</td>
-                    <td>${item.is_spicy ? '🌶️' : '—'}</td>
+                    <td>${item.is_veg
+                        ? '<span class="mark mark-veg" aria-label="Veg"></span> Veg'
+                        : '<span class="mark mark-nonveg" aria-label="Non-veg"></span> Non-Veg'}</td>
+                    <td>${item.is_spicy
+                        ? '<svg class="ico spicy" aria-hidden="true"><use href="../shared/icons.svg#i-chili"/></svg> Spicy'
+                        : '—'}</td>
                     <td>
                         <label class="toggle-switch">
                             <input type="checkbox" class="visible-toggle"
@@ -451,8 +477,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         </label>
                     </td>
                     <td>
-                        <button class="btn-edit filter-btn">✏️ Edit</button>
-                        <button class="btn-delete filter-btn" style="color:var(--danger)">🗑️ Delete</button>
+                        <button class="btn-edit filter-btn" aria-label="Edit ${esc(item.name)}"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-fude"/></svg> Edit</button>
+                        <button class="btn-delete filter-btn" aria-label="Delete ${esc(item.name)}"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-trash"/></svg> Delete</button>
                     </td>
                 `;
                 tr.querySelector('.visible-toggle').addEventListener('change', (e) =>
@@ -476,7 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (item) {
                 // Edit mode
-                title.innerText = '✏️ Edit Menu Item';
+                title.innerText = 'Edit menu item';
                 document.getElementById('editItemId').value      = item.id;
                 document.getElementById('itemName').value         = item.name || '';
                 document.getElementById('itemCategory').value     = item.category || '';
@@ -487,7 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? item.allergens.join(', ')
                     : (item.allergens || '');
             } else {
-                title.innerText = '➕ Add New Item';
+                title.innerText = 'Add new item';
             }
 
             container.style.display = 'block';
@@ -591,7 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         async deleteItem(id) {
-            if (!confirm('❗ Delete this menu item? This cannot be undone.')) return;
+            if (!confirm('Delete this menu item? This cannot be undone.')) return;
             const { error } = await window.supabaseClient.from('menu_items').delete().eq('id', id);
             if (error) { console.error('Delete error:', error.message); return; }
             await this.loadMenu();
@@ -741,10 +767,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const prefs = Array.isArray(c.preferences)
                     ? c.preferences.join(', ')
                     : (c.preferences || '—');
+                const visits = c.visit_count ?? 0;
+                const stamps = Math.min(visits, 10);
+                const initial = (c.name || '?').trim().charAt(0).toUpperCase() || '?';
                 tr.innerHTML = `
-                    <td>${c.name || '—'}</td>
+                    <td><span class="hanko hanko--sm hanko--sumi" aria-hidden="true">${initial}</span>${c.name || '—'}</td>
                     <td>${formatPhoneNumberAdmin(c.phone)}</td>
-                    <td>${c.visit_count ?? 0}</td>
+                    <td><span class="visits"><b>${visits}</b><span class="stamp-rally" aria-hidden="true">${'<i class="on"></i>'.repeat(stamps)}${'<i></i>'.repeat(10 - stamps)}</span></span></td>
                     <td>${prefs}</td>
                     <td>${this._formatDate(c.created_at)}</td>
                 `;
@@ -797,6 +826,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const rating = f.rating || 0;
                 const div = document.createElement('div');
                 div.className = 'feedback-card glass-card';
+                div.dataset.rating = rating;
                 div.innerHTML = `
                     <div class="stars">${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}</div>
                     <p class="feedback-comment">${f.comment || 'No comment provided.'}</p>
@@ -826,10 +856,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (sales.top_items && sales.top_items.length > 0) {
                     const topList = document.getElementById('topDishesList');
                     if (topList) {
-                        const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
                         topList.innerHTML = sales.top_items.slice(0, 5).map((dish, idx) => `
                             <div class="dish-row">
-                                <span class="dish-rank">${medals[idx] || idx + 1}</span>
+                                <span class="dish-rank">${idx + 1}</span>
                                 <span style="flex:1">${dish.name}</span>
                                 <span class="dish-count">${dish.sold || 0} sold (₹${parseFloat(dish.revenue || 0).toFixed(0)})</span>
                             </div>
@@ -842,6 +871,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (el) {
                         const pct = Math.round((parseFloat(feedbackData.average_rating) / 5) * 100);
                         el.innerText = `${pct}%`;
+                        document.querySelector('.satisfaction-donut')?.style.setProperty('--pct', pct);
                     }
                 }
             } catch (err) {
@@ -917,10 +947,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
             list.innerHTML = top5.map(([name, count], idx) => `
                 <div class="dish-row">
-                    <span class="dish-rank">${medals[idx] || idx + 1}</span>
+                    <span class="dish-rank">${idx + 1}</span>
                     <span style="flex:1">${name}</span>
                     <span class="dish-count">${count} sold</span>
                 </div>
@@ -955,6 +984,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const avg  = feedback.reduce((a, f) => a + (f.rating || 0), 0) / feedback.length;
             const pct  = Math.round((avg / 5) * 100);
             el.innerText = `${pct}%`;
+            document.querySelector('.satisfaction-donut')?.style.setProperty('--pct', pct);
         },
 
         // ── Helpers ────────────────────────────────────────────────────────

@@ -1,0 +1,84 @@
+/* Maneki Neko — icons.css (Kami to Sumi)
+   Sprite sizing classes + the scoped mask-icon subset for JS leaf elements.
+   Generated from scratchpad/gen-brand.js — mask paths are identical to the sprite symbols in icons.svg. */
+
+/* Sprite icons: <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-bowl"/></svg> */
+.ico{display:inline-block;width:1em;height:1em;vertical-align:-.15em;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+.ico--sm{width:14px;height:14px}
+.ico--md{width:20px;height:20px}
+.ico--lg{width:28px;height:28px}
+.ico--xl{width:40px;height:40px}
+.ico--bold{stroke-width:2.25}
+
+/* Mask icons — only on the enumerated leaf elements (§5.2): the --mi custom property is set on the
+   element itself and inherited by its ::before, so a JS textContent rewrite never loses the glyph. */
+[class*="mi-"]::before{content:"";display:inline-block;width:1.1em;height:1.1em;margin-right:.45em;vertical-align:-.2em;background:currentColor;-webkit-mask:var(--mi) center/contain no-repeat;mask:var(--mi) center/contain no-repeat}
+.mi-after-arrow::before{content:none}
+.mi-after-arrow::after{content:"";display:inline-block;width:1.1em;height:1.1em;margin-left:.45em;vertical-align:-.2em;background:currentColor;-webkit-mask:var(--mi-arrow-right-uri) center/contain no-repeat;mask:var(--mi-arrow-right-uri) center/contain no-repeat}
+
+:root{
+  --mi-eye-uri:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 4l3.4 3.9c2.6-1.4 5.6-1.4 8.2 0L19.5 4v8c0 4.6-3.4 7.9-7.5 9.5C7.9 19.9 4.5 16.6 4.5 12z'/%3E%3Cpath d='M7.6 12.6c.9-1.3 2.3-1.7 3.2-.9-.6 1.1-2.1 1.5-3.2.9zM16.4 12.6c-.9-1.3-2.3-1.7-3.2-.9.6 1.1 2.1 1.5 3.2.9z'/%3E%3C/svg%3E");
+  --mi-eye-off-uri:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 4l3.4 3.9c2.6-1.4 5.6-1.4 8.2 0L19.5 4v8c0 4.6-3.4 7.9-7.5 9.5C7.9 19.9 4.5 16.6 4.5 12z'/%3E%3Cpath d='M7.6 12.4l3.2-.7M16.4 12.4l-3.2-.7'/%3E%3Cpath d='M3.5 20.5 20.5 3.5'/%3E%3C/svg%3E");
+  --mi-arrow-right-uri:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E");
+  --mi-check-uri:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E");
+  --mi-fire-uri:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-2.2 1-3.7 2.4-5.2.2 1.4 1 2.4 2.1 2.6.1-3 .1-6 2.6-9.2 1.3 2.1 2.7 3.5 3.9 5.4.7-.6 1.1-1.5 1.1-2.6 1.6 1.9 2.4 3.9 2.4 6 0 5.4-3.5 9.2-8 9.2z'/%3E%3C/svg%3E");
+  --mi-bell-uri:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='13.8' r='6.2'/%3E%3Cpath d='M9.3 16.2h5.4M12 16.2v1.9'/%3E%3Cpath d='M12 7.6V5.4'/%3E%3Cpath d='M9.6 3.6c1.6-.8 3.2-.8 4.8 0'/%3E%3C/svg%3E");
+  --mi-tray-uri:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cellipse cx='12' cy='17.2' rx='9.5' ry='3.2'/%3E%3Cpath d='M7.4 10.2h9.2a4.6 4.6 0 0 1-9.2 0z'/%3E%3Cpath d='M10.4 7.6c0-1 .9-1.1 .9-2.1M13.6 7.6c0-1 .9-1.1 .9-2.1'/%3E%3C/svg%3E");
+  --mi-close-uri:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E");
+  --mi-refresh-uri:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 12a8 8 0 1 1-8-8c2.3 0 4.4.9 6 2.4L20 8.3'/%3E%3Cpath d='M20.3 3.6v4.9h-4.9'/%3E%3C/svg%3E");
+  --mi-daruma-uri:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3c5 0 8 3.6 8 8.6 0 4.4-2.4 8.2-5.2 9.4H9.2C6.4 19.8 4 16 4 11.6 4 6.6 7 3 12 3z'/%3E%3Cpath d='M8.3 10.6c1-1 2.4-1.2 3.3-.4M15.7 10.6c-1-1-2.4-1.2-3.3-.4'/%3E%3Cpath d='M9.3 13.2h.01M14.7 13.2h.01'/%3E%3Cpath d='M9.6 16.4c1.5 1 3.3 1 4.8 0'/%3E%3C/svg%3E");
+  --mi-mask-uri:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3c4.5 0 7.5 4 7.5 9s-3 9-7.5 9-7.5-4-7.5-9 3-9 7.5-9z'/%3E%3Cpath d='M8.3 10.9h2.8M12.9 10.9h2.8'/%3E%3Cpath d='M9.3 7.8h.01M14.7 7.8h.01'/%3E%3Cpath d='M10.4 15.4c.9.8 2.3.8 3.2 0'/%3E%3C/svg%3E");
+  --mi-incense-uri:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19.5V9.8'/%3E%3Cpath d='M12 8.4h.01'/%3E%3Cpath d='M12.2 6.4c-1.8-.9-1.8-2.2-.2-3.1 1.4-.8 1.5-1.7.4-2.6'/%3E%3Cellipse cx='12' cy='19.8' rx='4.6' ry='1.6'/%3E%3C/svg%3E");
+  --mi-enso-uri:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.6 4.4A8 8 0 1 0 19.6 10.9'/%3E%3C/svg%3E");
+  --mi-warning-uri:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3.6 20.8 19.4a.8.8 0 0 1-.7 1.1H3.9a.8.8 0 0 1-.7-1.1z'/%3E%3Cpath d='M12 9.6v4.4M12 17.2h.01'/%3E%3C/svg%3E");
+  --mi-crest-uzumaki-uri:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9.5'/%3E%3Cpath d='M11.5 12.4a1 1 0 0 1 1 1 2 2 0 0 1-2 2 3 3 0 0 1-3-3 4 4 0 0 1 4-4 5 5 0 0 1 5 5'/%3E%3C/svg%3E");
+  --mi-crest-star-uri:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9.5'/%3E%3Cpath fill='%23000' stroke='none' d='M12 6.7l1.5 3.4 3.7.3-2.8 2.4.9 3.6L12 14.5l-3.3 1.9.9-3.6-2.8-2.4 3.7-.3z'/%3E%3C/svg%3E");
+  --mi-crest-bell-uri:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9.5'/%3E%3Ccircle cx='12' cy='13.2' r='4'/%3E%3Cpath d='M10.2 14.8h3.6M12 9.2V7.2'/%3E%3C/svg%3E");
+  --mi-crest-swirl-uri:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9.5'/%3E%3Ccircle cx='11.2' cy='10' r='2.6'/%3E%3Cpath d='M13.8 10.6c.6 3-1.4 5.8-5.4 6.8'/%3E%3C/svg%3E");
+  --mi-crest-hat-uri:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9.5'/%3E%3Cpath d='M5.2 14.2c4.5 1.4 9.1 1.4 13.6 0'/%3E%3Cpath d='M8.2 14.2v-2.4a3.8 3.8 0 0 1 7.6 0v2.4'/%3E%3Cpath d='M8.2 12.6h7.6'/%3E%3C/svg%3E");
+}
+.mi-eye{--mi:var(--mi-eye-uri)}
+.mi-eye-off{--mi:var(--mi-eye-off-uri)}
+.mi-arrow-right{--mi:var(--mi-arrow-right-uri)}
+.mi-check{--mi:var(--mi-check-uri)}
+.mi-fire{--mi:var(--mi-fire-uri)}
+.mi-bell{--mi:var(--mi-bell-uri)}
+.mi-tray{--mi:var(--mi-tray-uri)}
+.mi-close{--mi:var(--mi-close-uri)}
+.mi-refresh{--mi:var(--mi-refresh-uri)}
+.mi-daruma{--mi:var(--mi-daruma-uri)}
+.mi-mask{--mi:var(--mi-mask-uri)}
+.mi-incense{--mi:var(--mi-incense-uri)}
+.mi-enso{--mi:var(--mi-enso-uri)}
+.mi-warning{--mi:var(--mi-warning-uri)}
+.mi-after-arrow{--mi:var(--mi-arrow-right-uri)}
+
+/* Kamon crests on JS leaf badges (§6.14): .character-badge draws the crest by ::before; the colour comes
+   from the .char-* class (theme.css), the mask from --mi set here. body.character-* drives .kamon-chip the same way. */
+.character-badge::before,.kamon-chip::before{content:"";display:inline-block;width:1.1em;height:1.1em;margin-right:.45em;vertical-align:-.2em;background:currentColor;-webkit-mask:var(--mi) center/contain no-repeat;mask:var(--mi) center/contain no-repeat}
+.char-naruto{--mi:var(--mi-crest-uzumaki-uri)}
+.char-goku{--mi:var(--mi-crest-star-uri)}
+.char-doraemon{--mi:var(--mi-crest-bell-uri)}
+.char-shinchan{--mi:var(--mi-crest-swirl-uri)}
+.char-luffy{--mi:var(--mi-crest-hat-uri)}
+body.character-naruto .kamon-chip{--mi:var(--mi-crest-uzumaki-uri);color:var(--c-naruto)}
+body.character-goku .kamon-chip{--mi:var(--mi-crest-star-uri);color:var(--c-goku)}
+body.character-doraemon .kamon-chip{--mi:var(--mi-crest-bell-uri);color:var(--c-doraemon-text)}
+body.character-shinchan .kamon-chip{--mi:var(--mi-crest-swirl-uri);color:var(--c-shinchan)}
+body.character-luffy .kamon-chip{--mi:var(--mi-crest-hat-uri);color:var(--c-luffy-text)}
+.character-badge:not([class*="char-"])::before{display:none}   /* unknown character: text only */
+.kamon-chip::before{display:none}
+body:is(.character-naruto,.character-goku,.character-doraemon,.character-shinchan,.character-luffy) .kamon-chip::before{display:inline-block}
+
+/* State swaps used by pages: #togglePin[aria-pressed="true"]{--mi:var(--mi-eye-off-uri)}  .restarting{--mi:var(--mi-enso-uri)} */
+
+/* Spinning variants (loading / refresh press) */
+.mi-enso::before,.restarting.mi-daruma::before{animation:mi-spin .9s linear infinite}
+.mi-refresh:active::before{animation:mi-spin .9s linear infinite}
+@keyframes mi-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.mi-enso::before,.restarting.mi-daruma::before,.mi-refresh:active::before{animation:none}}
+
+/* No mask support: hide the glyph, the text label remains. */
+@supports not (mask: url()){
+  [class*="mi-"]::before,[class*="mi-"]::after,.character-badge::before,body .kamon-chip::before{display:none}
+}

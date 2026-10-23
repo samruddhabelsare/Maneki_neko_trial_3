@@ -2,134 +2,161 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Maneki Neko | Customer</title>
     <meta name="description" content="Order food at Maneki Neko smart restaurant with AI assistant or manual menu browsing." />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="../shared/theme.css" />
+    <link rel="stylesheet" href="../shared/icons.css" />
+    <link rel="icon" href="../shared/favicon.svg" />
+    <meta name="theme-color" content="#100d0c" />
     <style>
-        /* ── Customer-Specific Styles ────────────────────────────────── */
+        /* ══════════════════════════════════════════════════════════════════
+           Customer app — Kami to Sumi (紙と墨)
+           paper = document · lacquer = container · red = seal or commit · gold = seam
+           Page CSS holds layout + page-specific selectors only; recipes live in theme.css.
+           ══════════════════════════════════════════════════════════════════ */
         body {
             height: 100vh;
+            height: 100dvh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
             position: relative;
         }
 
-        /* Utility overrides to preserve JS hooks */
-        .hidden-screen { display: none !important; }
-
-        /* ── Header ──────────────────────────────────────────────────── */
+        /* ── Header — lintel with lantern pools ───────────────────────── */
         .customer-header {
             flex-shrink: 0;
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur);
-            border-bottom: 1px solid var(--border);
-            padding: 1rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
             align-items: center;
-            z-index: 30;
-            position: sticky;
-            top: 0;
+            gap: 0.75rem;
+            padding: 0 1rem;
+            min-height: var(--header-h);
         }
+        @media (min-width: 768px) { .customer-header { padding: 0 1.5rem; gap: 1rem; } }
 
-        @media (min-width: 768px) {
-            .customer-header { padding: 1rem 2rem; }
+        .header-left { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+        .header-brand .brand-kanji { font-size: 1rem; white-space: nowrap; }
+        @media (max-width: 419px) { .header-brand .brand-stack { display: none; } }
+        /* 375–479px: the lockup keeps 招き猫 and drops the romaji; once the Bill button appears (inline-block) the kanji yields too.
+           Under 375px there is no room for a name at all (cat · crest · fuda · 4 buttons). */
+        @media (max-width: 479px) {
+            .header-brand .brand-romaji { display: none; }
+            .header-brand .brand-kanji { font-size: 0.9375rem; }
+            body:has(#statusToggleBtn[style*="inline-block"]) .header-brand .brand-stack { display: none; }
         }
+        @media (max-width: 374px) { .header-brand .brand-stack { display: none; } }
 
-        .header-left {
-            display: flex;
+        .kamon-chip {
+            display: inline-flex;
             align-items: center;
-            gap: 1rem;
-        }
-
-        .header-brand {
-            font-size: 1.25rem;
-            font-weight: 800;
-            letter-spacing: var(--tracking-tight);
-            display: none;
-        }
-
-        @media (min-width: 768px) {
-            .header-brand { display: inline-block; }
-        }
-
-        #characterBadge {
-            background: var(--primary-glow);
-            color: var(--primary);
-            font-weight: 700;
-            padding: 0.375rem 1rem;
+            padding: 0.25rem 0.7rem;
+            min-height: 30px;
+            border: 1px solid currentColor;
             border-radius: var(--radius-pill);
-            font-size: 0.85rem;
-            border: 1px solid rgba(99, 102, 241, 0.2);
+            font: 600 0.8125rem/1 var(--font-sans);
+            color: var(--text-secondary);
+            background: rgba(240, 220, 190, 0.04);
+            white-space: nowrap;
+        }
+        .kamon-chip::before { width: 16px; height: 16px; }
+        @media (max-width: 559px) {
+            .kamon-chip { padding: 0; width: 30px; justify-content: center; }
+            .kamon-chip::before { margin-right: 0; }
+            .kamon-chip #characterBadge { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
         }
 
+        /* Hanging fuda tag for the table number (grid middle column — no absolute positioning) */
         .header-table {
+            justify-self: center;
+            position: relative;
+            margin-top: 8px;
+            padding: 0.3rem 0.9rem;
+            background: var(--bg-surface-highest);
+            border: 1px solid var(--kin-dim);
+            border-radius: 3px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+            white-space: nowrap;
+        }
+        .header-table::before {            /* cord */
+            content: "";
             position: absolute;
             left: 50%;
-            transform: translateX(-50%);
-            font-weight: 700;
-            color: var(--text-secondary);
-            background: var(--bg-surface-variant);
-            padding: 0.375rem 1rem;
-            border-radius: var(--radius-pill);
-            font-size: 0.85rem;
-            border: 1px solid var(--border);
+            top: -9px;
+            width: 1px;
+            height: 9px;
+            background: var(--kin-dim);
         }
-
-        .header-action-btn {
-            background: var(--bg-surface-variant);
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-            font-weight: 700;
-            padding: 0.5rem 1.25rem;
-            border-radius: var(--radius-pill);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all var(--duration-fast) var(--ease-out);
-            cursor: pointer;
-            height: 44px; /* Ensure uniform height for all header buttons */
-        }
-
-        .header-action-btn:hover {
-            border-color: var(--glass-border-hover);
-            background: var(--bg-surface-bright);
-            color: var(--text-primary);
-        }
-
-        .btn-logout {
-            background: rgba(239, 68, 68, 0.1) !important;
-            border-color: rgba(239, 68, 68, 0.3) !important;
-            color: #ef4444 !important;
-        }
-        .btn-logout:hover {
-            background: rgba(239, 68, 68, 0.22) !important;
-            border-color: rgba(239, 68, 68, 0.6) !important;
-            color: #ff6b6b !important;
-        }
-        @media (max-width: 520px) {
-            .logout-label { display: none; }
-        }
-
-        #cartCount {
-            background: var(--primary-raw);
-            color: #fff;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .header-table::after {             /* knot */
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: -3px;
+            width: 6px;
+            height: 6px;
+            margin-left: -3px;
             border-radius: 50%;
-            font-size: 0.75rem;
-            font-weight: 700;
-            min-width: 24px;
+            background: var(--kin);
+        }
+        #tableDisplay { font: 600 1rem/1.2 var(--font-display); color: var(--text-primary); letter-spacing: 0.02em; }   /* 1rem keeps the .72em 卓 prefix above the 11px floor */
+        #tableDisplay.bi[data-ja]::before { margin-right: 0.35em; }   /* 卓 prefix survives the JS textContent rewrite */
+
+        .header-right { display: flex; align-items: center; gap: 0.5rem; }
+        @media (min-width: 768px) { .header-right { gap: 0.6rem; } }
+        /* Phones: six controls must share 390 px — tighter gaps, icon-only profile, slimmer fuda; nothing gets clipped */
+        @media (max-width: 479px) {
+            .customer-header { gap: 0.5rem; padding: 0 0.75rem; }
+            .header-left { gap: 0.5rem; }
+            .kamon-chip { flex-shrink: 0; }
+            .header-right { gap: 0.35rem; }
+            .header-table { padding: 0.3rem 0.6rem; }
+            #profileBtn { padding: 0; width: 44px; }
+            #profileBtn span { display: none; }
         }
 
-        /* Animation for cart badge */
+        /* Bill button: JS shows it with inline-block */
+        #statusToggleBtn {
+            width: auto;
+            min-width: 44px;
+            padding: 0 0.9rem;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--kin-dim);
+            color: var(--kin);
+            font: 600 0.8125rem/42px var(--font-sans);
+            vertical-align: middle;
+            text-align: center;
+            white-space: nowrap;
+        }
+        #statusToggleBtn .ico { width: 18px; height: 18px; vertical-align: -0.25em; margin-right: 0.3em; }
+        #statusToggleBtn:hover { border-color: var(--kin); background: rgba(240, 220, 190, 0.05); }
+        @media (max-width: 639px) {
+            #statusToggleBtn { padding: 0; }
+            #statusToggleBtn .ico { margin-right: 0; }
+            #statusToggleBtn .bill-label { display: none; }
+        }
+
+        #cartToggleBtn { position: relative; overflow: visible; }
+        #cartCount { position: absolute; top: -4px; right: -4px; box-shadow: 0 0 0 2px var(--lintel); }
+
+        #profileBtn { width: auto; min-width: 44px; padding: 0 0.75rem; border-radius: var(--radius-pill); gap: 0.4rem; display: inline-flex; justify-content: center; font: 600 0.8125rem/1 var(--font-sans); }
+        #profileBtn span { max-width: 9ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        #customerLogoutBtn {
+            display: inline-flex;
+            width: auto;
+            height: 36px;
+            min-height: 36px;
+            padding: 0 0.75rem;
+            gap: 0.4rem;
+            border-radius: var(--radius-paper);
+            font: 600 0.8125rem/1 var(--font-sans);
+            line-height: 1;
+            position: relative;
+        }
+        #customerLogoutBtn::after { content: ""; position: absolute; inset: -4px -6px; }   /* 36 px visual, ≥44 px hit area */
+        @media (max-width: 640px) { .logout-label { display: none; } #customerLogoutBtn { padding: 0 0.55rem; } }
+
         @keyframes pop {
             0%   { transform: scale(1); }
             50%  { transform: scale(1.4); }
@@ -137,7 +164,7 @@
         }
         .pop { animation: pop 0.3s ease-in-out; }
 
-        /* ── Welcome Screen ──────────────────────────────────────────── */
+        /* ── Welcome screen (paper card in a lit room) ────────────────── */
         #welcomeScreen {
             position: absolute;
             inset: 0;
@@ -146,1144 +173,997 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 2rem;
+            padding: 2rem 1rem;
             background: var(--bg-deep);
+            overflow-y: auto;
         }
-
         .welcome-gradient {
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at 50% 40%, var(--primary-glow-strong) 0%, transparent 60%);
-            opacity: 0.7;
+            pointer-events: none;
+            background-image:
+                var(--asanoha),
+                radial-gradient(220px 300px at 12% 8%, var(--lantern-glow), transparent),
+                radial-gradient(180px 260px at 88% 14%, var(--lantern-glow), transparent),
+                radial-gradient(40% 35% at 50% 110%, rgba(214, 58, 31, 0.12), transparent 70%);
+            background-size: 56px 97px, auto, auto, auto;
+            -webkit-mask-image: radial-gradient(60% 60% at 50% 45%, transparent 30%, #000 100%);
+            mask-image: radial-gradient(60% 60% at 50% 45%, transparent 30%, #000 100%);
         }
-
         .welcome-card {
             position: relative;
             z-index: 1;
             text-align: center;
-            max-width: 28rem;
-            background: var(--glass-bg-strong);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            padding: 3rem;
-            border-radius: var(--radius-2xl);
-            border: 1px solid var(--glass-border);
-            box-shadow: var(--shadow-ambient);
-            animation: fadeInUp 0.8s var(--ease-out);
-        }
-
-        .welcome-cat {
-            font-size: 4.5rem;
-            margin-bottom: 1.5rem;
-            display: inline-block;
-            transition: transform 0.3s;
-            cursor: default;
-        }
-
-        .welcome-cat:hover { transform: scale(1.1); }
-
-        .welcome-title {
-            font-size: clamp(2rem, 5vw, 2.75rem);
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            line-height: 1.1;
-            margin-bottom: 1rem;
-        }
-
-        .welcome-title-accent {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dim));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        #characterTagline {
-            font-size: 1.125rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-            margin-bottom: 2.5rem;
-        }
-
-        #startBtn {
-            background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
-            color: #fff;
-            font-weight: 800;
-            font-size: 1.125rem;
-            padding: 1rem 2.5rem;
-            border-radius: var(--radius-pill);
-            border: none;
             width: 100%;
-            cursor: pointer;
-            transition: all var(--duration-normal) var(--ease-out);
-            box-shadow: 0 8px 24px var(--primary-glow-strong);
+            max-width: 28rem;
+            padding: 2.25rem 2rem 2rem;
+            border-top: 4px solid var(--shu);
+            animation: ink-in 0.4s var(--ease-out);
+        }
+        .welcome-cat { display: flex; justify-content: center; margin-bottom: 0.75rem; }
+        .welcome-cat .mn { width: 120px; height: 120px; }
+        .welcome-card .eyebrow { margin-bottom: 0.5rem; }
+        .welcome-title {
+            font-size: clamp(1.75rem, 5vw, 2.25rem);
+            line-height: 1.15;
+            margin-bottom: 0.5rem;
+        }
+        .welcome-title-accent { color: var(--shu-ink); }
+        .welcome-card .rule-sumi { margin: 0.5rem auto 1rem; }
+        #characterTagline {
+            font-size: 1rem;
+            color: var(--sumi-ink-2);
+            font-weight: 500;
+            margin-bottom: 1.75rem;
         }
 
-        #startBtn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-glow-strong), 0 12px 32px var(--primary-glow-strong);
-        }
-
-        #startBtn:active { transform: scale(0.97); }
-
-        /* ── Mode Tabs ───────────────────────────────────────────────── */
+        /* ── Mode tabs — noren ────────────────────────────────────────── */
         .mode-tabs {
-            display: flex;
             justify-content: center;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: var(--glass-blur);
-            border-bottom: 1px solid var(--border);
-            z-index: 10;
+            padding: 0.75rem 1rem 0;
             flex-shrink: 0;
+            z-index: 10;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.28), transparent);
         }
+        .mode-tabs::before { content: none; }           /* the rod sits on the inner rail */
+        .mode-tabs-inner { width: 100%; max-width: 420px; }
+        .mode-tabs-inner .mode-tab { flex: 1; gap: 0.5rem; }
+        .mode-tab .ico { width: 18px; height: 18px; }
 
-        .mode-tabs-inner {
-            background: var(--bg-surface-variant);
-            padding: 0.375rem;
-            border-radius: var(--radius-pill);
-            display: flex;
-            gap: 0.25rem;
-            border: 1px solid var(--border);
-        }
-
-        .mode-tab {
-            padding: 0.625rem 1.5rem;
-            border-radius: var(--radius-pill);
-            font-size: 0.875rem;
-            font-weight: 700;
-            transition: all var(--duration-fast) var(--ease-out);
-            color: var(--text-secondary);
-            background: transparent;
-            border: none;
-            cursor: pointer;
-        }
-
-        .mode-tab:hover { color: var(--text-primary); }
-
-        .mode-tab.active {
-            background: var(--bg-surface-bright);
-            color: var(--primary);
-            box-shadow: var(--shadow-soft);
-        }
-
-        /* ── AI Chat ─────────────────────────────────────────────────── */
+        /* ── AI mode ──────────────────────────────────────────────────── */
         .ai-layout {
             position: absolute;
             inset: 0;
             display: flex;
             flex-direction: column;
-            padding: 1rem;
-            gap: 1.5rem;
+            padding: 0.75rem 0.75rem 0.75rem;
+            gap: 0.75rem;
             max-width: 80rem;
             margin: 0 auto;
             width: 100%;
         }
-
-        @media (min-width: 1024px) {
-            .ai-layout {
-                flex-direction: row;
-                padding: 2rem;
-            }
-        }
+        @media (min-width: 768px) { .ai-layout { padding: 1rem 1.5rem 1.25rem; gap: 1rem; } }
+        @media (min-width: 1024px) { .ai-layout { flex-direction: row; padding: 1.25rem 2rem 1.5rem; gap: 1.25rem; } }
 
         .chat-panel {
             flex: 1;
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-2xl);
+            min-height: calc(var(--chat-input-h) + 56px);   /* floor: input row + one bubble — the tray yields, never the input (landscape phones) */
             display: flex;
             flex-direction: column;
             overflow: hidden;
             position: relative;
             z-index: 1;
+            background: var(--bg-surface-low);
         }
-
-        .chat-fade-top {
+        .chat-panel::before {                      /* seigaiha floor at ~.06 */
+            content: "";
             position: absolute;
-            inset: 0 0 auto 0;
-            height: 40px;
-            background: linear-gradient(to bottom, var(--bg-surface), transparent);
+            inset: 0;
+            background-image: var(--seigaiha);
+            background-size: 56px 28px;
+            opacity: 0.4;
             pointer-events: none;
-            z-index: 10;
         }
-
+        .chat-fade-top { z-index: 2; height: 32px; }   /* shorter wash: the first (greeting) bubble starts below it */
         #chatMessages {
             flex: 1;
+            min-height: 0;
             overflow-y: auto;
-            padding: 1.5rem;
+            padding: 2.25rem 1rem 0.75rem;
             scroll-behavior: smooth;
-            z-index: 0;
+            position: relative;
+            z-index: 1;
         }
+        @media (min-width: 768px) { #chatMessages { padding: 2.25rem 1.5rem 1rem; } }
 
         .chat-input-area {
-            padding: 1rem;
-            background: var(--bg-surface-low);
-            border-top: 1px solid var(--border);
-            flex-shrink: 0;
-        }
-
-        .chat-input-wrapper {
             position: relative;
+            z-index: 3;
+            flex-shrink: 0;
+            min-height: var(--chat-input-h);
+            padding: 0.6rem 0.75rem calc(0.6rem + env(safe-area-inset-bottom));
+            background: var(--bg-surface-container);
+            border-top: 1px solid var(--border);
+            background-image: var(--rule-kin);
+            background-repeat: no-repeat;
+            background-size: 100% 1px;
+            background-position: top;
+        }
+        .chat-input-wrapper {
             display: flex;
             align-items: center;
-            background: var(--bg-surface-variant);
-            border-radius: var(--radius-pill);
-            border: 1px solid var(--border);
-            padding: 0.375rem;
-            transition: all var(--duration-fast) var(--ease-out);
+            gap: 0.5rem;
+            min-height: 52px;
+            padding: 0.25rem 0.25rem 0.25rem 0.9rem;
+            background-color: var(--washi);
+            background-image: var(--washi-fibre), linear-gradient(180deg, var(--washi-bright), var(--washi) 60%, var(--washi-2));
+            background-size: 240px 240px, auto;
+            border: 1px solid rgba(28, 24, 22, 0.18);
+            border-radius: var(--radius-paper);
+            box-shadow: var(--shadow-paper);
+            transition: box-shadow var(--duration-fast) var(--ease-out);
         }
-
-        .chat-input-wrapper:focus-within {
-            border-color: rgba(99, 102, 241, 0.4);
-            box-shadow: 0 0 0 3px var(--primary-glow);
-        }
-
+        .chat-input-wrapper:focus-within { box-shadow: var(--shadow-paper), 0 0 0 2px var(--kin); }
         #chatInput {
             flex: 1;
+            min-width: 0;
             background: transparent;
-            border: none;
-            padding: 0.5rem 1rem;
-            color: var(--text-primary);
-            font-weight: 500;
-            font-size: 0.95rem;
-            outline: none;
-            font-family: var(--font-sans);
+            border: 0;
+            padding: 0.5rem 0.25rem;
+            color: var(--sumi-ink);
+            font: 500 1rem/1.3 var(--font-sans);
+            box-shadow: none;
         }
+        #chatInput:focus { background: transparent; border: 0; box-shadow: none; }
+        #chatInput::placeholder { color: var(--sumi-ink-3); }
+        #chatInput:disabled { opacity: 0.6; }
 
-        #chatInput::placeholder { color: var(--text-dimmed); }
+        .chat-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
 
-        .chat-actions {
-            display: flex;
-            gap: 0.5rem;
-            flex-shrink: 0;
-        }
-
-        #voiceBtn, #sendBtn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            cursor: pointer;
-            transition: all var(--duration-fast) var(--ease-out);
-            font-size: 1rem;
-        }
-
+        /* Taiko mic — two-tone drum with a dashed rope ring */
         #voiceBtn {
-            background: var(--bg-surface-bright);
-            color: var(--text-secondary);
+            width: 44px;
+            height: 44px;
+            display: inline-grid;
+            place-items: center;
+            padding: 0;
+            border-radius: 50%;
+            border: 2px dashed var(--kin-dim);
+            background: radial-gradient(circle, var(--bg-surface-highest) 0 56%, var(--shu-deep) 57%);
+            color: var(--text-primary);
+            transition: border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
         }
-
-        #voiceBtn:hover { background: var(--bg-surface-highest); color: var(--text-primary); }
-
-        #sendBtn {
-            background: var(--primary-raw);
+        #voiceBtn .ico { width: 20px; height: 20px; }
+        #voiceBtn:hover { border-color: var(--kin); }
+        #voiceBtn.recording {
+            background: var(--shu);
             color: #fff;
+            border-style: solid;
+            border-color: var(--shu-deep);
+            animation: ripple 0.9s ease-out infinite;
         }
+        /* Crane send — round seal */
+        #sendBtn { width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 50%; }
+        #sendBtn .ico { width: 20px; height: 20px; }
 
-        #sendBtn:hover { background: var(--primary-dim); box-shadow: var(--shadow-glow); }
+        /* Chat bubbles come from theme (§6.14); kamon ring colour follows the character */
+        body.character-naruto   .message.bot .msg-role { border-color: var(--c-naruto); }
+        body.character-goku     .message.bot .msg-role { border-color: var(--c-goku); }
+        body.character-doraemon .message.bot .msg-role { border-color: var(--c-doraemon-text); }
+        body.character-shinchan .message.bot .msg-role { border-color: var(--c-shinchan); }
+        body.character-luffy    .message.bot .msg-role { border-color: var(--c-luffy-text); }
+        .message.user .msg-role { border-color: var(--border-hover); color: var(--text-secondary); }
+        .message.user .msg-role .ico { width: 16px; height: 16px; }
+        .message.bot .msg-role .ico { width: 22px; height: 22px; }
 
-        /* Voice Recording Pulse */
-        @keyframes pulse-red {
-            0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70%  { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-
-        .recording {
-            background-color: var(--danger-bg) !important;
-            color: var(--danger) !important;
-            animation: pulse-red 1.5s infinite !important;
-        }
-
-        /* Chat Messages */
-        .message { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; animation: slideUp 0.3s ease-out; }
-        .message.user { justify-content: flex-end; }
-        .message.user .msg-bubble { background: var(--primary-raw); color: #fff; border-radius: 20px 20px 4px 20px; }
-        .message.bot .msg-bubble { background: var(--bg-surface-variant); color: var(--text-primary); border-radius: 20px 20px 20px 4px; border: 1px solid var(--border); }
-        .msg-role { font-size: 1.5rem; display: flex; align-items: flex-end; padding-bottom: 4px; }
-        .msg-bubble { padding: 0.75rem 1rem; font-size: 0.95rem; line-height: 1.5; max-width: 80%; word-break: break-word; font-weight: 500; }
-        .cursor { display: inline-block; width: 8px; height: 16px; background: var(--text-muted); animation: blink 1s step-end infinite; margin-left: 4px; vertical-align: middle; }
-        @keyframes blink { 50% { opacity: 0; } }
-
-        /* ── AI Order Summary ────────────────────────────────────────── */
+        /* ── AI order tray — okaikei slip (paper) ─────────────────────── */
         .order-summary-panel {
-            width: 100%;
-            background: var(--glass-bg-strong);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-2xl);
-            padding: 1.5rem;
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
             z-index: 1;
-            box-shadow: var(--shadow-ambient);
+            padding: 1rem 1.1rem 1.1rem;
+            border-top: 4px solid var(--kin);
         }
-
-        @media (min-width: 1024px) {
-            .order-summary-panel {
-                width: 320px;
-                position: static;
-                max-height: none;
-            }
-        }
-
-        @media (max-width: 1023px) {
-            .order-summary-panel {
-                position: absolute;
-                inset: auto 1rem 1rem 1rem;
-                max-height: 40vh;
-            }
-        }
-
+        .order-summary-panel .eyebrow { margin-bottom: 0.15rem; }
         .order-summary-title {
-            font-size: 1.25rem;
-            font-weight: 800;
-            letter-spacing: var(--tracking-tight);
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1rem;
-            margin-bottom: 1rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            padding-bottom: 0.6rem;
+            margin-bottom: 0.25rem;
+            border-bottom: 2px dashed var(--washi-line);
         }
-
+        .order-summary-title .ico { width: 20px; height: 20px; color: var(--sumi-ink-2); }
+        /* Scroll affordance: the last 24px fade only while more rows are hidden — the padding-bottom fills the fade zone once scrolled to the end */
         #aiOrderItems {
             flex: 1;
+            min-height: 0;
             overflow-y: auto;
-            margin-bottom: 1rem;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: var(--radius-lg);
-            padding: 0.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.03);
+            padding: 0.15rem 0 24px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--sumi-ink-3) transparent;
+            -webkit-mask-image: linear-gradient(#000 calc(100% - 24px), transparent);
+            mask-image: linear-gradient(#000 calc(100% - 24px), transparent);
         }
+        #aiOrderItems .empty-hint { padding: 1.5rem 0.5rem; font-size: 0.875rem; }
+        #aiOrderItems .empty-hint::before { width: 44px; height: 44px; }
 
-        #aiOrderTotal {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--primary);
-            margin-bottom: 1.5rem;
-            text-align: center;
-            border-top: 1px solid var(--border);
-            padding-top: 1rem;
-        }
-
-        .order-actions {
+        .order-item-row {
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
+            gap: 0.3rem;
+            padding: 0.55rem 0;
+            border-bottom: 1px dotted var(--washi-line-strong);
         }
-
-        #aiConfirmOrder {
-            background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
-            color: #fff;
-            font-weight: 800;
-            padding: 0.875rem 1.5rem;
-            border-radius: var(--radius-pill);
-            border: none;
-            width: 100%;
-            cursor: pointer;
-            transition: all var(--duration-normal) var(--ease-out);
-            box-shadow: 0 4px 16px var(--primary-glow);
+        .order-item-row:last-child { border-bottom: 0; }
+        .ai-item-main { display: flex; align-items: center; gap: 0.4rem; }
+        .order-item-row .item-name {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: baseline;
+            gap: 0.35rem;
+            font: 600 0.9375rem/1.3 var(--font-sans);
+            color: var(--sumi-ink);
         }
-
-        #aiConfirmOrder:hover { transform: translateY(-1px); box-shadow: var(--shadow-glow-strong); }
-
-        #aiClearOrder {
+        .order-item-row .item-name::after { content: ""; flex: 1; min-width: 10px; border-bottom: 1px dotted var(--washi-line-strong); transform: translateY(-0.3em); }
+        .ai-qty-ctrl { display: inline-flex; align-items: center; gap: 0.15rem; flex-shrink: 0; }
+        .ai-qty-btn {
+            width: 28px;
+            height: 28px;
+            min-height: 0;
+            border: 1.5px solid var(--sumi-ink-3);
+            color: var(--sumi-ink);
             background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-            font-weight: 700;
-            padding: 0.75rem 1.5rem;
-            border-radius: var(--radius-pill);
-            width: 100%;
-            cursor: pointer;
-            transition: all var(--duration-fast) var(--ease-out);
+            font: 700 0.9rem/1 var(--font-sans);
+            position: relative;
+        }
+        .ai-qty-btn::before { content: ""; position: absolute; inset: -8px; }   /* 44 px hit area */
+        .ai-qty-btn:hover { background: var(--washi-bright); border-color: var(--sumi-ink); color: var(--sumi-ink); }
+        .ai-qty-btn .ico { width: 14px; height: 14px; }
+        .ai-qty-val { min-width: 1.6ch; text-align: center; font: 700 1rem/1 var(--font-display); color: var(--sumi-ink); font-variant-numeric: tabular-nums; }
+        .order-item-row .item-price { font: 600 0.9375rem/1 var(--font-display); color: var(--sumi-ink); white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 5ch; text-align: right; }
+        .ai-item-remove {
+            width: 28px;
+            height: 28px;
+            display: inline-grid;
+            place-items: center;
+            padding: 0;
+            border-radius: 50%;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--sumi-ink-3);
+            position: relative;
+            flex-shrink: 0;
+        }
+        .ai-item-remove::before { content: ""; position: absolute; inset: -8px; }
+        .ai-item-remove:hover { color: var(--ume-ink); border-color: var(--ume-ink); }
+        .ai-item-remove .ico { width: 14px; height: 14px; }
+
+        .order-total-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-top: 0.5rem;
+            padding-top: 0.75rem;
+            border-top: 2px dashed var(--washi-line);
+        }
+        #aiOrderTotal { flex: 1; text-align: right; font: 700 1.375rem/1.1 var(--font-display); color: var(--sumi-ink); font-variant-numeric: tabular-nums; }
+        .order-actions { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.85rem; }
+
+        /* Desktop: tray is a 320 px column — rows become two-line denpyo entries (name · remove / qty · price) */
+        @media (min-width: 1024px) {
+            .order-summary-panel { width: 320px; flex: 0 0 320px; max-height: 100%; }
+            .ai-item-main {
+                display: grid;
+                grid-template-columns: 1fr auto;
+                grid-template-areas: "name remove" "qty price";
+                column-gap: 0.5rem;
+                row-gap: 0.4rem;
+            }
+            .order-item-row .item-name { grid-area: name; }
+            .ai-item-remove { grid-area: remove; }
+            .ai-qty-ctrl { grid-area: qty; justify-self: start; }
+            .order-item-row .item-price { grid-area: price; }
+        }
+        /* Phones / tablets: tray is in flow BELOW the chat panel — it can never cover the input */
+        @media (max-width: 1023px) {
+            /* flex 0 1 auto + min-height 0: on short (landscape) viewports the tray shrinks to whatever is left after the chat floor, so #chatInput is always reachable */
+            .order-summary-panel { position: static; flex: 0 1 auto; min-height: 0; max-height: min(38vh, calc(100dvh - var(--header-h) - 62px - var(--chat-input-h) - 100px)); overflow: auto; border-top-color: var(--kin-dim); padding: 0.7rem 0.9rem 0.9rem; }
+            @media (min-height: 760px) { .order-summary-panel { max-height: min(44vh, calc(100dvh - var(--header-h) - 62px - var(--chat-input-h) - 100px)); } }
+            .order-summary-panel:has(.empty-hint) { max-height: 48px; min-height: 48px; overflow: hidden; padding-top: 0.6rem; }
+            .order-summary-panel:has(.empty-hint) .order-summary-title,
+            .order-summary-panel:has(.empty-hint) #aiOrderItems,
+            .order-summary-panel:has(.empty-hint) .order-total-wrap,
+            .order-summary-panel:has(.empty-hint) .order-actions { display: none; }
+            .order-summary-panel:has(.empty-hint) .eyebrow::after { content: " · no items yet"; text-transform: none; letter-spacing: 0; color: var(--sumi-ink-3); }
+            .order-actions { flex-direction: row; }
+            .order-actions > * { flex: 1; }
         }
 
-        #aiClearOrder:hover { border-color: var(--glass-border-hover); color: var(--text-primary); }
-
-        /* ── Manual Mode ─────────────────────────────────────────────── */
+        /* ── Manual mode — izakaya wall ───────────────────────────────── */
+        /* The rail bleeds into the 1rem gutters so theme's edge-fade mask eats the gutter, not the first/last fuda;
+           the mask is re-tuned to the gutter width (inline style only sets padding-top/bottom, so the longhands are free) */
+        #manualCategoryTabs.cat-rail {
+            margin-left: -1rem;
+            margin-right: -1rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            scroll-padding-inline: 1rem;
+            -webkit-mask-image: linear-gradient(90deg, transparent, #000 1rem, #000 calc(100% - 1rem), transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 1rem, #000 calc(100% - 1rem), transparent);
+        }
         .cat-tab {
-            background: var(--bg-surface-variant);
+            position: relative;
+            margin-top: 6px;
+            padding: 0.6rem 1.1rem;
+            min-height: 44px;
+            background: var(--bg-surface-highest);
+            border: 1px solid var(--border-hover);
+            border-radius: 3px;
             color: var(--text-secondary);
-            font-weight: 600;
-            padding: 0.75rem 1.5rem;
-            border-radius: var(--radius-pill);
-            transition: all var(--duration-fast) var(--ease-out);
-            border: 1px solid var(--border);
+            font: 600 0.875rem/1.2 var(--font-sans);
             white-space: nowrap;
-            font-size: 0.875rem;
-            cursor: pointer;
+            transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
         }
+        .cat-tab::before { content: ""; position: absolute; top: -7px; left: 50%; width: 1px; height: 7px; background: var(--kin-dim); }
+        .cat-tab:hover { border-color: var(--kin-dim); color: var(--text-primary); }
+        .cat-tab.active { background: var(--washi); color: var(--sumi-ink); border-color: var(--washi); box-shadow: var(--shadow-paper); }
+        .cat-tab.active::before { background: var(--kin); }
 
-        .cat-tab:hover { border-color: var(--glass-border-hover); color: var(--text-primary); }
-
-        .cat-tab.active {
-            background: var(--primary-raw);
-            color: #fff;
-            border-color: var(--primary-raw);
-            box-shadow: 0 0 16px var(--primary-glow);
-        }
-
+        /* Osusume menu card = paper (recipe inlined: JS sets className='menu-card'; no transform on rebuilds) */
         .menu-card {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-lg);
-            padding: 1.5rem;
-            transition: all var(--duration-normal) var(--ease-out);
+            background-color: var(--washi);
+            background-image: var(--washi-fibre), linear-gradient(180deg, var(--washi-bright), var(--washi) 60%, var(--washi-2));
+            background-size: 240px 240px, auto;
+            box-shadow: var(--shadow-paper), inset 3px 0 0 var(--kin);
+            border: 1px solid rgba(28, 24, 22, 0.18);
+            border-radius: var(--radius-paper);
+            color: var(--sumi-ink);
+            position: relative;
+            padding: 1.1rem 1.1rem 1rem 1.3rem;
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
+            gap: 0.6rem;
+            transition: box-shadow var(--duration-normal) var(--ease-out);
         }
-
-        .menu-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--glass-border-hover);
-            box-shadow: var(--shadow-card-hover);
-        }
-
-        .menu-card-name { font-weight: 800; font-size: 1.125rem; color: var(--text-primary); }
-        .menu-card-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-        .badge-veg    { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
-        .badge-nonveg { background: var(--danger-bg);  color: var(--danger);  border: 1px solid var(--danger-border); }
-        .badge-spicy  { background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning-border); }
-
+        .menu-card:hover { box-shadow: var(--shadow-paper-lift), inset 3px 0 0 var(--kin); }
+        .menu-card-name { font: 600 1.0625rem/1.3 var(--font-display); color: var(--sumi-ink); letter-spacing: var(--tracking-display); }
+        .menu-card-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+        .menu-card .badge::before { content: none; }
+        .menu-card .badge { gap: 0.3rem; padding: 0.2rem 0.5rem; }
+        .menu-card .badge .ico { width: 13px; height: 13px; }
+        /* Label text in the ink hues (≥4.5:1 on the badge tint); the FSSAI mark keeps the veg/non-veg colours */
+        .menu-card .badge-veg    { color: var(--matcha-ink); }
+        .menu-card .badge-nonveg { color: var(--ume-ink); }
+        .badge-spicy  { color: var(--kuchiba-ink); }
+        .badge-spicy .ico { color: var(--spicy); }
+        .menu-card .mark-veg    { color: var(--veg-ink); }
+        .menu-card .mark-nonveg { color: var(--nonveg-ink); }
         .menu-card-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 0.5rem;
             margin-top: auto;
-            padding-top: 1rem;
-            border-top: 1px dashed var(--border);
+            padding-top: 0.75rem;
+            border-top: 2px dashed var(--washi-line);
         }
-
-        .menu-card-price { font-weight: 800; color: var(--primary); font-size: 1.125rem; }
-
+        .menu-card-price { font: 700 1.25rem/1 var(--font-display); color: var(--sumi-ink); font-variant-numeric: tabular-nums; }
+        /* small seal button (seal recipe without the texture layer — the grid is rebuilt) */
         .btn-add {
-            background: var(--primary-raw);
-            color: #fff;
-            font-weight: 600;
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius-pill);
-            font-size: 0.875rem;
-            border: none;
-            cursor: pointer;
-            transition: all var(--duration-fast) var(--ease-out);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            min-height: 36px;
+            padding: 0.4rem 0.9rem;
+            position: relative;
+            background: linear-gradient(170deg, #e0432a, var(--shu) 55%, var(--primary-dim));
+            color: var(--on-primary);
+            font: 600 0.8125rem/1.2 var(--font-sans);
+            border: 1px solid var(--shu-deep);
+            border-radius: var(--radius-seal);
+            box-shadow: var(--shadow-seal);
+            white-space: nowrap;
+            transition: filter var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
         }
+        .btn-add .ico { width: 14px; height: 14px; }
+        .btn-add::before { content: ""; position: absolute; inset: -4px 0; }   /* 36px visual → 44px hit area */
+        .btn-add:hover { filter: brightness(1.06); }
+        .btn-add:active { transform: translateY(1px); box-shadow: 0 0 0 var(--shu-deep), 0 2px 6px rgba(0, 0, 0, 0.4); }
+        #manualMenuGrid > .empty-hint { grid-column: 1 / -1; }
 
-        .btn-add:hover { background: var(--primary-dim); box-shadow: var(--shadow-glow); }
-
-        /* ── Cart Sidebar ────────────────────────────────────────────── */
+        /* ── Cart drawer — shoji (lacquer) ────────────────────────────── */
         #cartBackdrop {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            z-index: 40;
+            background: rgba(16, 13, 12, 0.72);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 45;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s;
         }
-
         #cartBackdrop.visible { opacity: 1; pointer-events: auto; }
 
         #cartSidebar {
             position: fixed;
             inset: 0 0 0 auto;
-            width: 100%;
-            max-width: 400px;
-            background: var(--bg-surface);
+            width: min(400px, 100%);
             z-index: 50;
             transform: translateX(100%);
-            transition: transform 0.3s var(--ease-out);
+            transition: transform 0.32s var(--ease-out);
             display: flex;
             flex-direction: column;
-            border-left: 1px solid var(--border);
+            border-radius: 0;
+            border-left: 1px solid var(--kin-hair);
         }
-
-        #cartSidebar.open {
-            transform: translateX(0);
-            box-shadow: -10px 0 40px rgba(0, 0, 0, 0.3);
-        }
+        #cartSidebar.open { transform: translateX(0); box-shadow: -10px 0 40px rgba(0, 0, 0, 0.45); }
 
         .cart-header {
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: var(--bg-surface-low);
+            gap: 0.75rem;
+            padding: 0.6rem 1rem 0.6rem 1.25rem;
+            border-bottom: 1px solid var(--kin-hair);
         }
+        .cart-header h3 { display: flex; align-items: baseline; gap: 0.6rem; font-size: 1.25rem; }
+        .cart-header h3 .ico { width: 22px; height: 22px; align-self: center; color: var(--kin); }
+        #cartCloseBtn { width: 44px; height: 44px; }
 
-        .cart-header h3 {
-            font-size: 1.25rem;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        #cartItemsList { flex: 1; min-height: 0; overflow-y: auto; padding: 1rem 1.25rem; }
+
+        /* Cart item = paper strip (recipe inlined; list is rebuilt on every change — no transitions) */
+        .cart-item {
+            background-color: var(--washi);
+            background-image: var(--washi-fibre), linear-gradient(180deg, var(--washi-bright), var(--washi) 60%, var(--washi-2));
+            background-size: 240px 240px, auto;
+            box-shadow: var(--shadow-paper);
+            border: 1px solid rgba(28, 24, 22, 0.18);
+            border-left: 3px solid var(--kin);
+            border-radius: var(--radius-paper);
+            color: var(--sumi-ink);
+            padding: 0.8rem 0.9rem 0.9rem;
+            margin-bottom: 0.75rem;
         }
-
-        #cartCloseBtn {
+        .cart-item-header { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+        .cart-item-name { font: 600 0.9375rem/1.3 var(--font-sans); color: var(--sumi-ink); }
+        .cart-item-remove {
             width: 32px;
             height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: inline-grid;
+            place-items: center;
+            padding: 0;
             border-radius: 50%;
-            background: var(--bg-surface-bright);
-            color: var(--text-secondary);
-            font-weight: 700;
-            border: none;
-            cursor: pointer;
-            transition: all var(--duration-fast) var(--ease-out);
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--sumi-ink-3);
+            flex-shrink: 0;
+            position: relative;
         }
-
-        #cartCloseBtn:hover { background: var(--bg-surface-highest); color: var(--text-primary); }
-
-        #cartItemsList {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1.5rem;
-            background: var(--bg-surface-low);
+        .cart-item-remove::before { content: ""; position: absolute; inset: -6px; }
+        .cart-item-remove:hover { color: var(--ume-ink); border-color: var(--ume-ink); }
+        .cart-item-remove .ico { width: 14px; height: 14px; }
+        .cart-item-controls { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+        .qty-controls { display: inline-flex; align-items: center; gap: 0.3rem; }
+        .qty-btn { position: relative; width: 36px; height: 36px; border: 1.5px solid var(--sumi-ink-3); color: var(--sumi-ink); background: transparent; line-height: 1; }
+        .qty-btn::before { content: ""; position: absolute; inset: -4px; }   /* 44px hit area */
+        .qty-btn:hover { background: var(--washi-bright); border-color: var(--sumi-ink); color: var(--sumi-ink); }
+        .qty-btn .ico { width: 14px; height: 14px; }
+        .qty-val { min-width: 2ch; text-align: center; font: 700 1.0625rem/1 var(--font-display); color: var(--sumi-ink); font-variant-numeric: tabular-nums; }
+        .cart-item-price { font: 600 1rem/1 var(--font-display); color: var(--sumi-ink); font-variant-numeric: tabular-nums; }
+        /* tanzaku note — selector carries the extra specificity to beat theme's dark input[type="text"] */
+        .cart-item input.cart-item-note {
+            display: block;
+            width: 100%;
+            margin-top: 0.65rem;
+            background: var(--washi-bright);
+            border: 0;
+            border-left: 3px solid var(--kin);
+            border-bottom: 1.5px solid rgba(28, 24, 22, 0.35);
+            border-radius: 0 3px 3px 0;
+            padding: 0.45rem 0.6rem;
+            color: var(--sumi-ink);
+            font: 500 1rem/1.3 var(--font-sans);
+            box-shadow: none;
+            outline: none;
         }
-
-        /* Cart Items (injected dynamically) */
-        .cart-item { background: var(--bg-surface-variant); border-radius: var(--radius-lg); padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border); }
-        .cart-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-        .cart-item-name { font-weight: 700; color: var(--text-primary); font-size: 0.95rem; }
-        .cart-item-remove { color: var(--text-dimmed); background: transparent; transition: color var(--duration-fast); font-size: 1rem; padding: 2px 6px; border: none; cursor: pointer; }
-        .cart-item-remove:hover { color: var(--danger); }
-        .cart-item-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-        .qty-controls { display: flex; align-items: center; gap: 0.75rem; background: var(--bg-surface-bright); padding: 0.25rem; border-radius: var(--radius-pill); border: 1px solid var(--border); }
-        .qty-btn { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: var(--bg-surface-variant); border-radius: 50%; font-weight: 700; color: var(--text-secondary); transition: all var(--duration-fast); border: none; cursor: pointer; }
-        .qty-btn:hover { background: var(--bg-surface-highest); color: var(--text-primary); }
-        .qty-val { font-weight: 700; font-size: 0.875rem; width: 16px; text-align: center; }
-        .cart-item-price { font-weight: 800; color: var(--primary); }
-        .cart-item-note { width: 100%; background: var(--bg-surface-bright); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem 0.75rem; font-size: 0.8rem; color: var(--text-primary); outline: none; transition: border-color var(--duration-fast); font-family: var(--font-sans); }
-        .cart-item-note:focus { border-color: rgba(99, 102, 241, 0.4); }
+        .cart-item input.cart-item-note::placeholder { color: var(--sumi-ink-3); }
+        .cart-item input.cart-item-note:focus { background: var(--washi-bright); border-bottom: 2px solid var(--shu-ink); box-shadow: 0 1px 0 var(--shu-ink); border-left-color: var(--shu-ink); }
 
         .cart-footer {
-            padding: 1.5rem;
-            background: var(--bg-surface);
-            border-top: 1px solid var(--border);
-            z-index: 1;
             flex-shrink: 0;
             margin-top: auto;
+            padding: 1rem 1.25rem calc(1rem + env(safe-area-inset-bottom));
+            background: var(--bg-surface-low);
+            border-top: 1px solid var(--border);
+            background-image: var(--rule-kin);
+            background-repeat: no-repeat;
+            background-size: 100% 1px;
+            background-position: top;
         }
-
         #cartTotal {
             display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            font: 700 1.5rem/1.1 var(--font-display);
+            color: var(--kin);
+            font-variant-numeric: tabular-nums;
+        }
+        #cartTotal.bi[data-ja]::before { font-size: 0.75rem; margin-right: auto; }
+
+        /* ── Active order bar — hanging shop sign ─────────────────────── */
+        .active-order-bar {
+            display: none;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--primary);
-        }
-
-        #placeOrderBtn {
-            width: 100%;
-            background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
-            color: #fff;
-            font-weight: 800;
-            padding: 1rem;
-            border-radius: var(--radius-md);
-            border: none;
-            cursor: pointer;
-            font-size: 1.125rem;
-            transition: all var(--duration-normal) var(--ease-out);
-            box-shadow: 0 4px 16px var(--primary-glow);
-        }
-
-        #placeOrderBtn:hover { box-shadow: var(--shadow-glow-strong); transform: translateY(-1px); }
-
-        /* ── Order Items (in AI summary) ─────────────────────────────── */
-        .order-item-row {
-            display: flex;
-            flex-direction: column;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.9rem;
-            gap: 0.35rem;
-        }
-        .order-item-row:last-child { border-bottom: none; }
-        .ai-item-main { display: flex; justify-content: space-between; align-items: center; }
-        .ai-item-instructions {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            font-style: italic;
-            padding: 0.25rem 0.5rem;
-            border-left: 2px solid var(--primary-raw);
-            margin-left: 0.25rem;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 0 4px 4px 0;
-        }
-        .item-name { font-weight: 600; color: var(--text-primary); flex: 1; text-align: left; }
-        .item-qty { font-weight: 700; color: var(--text-muted); width: 40px; text-align: center; }
-        .item-price { font-weight: 700; color: var(--text-primary); width: 60px; text-align: right; }
-        .ai-item-remove {
-            background: transparent;
-            border: none;
-            color: var(--text-dimmed);
-            font-size: 0.95rem;
-            cursor: pointer;
-            padding: 2px 6px;
-            margin-left: 0.5rem;
-            border-radius: 50%;
-            transition: all var(--duration-fast) var(--ease-out);
-            line-height: 1;
+            gap: 0.75rem;
+            padding: 0.6rem 1rem;
+            z-index: 15;
             flex-shrink: 0;
+            border-radius: 0;
+            border-left: 0;
+            border-right: 0;
+            border-bottom: 0;
+            border-top: 1px solid var(--kin-hair);
+            background-image: var(--rule-kin), linear-gradient(90deg, transparent calc(8% - 1px), var(--kin-dim) 8%, transparent calc(8% + 1px)), linear-gradient(90deg, transparent calc(92% - 1px), var(--kin-dim) 92%, transparent calc(92% + 1px));
+            background-repeat: no-repeat;
+            background-size: 100% 1px, 100% 8px, 100% 8px;
+            background-position: top, top, top;
         }
-        .ai-item-remove:hover {
-            color: var(--danger);
-            background: var(--danger-bg);
-        }
-        .ai-qty-ctrl {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: var(--radius-sm, 6px);
-            padding: 2px 4px;
-            border: 1px solid var(--glass-border, rgba(255,255,255,0.08));
-        }
-        .ai-qty-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-primary, #fff);
-            font-size: 0.9rem;
-            font-weight: 700;
-            width: 22px;
-            height: 22px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.15s ease;
-        }
-        .ai-qty-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            color: var(--accent-orange, #ff7a18);
-        }
-        .ai-qty-val {
-            font-size: 0.85rem;
-            font-weight: 600;
-            min-width: 16px;
-            text-align: center;
-            color: var(--text-primary, #fff);
-        }
-        .latency-badge {
-            display: inline-block;
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: #10b981;
-            background: rgba(16, 185, 129, 0.12);
-            border: 1px solid rgba(16, 185, 129, 0.25);
-            border-radius: 9999px;
-            padding: 2px 8px;
-            margin-top: 4px;
-            margin-left: 8px;
-            transition: opacity 0.8s ease;
-            vertical-align: middle;
-        }
-        .empty-hint { color: var(--text-dimmed); font-style: italic; text-align: center; padding: 2rem 0; font-size: 0.95rem; }
+        @media (min-width: 768px) { .active-order-bar { padding: 0.65rem 1.5rem; } }
+        .active-order-bar .order-info { display: flex; align-items: center; gap: 0.6rem; font: 600 0.875rem/1.2 var(--font-sans); color: var(--text-primary); min-width: 0; }
+        .active-order-bar .order-info .ico { width: 18px; height: 18px; color: var(--kin); flex-shrink: 0; }
+        .active-order-bar .order-info > span { display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #activeOrderStatus { color: var(--lantern); text-shadow: 0 0 8px var(--lantern-glow); }
+        .active-order-bar .bar-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+        .active-order-bar .bar-btn { position: relative; }
+        .active-order-bar .bar-btn::before { content: ""; position: absolute; inset: -4px -2px; }   /* .btn-sm 36px → 44px hit area */
+        .active-order-bar .bar-btn .ico { width: 16px; height: 16px; }
+        @media (max-width: 479px) { .active-order-bar .order-info .order-word { display: none; } }
 
-        /* ── Order Status Screen ──────────────────────────────────────── */
-        #orderStatusScreen {
-            position: absolute;
-            inset: 0;
-            background: var(--bg-deep);
-            z-index: 50;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem;
-        }
-
-        .order-status-card {
-            background: var(--glass-bg-strong);
-            backdrop-filter: blur(24px);
-            border: 1px solid var(--glass-border);
-            padding: 2.5rem;
-            border-radius: var(--radius-2xl);
-            box-shadow: var(--shadow-ambient);
-            max-width: 28rem;
-            width: 100%;
-            text-align: center;
-        }
-
-        .order-status-title {
-            font-size: 1.75rem;
-            font-weight: 800;
-            letter-spacing: var(--tracking-tight);
-            margin-bottom: 0.5rem;
-        }
-
-        #orderIdDisplay {
-            font-size: 0.85rem;
-            font-family: var(--font-mono);
-            color: var(--text-muted);
-            margin-bottom: 2.5rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-        }
-
-        .status-steps {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            position: relative;
-            isolation: isolate;
-        }
-
-        .status-steps::before {
-            content: "";
-            position: absolute;
-            left: 1.5rem;
-            top: 1.5rem;
-            bottom: 1.5rem;
-            width: 2px;
-            background: var(--border);
-            z-index: -1;
-            border-radius: var(--radius-pill);
-        }
-
-        .status-step {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            opacity: 0.3;
-            transition: opacity 0.3s;
-        }
-
-        .status-step-icon {
-            width: 3rem;
-            height: 3rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            flex-shrink: 0;
-            border: 2px solid var(--border);
-            background: var(--bg-surface-variant);
-        }
-
-        .status-step-label {
-            font-size: 1.125rem;
-            font-weight: 700;
-            color: var(--text-secondary);
-        }
-
-        /* Active step overrides from JS */
-        #orderStatusScreen .active-step { opacity: 1 !important; }
-        #orderStatusScreen .active-step > div:first-child {
-            background: var(--primary-raw);
-            color: #fff;
-            border-color: var(--primary-raw);
-            box-shadow: 0 0 20px var(--primary-glow-strong);
-        }
-        #orderStatusScreen .active-step > div:last-child { color: var(--text-primary); }
-
-        .status-message {
-            color: var(--text-muted);
-            font-weight: 500;
-            margin-top: 2.5rem;
-            font-size: 0.875rem;
-            background: var(--bg-surface-variant);
-            padding: 0.75rem 1rem;
-            border-radius: var(--radius-md);
-            display: inline-block;
-            border: 1px solid var(--border);
-        }
-
-        /* ── QR Payment Screen ───────────────────────────────────────── */
+        /* ── Full-screen takeovers (status / payment) ─────────────────── */
+        #orderStatusScreen,
         #qrPaymentScreen {
             position: absolute;
             inset: 0;
             background: var(--bg-deep);
-            z-index: 60;
+            background-image:
+                radial-gradient(260px 320px at 10% 0%, var(--lantern-glow), transparent),
+                radial-gradient(220px 300px at 92% 6%, var(--lantern-glow), transparent);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1.5rem;
-        }
-
-        .payment-card {
-            background: var(--glass-bg-strong);
-            backdrop-filter: blur(24px);
-            border: 1px solid var(--glass-border);
-            padding: 2.5rem;
-            border-radius: var(--radius-2xl);
-            box-shadow: var(--shadow-ambient);
-            max-width: 24rem;
-            width: 100%;
-            text-align: center;
-        }
-
-        .payment-title {
-            font-size: 1.75rem;
-            font-weight: 800;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        #qrBox {
-            background: #fff;
-            padding: 1.5rem;
-            border-radius: var(--radius-xl);
-            display: inline-block;
-            margin-bottom: 1.5rem;
-        }
-
-        #qrTotal {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--primary);
-            margin-bottom: 2rem;
-        }
-
-        .payment-methods {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            margin-bottom: 2rem;
-        }
-
-        .payment-method {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            background: var(--bg-surface-variant);
             padding: 1rem;
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-            cursor: pointer;
-            transition: all var(--duration-fast) var(--ease-out);
+            overflow-y: auto;
         }
+        #orderStatusScreen { z-index: 50; }
+        #qrPaymentScreen   { z-index: 60; }
 
-        .payment-method:hover { border-color: var(--glass-border-hover); }
-        .payment-method:focus-within { border-color: rgba(99, 102, 241, 0.4); box-shadow: 0 0 0 3px var(--primary-glow); }
-
-        .payment-method input[type="radio"] {
-            width: 1.25rem;
-            height: 1.25rem;
-            accent-color: var(--primary-raw);
-        }
-
-        .payment-method span { font-weight: 700; color: var(--text-secondary); }
-
-        #paymentDoneBtn {
-            background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
-            color: #fff;
-            font-weight: 800;
-            padding: 1rem 2rem;
-            border-radius: var(--radius-pill);
-            border: none;
+        .order-status-card,
+        .payment-card {
             width: 100%;
-            cursor: pointer;
-            transition: all var(--duration-normal) var(--ease-out);
-            box-shadow: 0 4px 16px var(--primary-glow);
+            max-width: 32rem;
+            padding: 2rem 1.75rem 1.75rem;
+            text-align: center;
+            margin: auto;
+            animation: ink-in 0.35s var(--ease-out);
+        }
+        @media (max-width: 479px) { .order-status-card, .payment-card { padding: 1.5rem 1.1rem 1.25rem; } }
+        .order-status-card { border-top: 4px solid var(--shu); }
+        .order-status-card .eyebrow, .payment-card .eyebrow { margin-bottom: 0.35rem; }
+        .order-status-title, .payment-title { font-size: 1.625rem; }
+        .order-status-card .rule-sumi, .payment-card .rule-sumi { margin: 0.5rem auto 1rem; }
+
+        .order-id-strip {
+            display: block;
+            margin: 0 auto 1.5rem;
+            padding: 0.5rem 0;
+            border-top: 2px dashed var(--washi-line);
+            border-bottom: 2px dashed var(--washi-line);
+        }
+        #orderIdDisplay {
+            font: 500 0.8125rem/1.3 var(--font-mono);
+            color: var(--sumi-ink-3);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            overflow-wrap: anywhere;
         }
 
-        #paymentDoneBtn:hover { transform: translateY(-2px); box-shadow: var(--shadow-glow-strong); }
+        /* Stamp rally: four stations, three ink paths (.step-line receives .active from JS) */
+        .status-steps {
+            display: grid;
+            grid-template-columns: auto 1fr auto 1fr auto 1fr auto;
+            align-items: start;
+            gap: 0;
+            margin: 0.25rem 0 0;
+        }
+        .status-step {
+            display: grid;
+            justify-items: center;
+            gap: 0.45rem;
+            min-width: 64px;
+        }
+        /* Unreached stations: only the ring is pencil-faded; the labels stay ink-3 (5.02:1) so Ready / Delivered remain readable */
+        .status-step:not(.active-step) .status-step-icon { opacity: 0.55; transition: opacity 0.3s; }
+        .status-step:not(.active-step) .status-step-label,
+        .status-step:not(.active-step) .status-step-label .jp { color: var(--sumi-ink-3); }
+        .status-step-icon {
+            width: 48px;
+            height: 48px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            border: 2px solid var(--sumi-ink-3);
+            color: var(--sumi-ink-2);
+            background: var(--washi);
+        }
+        .status-step-icon .ico { width: 22px; height: 22px; }
+        .status-step-label {
+            display: grid;
+            gap: 0.1rem;
+            font: 600 0.8125rem/1.2 var(--font-sans);
+            color: var(--sumi-ink-2);
+        }
+        .status-step-label .jp { font-size: 0.6875rem; }
+        .step-line {
+            display: block;
+            height: 0;
+            margin-top: 23px;
+            border-top: 2px dotted var(--washi-line-strong);
+        }
+        .step-line.active { border-top-style: solid; border-top-color: var(--shu-ink); }
+        /* Active step: red hanko on the station (selectors preserved) */
+        #orderStatusScreen .active-step { opacity: 1; }
+        #orderStatusScreen .active-step > div:first-child {
+            background: var(--shu);
+            color: #fff;
+            border-color: var(--shu-deep);
+            box-shadow: var(--shadow-seal);
+            animation: stamp 0.32s var(--ease-spring);
+        }
+        #orderStatusScreen .active-step > div:last-child { color: var(--sumi-ink); }
+        @media (max-width: 479px) {
+            .status-steps { grid-template-columns: 1fr; justify-items: start; }
+            .status-step { grid-template-columns: auto 1fr; justify-items: start; align-items: center; gap: 0.85rem; min-width: 0; }
+            .status-step-label { text-align: left; }
+            .step-line { width: 0; height: 22px; margin: 0 0 0 23px; border-top: 0; border-left: 2px dotted var(--washi-line-strong); }
+            .step-line.active { border-left-style: solid; border-left-color: var(--shu-ink); }
+        }
 
-        /* ── Feedback Modal ───────────────────────────────────────────── */
+        .status-message {
+            display: inline-block;
+            margin-top: 1.5rem;
+            padding: 0.5rem 0.9rem;
+            background: var(--washi-bright);
+            border-left: 3px solid var(--kin);
+            border-radius: 0 3px 3px 0;
+            color: var(--sumi-ink-2);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .btn-row { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+        .btn-row > * { flex: 1; }
+        .btn-row .ico { width: 16px; height: 16px; }
+
+        /* QR payment — ema plaque with a cord */
+        .payment-card.ema { border-top-color: var(--kin); margin-top: 28px; }
+        .payment-card::before {            /* hanging cord + knot */
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: -40px;
+            width: 2px;
+            height: 30px;
+            margin-left: -1px;
+            background: var(--kin-dim);
+            box-shadow: 0 -3px 0 2px var(--kin);
+        }
+        #qrBox {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            width: 200px;
+            aspect-ratio: 1;
+            padding: 10px;
+            margin: 0 auto;
+            background: #fff;
+            border: 1px solid var(--washi-line);
+            border-radius: 4px;
+            box-shadow: inset 0 0 0 1px rgba(28, 24, 22, 0.06);
+        }
+        .qr-cell.dark  { background: #1c1816; }
+        .qr-cell.light { background: #fff; }
+        .qr-caption { margin: 0.5rem 0 1rem; font-size: 0.75rem; color: var(--sumi-ink-3); letter-spacing: 0.04em; }
+        #qrTotal {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+            font: 700 1.75rem/1.1 var(--font-display);
+            color: var(--sumi-ink);
+            font-variant-numeric: tabular-nums;
+        }
+        #qrTotal.bi[data-ja]::before { font-size: 0.75rem; }
+        .payment-methods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin-bottom: 1.25rem; }
+        .payment-method:hover { border-color: var(--sumi-ink); }
+        .payment-method:has(input:checked) .ico { color: #fff; }
+
+        /* ── Feedback modal — omikuji booth ───────────────────────────── */
         #feedbackModal {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
+            background: rgba(16, 13, 12, 0.72);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             z-index: 70;
-            display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1.5rem;
+            padding: 1rem;
+            overflow-y: auto;
         }
-
         .feedback-modal-card {
-            background: var(--bg-surface);
-            padding: 2.5rem;
-            border-radius: var(--radius-2xl);
-            box-shadow: var(--shadow-ambient);
-            max-width: 28rem;
             width: 100%;
+            max-width: 28rem;
+            padding: 2rem 1.75rem 1.75rem;
             text-align: center;
             position: relative;
             overflow: hidden;
-            border: 1px solid var(--border);
+            border-top: 4px solid var(--shu);
+            animation: ink-in 0.3s var(--ease-out);
+            margin: auto;
         }
+        .feedback-modal-card .eyebrow { margin-bottom: 0.35rem; }
+        .feedback-modal-title { font-size: 1.5rem; }
+        .feedback-modal-card .rule-sumi { margin: 0.5rem auto 1.25rem; }
 
-        .feedback-modal-title {
-            font-size: 1.5rem;
-            font-weight: 800;
-            margin-bottom: 2rem;
-        }
-
-        #starRating {
-            display: flex;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-bottom: 2rem;
-            font-size: 2.5rem;
-        }
-
-        .star {
+        #starRating { display: flex; justify-content: center; gap: 0.35rem; margin-bottom: 1.25rem; }
+        .star {                                   /* native <button>: Enter/Space fire the same click handler JS binds */
+            display: inline-grid;
+            place-items: center;
+            width: 48px;
+            height: 48px;
+            padding: 0;
+            background: none;
+            border: 0;
             cursor: pointer;
-            opacity: 0.3;
-            transition: opacity var(--duration-fast), transform var(--duration-fast);
+            color: var(--sumi-ink-3);
+            border-radius: 50%;
+            transition: color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
         }
-
-        .star.selected { opacity: 1; transform: scale(1.1); }
-
+        .star .ico { width: 30px; height: 30px; }
+        .star .fill { display: none; }
+        .star.selected { color: var(--kin-dim); transform: scale(1.08); }
+        .star.selected .fill { display: inline-block; }
+        .star.selected > :not(.fill) { display: none; }
+        @supports selector(:has(a)) {
+            #starRating:has(.star:hover) .star { color: var(--sumi-ink-3); }
+            .star:hover, .star:has(~ .star:hover) { color: var(--kin-dim); }
+        }
         #feedbackComment {
             width: 100%;
-            background: var(--bg-surface-variant);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 1rem;
-            color: var(--text-primary);
-            font-weight: 500;
-            outline: none;
-            transition: all var(--duration-fast) var(--ease-out);
+            margin-bottom: 1.25rem;
             resize: none;
-            margin-bottom: 2rem;
-            font-family: var(--font-sans);
+            border-left: 3px solid var(--kin);
+            border-radius: 0 3px 3px 0;
+            text-align: left;
         }
 
-        #feedbackComment:focus {
-            border-color: rgba(99, 102, 241, 0.4);
-            box-shadow: 0 0 0 3px var(--primary-glow);
-            background: var(--bg-surface-bright);
-        }
-
-        #submitFeedbackBtn {
-            background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim));
-            color: #fff;
-            font-weight: 800;
-            padding: 1rem 2rem;
-            border-radius: var(--radius-pill);
-            border: none;
-            width: 100%;
-            cursor: pointer;
-            transition: all var(--duration-normal) var(--ease-out);
-        }
-
-        #submitFeedbackBtn:hover { transform: translateY(-1px); box-shadow: var(--shadow-glow); }
-
-        /* Thank You overlay */
+        /* Thank-you slip (JS display:flex) */
         #thankYouMsg {
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, var(--bg-surface), var(--bg-surface-low));
             z-index: 10;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 2rem;
+            padding: 2rem 1.5rem;
             text-align: center;
+            background-color: var(--washi);
+            background-image: var(--washi-fibre), linear-gradient(180deg, var(--washi-bright), var(--washi) 60%, var(--washi-2));
+            background-size: 240px 240px, auto;
+            overflow: hidden;
         }
+        #thankYouMsg > * { position: relative; z-index: 2; }
+        #thankYouMsg > .sakura-drift { position: absolute; inset: 0; z-index: 1; }   /* petals must keep theme's absolute box */
+        #thankYouMsg .hanko { width: 72px; height: 72px; font-size: 1.5rem; margin-bottom: 1rem; }
+        #thankYouMsg h3 { font-size: 1.5rem; margin-bottom: 0.4rem; }
+        #thankYouMsg .thanks-sub { color: var(--sumi-ink-2); font-weight: 500; }
+        #thankYouMsg .thanks-actions { margin-top: 1.25rem; padding-top: 1rem; border-top: 2px dashed var(--washi-line); width: 100%; display: grid; gap: 0.6rem; justify-items: center; }
+        #thankYouMsg .thanks-actions .meta { font-size: 0.75rem; color: var(--sumi-ink-3); }
 
-        /* ── Order History Modal ─────────────────────────────────────── */
-        #historyModal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            z-index: 100;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem;
-        }
-
+        /* ── Order history modal — goshuin book ───────────────────────── */
+        #historyModal { display: none; z-index: 9000; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); overflow-y: auto; }
         #historyModal .modal-content {
-            background: var(--bg-surface);
-            padding: 2.5rem;
-            border-radius: var(--radius-2xl);
-            box-shadow: var(--shadow-ambient);
             max-width: 32rem;
-            width: 100%;
-            position: relative;
-            border: 1px solid var(--border);
-            max-height: 85vh;
+            max-height: 88vh;
+            padding: 1.75rem 1.5rem 1.25rem;
             display: flex;
             flex-direction: column;
+            margin: auto;
         }
-
+        #historyModal .modal-content:hover { box-shadow: var(--shadow-paper); border-color: rgba(28, 24, 22, 0.18); border-top-color: var(--shu); }
         #historyModal .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border);
+            gap: 1rem;
+            margin-bottom: 0.25rem;
         }
-
-        #historyModal .modal-header h3 {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--text-primary);
-            margin: 0;
+        #historyModal .modal-header h3 { display: flex; align-items: baseline; gap: 0.6rem; font-size: 1.375rem; }
+        #historyModal .rule-sumi { margin: 0.25rem 0 1rem; }
+        #historyModal .history-list { overflow-y: auto; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.65rem; padding-right: 0.25rem; }
+        .history-card {
+            background: var(--washi-bright);
+            border: 1px solid var(--washi-line);
+            border-left: 3px solid var(--kin);
+            border-radius: 3px;
+            padding: 0.85rem 1rem;
         }
+        .history-card-header { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+        .history-date { font: 600 0.875rem/1.2 var(--font-display); color: var(--sumi-ink); }
+        .history-items { font-size: 0.9rem; color: var(--sumi-ink-2); line-height: 1.5; margin-bottom: 0.6rem; }
+        .history-total { display: flex; justify-content: flex-end; padding-top: 0.5rem; border-top: 1px dotted var(--washi-line-strong); font: 700 1.0625rem/1.1 var(--font-display); color: var(--sumi-ink); font-variant-numeric: tabular-nums; }
+        .modal-footer { margin-top: 1rem; padding-top: 0.85rem; border-top: 2px dashed var(--washi-line); display: flex; justify-content: flex-end; }
+        #modalLogoutBtn .ico { width: 16px; height: 16px; }
 
-        #historyModal .modal-close {
-            background: var(--bg-surface-variant);
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: 50%;
+        /* ── Login overlay — the real first screen ────────────────────── */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9000;
+            background: rgba(16, 13, 12, 0.96);
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            transition: all var(--duration-fast) var(--ease-out);
-            font-size: 1.25rem;
-        }
-
-        #historyModal .modal-close:hover {
-            color: var(--text-primary);
-            border-color: var(--text-primary);
-            background: var(--bg-surface-bright);
-        }
-
-        #historyModal .history-list {
+            padding: 1rem;
             overflow-y: auto;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            padding-right: 0.5rem;
         }
-
-        /* custom scrollbar for history list */
-        #historyModal .history-list::-webkit-scrollbar { width: 6px; }
-        #historyModal .history-list::-webkit-scrollbar-track { background: transparent; }
-        #historyModal .history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--radius-pill); }
-
-        .history-card {
-            background: var(--bg-surface-variant);
-            border: 1px solid var(--border);
-            padding: 1.25rem;
-            border-radius: var(--radius-xl);
-            transition: all var(--duration-normal) var(--ease-out);
+        .login-overlay .enso-halo { position: fixed; width: min(560px, 120vw); height: min(560px, 120vw); }
+        .login-glass-card {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 420px;
+            padding: 2rem 1.75rem 1.75rem;
+            border-top: 4px solid var(--shu);
+            animation: ink-in 0.4s var(--ease-out);
+            margin: auto;
         }
+        @media (max-width: 479px) { .login-glass-card { padding: 1.5rem 1.15rem 1.25rem; } }
+        .login-brand { text-align: center; margin-bottom: 1.25rem; }
+        .login-brand .mn { width: 64px; height: 64px; margin-bottom: 0.5rem; }
+        .login-brand .eyebrow { margin-bottom: 0.3rem; }
+        .login-brand h2 { font-size: 1.5rem; }
+        .login-brand .rule-sumi { margin: 0.4rem auto 0.75rem; }
+        .login-brand p { color: var(--sumi-ink-2); font-size: 0.9375rem; }
 
-        .history-card:hover {
-            border-color: rgba(99, 102, 241, 0.4);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-            transform: translateY(-2px);
-        }
-
-        .history-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.75rem;
-        }
-
-        .history-date {
-            font-size: 0.875rem;
-            font-weight: 700;
-            color: var(--text-secondary);
-        }
-
-        .history-status {
-            font-size: 0.75rem;
-            font-weight: 800;
-            padding: 0.25rem 0.75rem;
-            border-radius: var(--radius-pill);
+        .login-form { display: flex; flex-direction: column; gap: 1rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .form-group > label, .form-group > .form-label {
+            font: 600 0.6875rem/1.4 var(--font-sans);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        
-        .history-status.status-pending { background: rgba(245,158,11,0.15); color: #f59e0b; }
-        .history-status.status-preparing { background: var(--primary-raw); color: #fff; }
-        .history-status.status-ready { background: rgba(16,185,129,0.15); color: #10b981; }
-        .history-status.status-completed { background: var(--border); color: var(--text-secondary); }
-
-        .history-items {
-            font-size: 0.95rem;
-            color: var(--text-primary);
-            line-height: 1.5;
-            margin-bottom: 1rem;
-            font-weight: 500;
-        }
-
-        .history-total {
-            font-size: 1.125rem;
-            font-weight: 800;
-            color: var(--primary);
+            letter-spacing: var(--tracking-eyebrow);
+            color: var(--shu-ink);
             display: flex;
-            justify-content: flex-end;
-            border-top: 1px solid var(--border);
-            padding-top: 0.75rem;
+            align-items: baseline;
+            gap: 0.5rem;
         }
+        .form-group > label .jp, .form-group > .form-label .jp { text-transform: none; letter-spacing: 0.08em; }
+        .form-group .input-wrap > input { width: 100%; }
 
-        /* ── Doraemon VTuber Avatar ──────────────────────────────────── */
+        .prefs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+        .pref-chip { justify-content: center; min-height: 44px; }
+        .pref-chip .ico { width: 16px; height: 16px; color: var(--spicy); }
+        .pref-chip:has(input:checked) .ico, .pref-chip:has(input:checked) .mark { color: #fff; }
+        .login-form .btn-seal { margin-top: 0.25rem; }
+        #guestBtn .jp { color: inherit; opacity: 0.8; }
+
+        /* ── Doraemon VTuber avatar ───────────────────────────────────── */
         #doraemonAvatar {
             position: fixed;
-            bottom: 100px;
+            bottom: 96px;
             left: 20px;
-            z-index: 100;
+            z-index: 40;
             width: 130px;
             height: 130px;
             animation: avatarBob 3s ease-in-out infinite;
-            filter: drop-shadow(0 8px 24px rgba(99, 102, 241, 0.25));
-            transition: transform 0.2s ease;
+            filter: drop-shadow(0 8px 24px rgba(214, 58, 31, 0.25));
             cursor: pointer;
         }
-
-        #doraemonAvatar:hover {
-            transform: scale(1.1);
+        #doraemonAvatar::before {                 /* zabuton cushion */
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: -6px;
+            width: 120px;
+            height: 18px;
+            margin-left: -60px;
+            border-radius: 50%;
+            background: var(--bg-surface-highest);
+            border: 1px solid var(--kin-hair);
+            z-index: -1;
+        }
+        #doraemonAvatar::after {                  /* floating kanji by emotion */
+            position: absolute;
+            top: -4px;
+            right: -6px;
+            font: 700 1.25rem/1 var(--font-jp);
+            color: var(--kin);
+            text-shadow: 0 0 8px var(--lantern-glow);
+            opacity: 0;
+            animation: thoughtLoop 2s ease-out infinite forwards;   /* forwards: finite emotions end hidden instead of snapping back to opacity 1 */
+            pointer-events: none;
+        }
+        /* each emotion owns a (identical) keyframe name so switching emotion restarts the fade */
+        #doraemonAvatar[data-emotion="thinking"]::after { content: "…"; }
+        #doraemonAvatar[data-emotion="confused"]::after { content: "?"; }
+        #doraemonAvatar[data-emotion="happy"]::after    { content: "♪"; animation-name: thoughtFade; animation-iteration-count: 2; }
+        #doraemonAvatar[data-emotion="excited"]::after  { content: "!"; animation-name: thoughtFadeAlt; animation-iteration-count: 2; }
+        @keyframes thoughtLoop {
+            0%   { opacity: 0; transform: translateY(6px); }
+            30%  { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-10px); }
+        }
+        @keyframes thoughtFade {
+            0%   { opacity: 0; transform: translateY(6px); }
+            30%  { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-10px); }
+        }
+        @keyframes thoughtFadeAlt {
+            0%   { opacity: 0; transform: translateY(6px); }
+            30%  { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-10px); }
+        }
+        @media (max-width: 1023px) {
+            #doraemonAvatar { width: 84px; height: 84px; top: calc(var(--header-h) + 64px); right: 10px; left: auto; bottom: auto; }
+            #doraemonAvatar::before { width: 78px; height: 12px; margin-left: -39px; bottom: -3px; }
+            #doraemonAvatar::after { right: auto; left: -16px; top: 2px; }   /* kanji floats on the inner side, never off-screen */
+        }
+        @media (max-height: 520px) { #doraemonAvatar { display: none; } }
+        /* Menu mode has no conversation: the waiter steps aside so the category rail / cards stay clear */
+        body:has(#mode-manual[style*="display: block"]) #doraemonAvatar { display: none; }
+        /* Phones: the welcome card owns the top of the screen; the avatar waits until the room opens */
+        @media (max-width: 1023px) {
+            body:has(#welcomeScreen[style*="flex"]) #doraemonAvatar { display: none; }
+        }
+        /* The hanging shop sign lifts the avatar clear of the chat input row */
+        @media (min-width: 1024px) {
+            body:has(#activeOrderBar[style*="flex"]) #doraemonAvatar { bottom: 156px; }
+        }
+        /* Toasts (§6.9: never over the chat input row or a control):
+           desktop — chōchin tags hang from the lintel, top-right, over the tray's title only;
+           phones/tablets — left-anchored on the chat floor below the noren tabs, ending before the 84px avatar */
+        @media (min-width: 1024px) {
+            #toastContainer { top: calc(var(--header-h) + 12px); bottom: auto; right: 1rem; }
+        }
+        @media (max-width: 1023px) {
+            #toastContainer { top: calc(var(--header-h) + 64px); left: 1rem; right: auto; transform: none; width: min(calc(100vw - 110px), 380px); }
         }
 
-        /* Idle bob animation */
         @keyframes avatarBob {
             0%, 100% { transform: translateY(0); }
             50%      { transform: translateY(-8px); }
         }
-
-        /* Blink animation for eyes */
-        .dora-eye-white {
-            animation: doraemonBlink 4s ease-in-out infinite;
-        }
-
+        .dora-eye-white { animation: doraemonBlink 4s ease-in-out infinite; }
         @keyframes doraemonBlink {
             0%, 90%, 100% { transform: scaleY(1); }
             95%            { transform: scaleY(0.05); }
         }
-
-        /* Mouth animation when talking */
-        .dora-mouth {
-            transition: all 0.1s ease;
-        }
-
-        #doraemonAvatar.talking .dora-mouth {
-            animation: mouthFlap 0.25s ease-in-out infinite alternate;
-        }
-
+        .dora-mouth { transition: all 0.1s ease; }
+        #doraemonAvatar.talking .dora-mouth { animation: mouthFlap 0.25s ease-in-out infinite alternate; }
         @keyframes mouthFlap {
             0%   { transform: scaleY(0.6) translateY(2px); }
             100% { transform: scaleY(1.3) translateY(-1px); }
         }
+        #doraemonAvatar.talking { filter: drop-shadow(0 0 20px var(--lantern-glow-strong)) drop-shadow(0 8px 24px rgba(214, 58, 31, 0.3)); }
 
-        /* Glow ring when talking */
-        #doraemonAvatar.talking {
-            filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.6)) drop-shadow(0 8px 24px rgba(99, 102, 241, 0.3));
-        }
-
-        /* Sound wave indicator */
         .avatar-sound-waves {
             position: absolute;
             bottom: -10px;
@@ -1295,79 +1175,48 @@
             opacity: 0;
             transition: opacity 0.3s;
         }
-
-        #doraemonAvatar.talking .avatar-sound-waves {
-            opacity: 1;
-        }
-
-        .sound-bar {
-            width: 4px;
-            border-radius: 4px;
-            background: var(--primary-raw);
-        }
-
+        #doraemonAvatar.talking .avatar-sound-waves { opacity: 1; }
+        .sound-bar { width: 4px; border-radius: 4px; background: var(--kin); }
         .sound-bar:nth-child(1) { height: 8px;  animation: soundWave 0.4s ease-in-out infinite alternate; animation-delay: 0s; }
         .sound-bar:nth-child(2) { height: 14px; animation: soundWave 0.4s ease-in-out infinite alternate; animation-delay: 0.1s; }
         .sound-bar:nth-child(3) { height: 10px; animation: soundWave 0.4s ease-in-out infinite alternate; animation-delay: 0.2s; }
         .sound-bar:nth-child(4) { height: 16px; animation: soundWave 0.4s ease-in-out infinite alternate; animation-delay: 0.05s; }
         .sound-bar:nth-child(5) { height: 8px;  animation: soundWave 0.4s ease-in-out infinite alternate; animation-delay: 0.15s; }
-
         @keyframes soundWave {
             0%   { height: 4px; }
             100% { height: 18px; }
         }
-
-        /* Hide avatar when not Doraemon */
         body:not(.character-doraemon) #doraemonAvatar { display: none; }
 
-        /* ── Doraemon Emotion Animations ──────────────────────────────── */
-        /* Happy: bouncy and warm */
-        #doraemonAvatar.emotion-happy {
-            animation: happyBounce 0.5s ease-in-out 3;
-        }
-        #doraemonAvatar.emotion-happy .dora-mouth {
-            transform: scaleY(1.2);
-        }
+        /* Emotions (finite ones hand back to the idle bob) */
+        #doraemonAvatar.emotion-happy { animation: happyBounce 0.5s ease-in-out 3, avatarBob 3s ease-in-out infinite 1.5s; }
+        #doraemonAvatar.emotion-happy .dora-mouth { transform: scaleY(1.2); }
         @keyframes happyBounce {
             0%, 100% { transform: translateY(0) rotate(0deg); }
             25% { transform: translateY(-12px) rotate(-3deg); }
             75% { transform: translateY(-8px) rotate(3deg); }
         }
-
-        /* Excited: fast wiggle */
-        #doraemonAvatar.emotion-excited {
-            animation: excitedWiggle 0.3s ease-in-out 4;
-        }
+        #doraemonAvatar.emotion-excited { animation: excitedWiggle 0.3s ease-in-out 4, avatarBob 3s ease-in-out infinite 1.2s; }
         @keyframes excitedWiggle {
             0%, 100% { transform: translateX(0) scale(1); }
             25% { transform: translateX(-6px) scale(1.05); }
             75% { transform: translateX(6px) scale(1.05); }
         }
-
-        /* Confused: head tilt + question mark effect */
-        #doraemonAvatar.emotion-confused {
-            animation: confusedTilt 2s ease-in-out infinite;
-        }
+        #doraemonAvatar.emotion-confused { animation: confusedTilt 2s ease-in-out infinite; }
         @keyframes confusedTilt {
             0%, 100% { transform: rotate(0deg); }
             30% { transform: rotate(12deg); }
             60% { transform: rotate(-8deg); }
         }
-
-        /* Shy: blush glow + slight shrink */
         #doraemonAvatar.emotion-shy {
             animation: shyPulse 1.5s ease-in-out infinite;
-            filter: drop-shadow(0 0 15px rgba(255, 105, 180, 0.4)) drop-shadow(0 8px 24px rgba(99, 102, 241, 0.25));
+            filter: drop-shadow(0 0 15px rgba(243, 185, 200, 0.45)) drop-shadow(0 8px 24px rgba(214, 58, 31, 0.25));
         }
         @keyframes shyPulse {
             0%, 100% { transform: scale(0.95) rotate(0deg); }
             50% { transform: scale(0.9) rotate(-5deg); }
         }
-
-        /* Frustrated: shake */
-        #doraemonAvatar.emotion-frustrated {
-            animation: frustratedShake 0.4s ease-in-out 3;
-        }
+        #doraemonAvatar.emotion-frustrated { animation: frustratedShake 0.4s ease-in-out 3, avatarBob 3s ease-in-out infinite 1.2s; }
         @keyframes frustratedShake {
             0%, 100% { transform: translateX(0); }
             20% { transform: translateX(-8px); }
@@ -1375,373 +1224,36 @@
             60% { transform: translateX(-5px); }
             80% { transform: translateX(5px); }
         }
-
-        /* Thinking: slow float upward */
-        #doraemonAvatar.emotion-thinking {
-            animation: thinkingFloat 2s ease-in-out infinite;
-        }
+        #doraemonAvatar.emotion-thinking { animation: thinkingFloat 2s ease-in-out infinite; }
         @keyframes thinkingFloat {
             0%, 100% { transform: translateY(0) rotate(0deg); }
             50% { transform: translateY(-15px) rotate(3deg); }
         }
-
-        /* Sad: droopy */
         #doraemonAvatar.emotion-sad {
             animation: sadDroop 2s ease-in-out infinite;
-            filter: drop-shadow(0 8px 24px rgba(100, 100, 200, 0.3)) brightness(0.85);
+            filter: drop-shadow(0 8px 24px rgba(43, 74, 111, 0.45)) brightness(0.85);
         }
         @keyframes sadDroop {
             0%, 100% { transform: translateY(0) rotate(0deg); }
             50% { transform: translateY(5px) rotate(-3deg); }
         }
-
-        /* Scared: tremble */
-        #doraemonAvatar.emotion-scared {
-            animation: scaredTremble 0.15s ease-in-out infinite;
-        }
+        #doraemonAvatar.emotion-scared { animation: scaredTremble 0.15s ease-in-out infinite; }
         @keyframes scaredTremble {
             0%, 100% { transform: translate(0, 0); }
             25% { transform: translate(-2px, -1px); }
             75% { transform: translate(2px, 1px); }
         }
 
-        /* ── In-chat Doraemon mini avatar ─────────────────────────────── */
-        .chat-doraemon-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-        }
-        .chat-doraemon-avatar {
-            width: 44px;
-            height: 44px;
-            flex-shrink: 0;
-            border-radius: 50%;
-            background: #0099DD;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 12px rgba(0, 153, 221, 0.3);
-            overflow: hidden;
-        }
-        .chat-doraemon-avatar svg {
-            width: 38px;
-            height: 38px;
-        }
-
-        .glass-panel {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
-        }
-
-        /* ── Login Overlay Styling ────────────────────────────────── */
-        .login-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            background: rgba(5, 5, 5, 0.95);
-            backdrop-filter: blur(20px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-        }
-
-        .login-glass-card {
-            width: 100%;
-            max-width: 420px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 170, 0, 0.3);
-            border-radius: 24px;
-            padding: 2.5rem;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
-            animation: modal-pop 0.4s cubic-bezier(0.17, 0.84, 0.44, 1);
-        }
-
-        @keyframes modal-pop {
-            from { transform: scale(0.92); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        .login-brand {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .login-brand h2 {
-            font-size: 1.6rem;
-            color: var(--accent-amber, #ffaa00);
-            margin-top: 0.75rem;
-        }
-
-        .login-form {
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .form-group label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-secondary, #aaa);
-            padding-left: 0.4rem;
-        }
-
-        .form-group input {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #fff;
-            padding: 0.8rem 1.1rem;
-            border-radius: 14px;
-            font-size: 1rem;
-            outline: none;
-            transition: all 0.2s ease;
-        }
-
-        .form-group input:focus {
-            border-color: var(--accent-amber, #ffaa00);
-            background: rgba(255, 255, 255, 0.09);
-        }
-
-        .prefs-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.6rem;
-        }
-
-        .pref-chip {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 0.6rem;
-            font-size: 0.82rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .pref-chip:hover {
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .pref-chip input {
-            accent-color: var(--accent-amber, #ffaa00);
-        }
-
-        /* ── Modal Overlay (History) ─────────────────────────────────── */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 9000;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(8px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 0.75rem;
-        }
-
-        .history-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            max-height: 50vh;
-            overflow-y: auto;
-        }
-
-        .history-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 14px;
-            padding: 1rem;
-        }
-
-        .history-card-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-        }
-
-        .history-total {
-            font-weight: 700;
-            color: var(--accent-amber, #ffaa00);
-        }
-
-        .status-completed { color: #4ade80; }
-        .status-pending { color: #fbbf24; }
-
-        .icon-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .icon-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: var(--border-hover);
-        }
-
-        .hidden { display: none !important; }
-
-        /* ── Login Buttons ────────────────────────────────────────── */
-        .btn-primary {
-            width: 100%;
-            padding: 0.9rem 1.5rem;
-            border: none;
-            border-radius: 14px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background: linear-gradient(135deg, var(--accent-amber, #ffaa00), #ff8800);
-            color: #111;
-            box-shadow: 0 6px 20px rgba(255, 170, 0, 0.3);
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 28px rgba(255, 170, 0, 0.45);
-        }
-        .btn-secondary {
-            width: 100%;
-            padding: 0.8rem 1.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 14px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background: transparent;
-            color: var(--text-secondary, #aaa);
-        }
-        .btn-secondary:hover {
-            border-color: rgba(255, 255, 255, 0.3);
-            color: var(--text-primary, #eee);
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        /* ── Active Order Bar ─────────────────────────────────────── */
-        .active-order-bar {
-            display: none;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.75rem 1.5rem;
-            background: var(--glass-bg-strong, rgba(255,255,255,0.05));
-            backdrop-filter: blur(16px);
-            border-top: 1px solid var(--border, rgba(255,255,255,0.1));
-            border-bottom: 1px solid var(--border, rgba(255,255,255,0.1));
-            z-index: 15;
-            flex-shrink: 0;
-        }
-        .active-order-bar .order-info {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-        .active-order-bar .order-info .pulse-dot {
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            background: #4ade80;
-            animation: pulse-green 1.5s infinite;
-        }
-        @keyframes pulse-green {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50%      { opacity: 0.5; transform: scale(1.4); }
-        }
-        .active-order-bar .bar-actions {
-            display: flex; gap: 0.5rem;
-        }
-        .active-order-bar .bar-btn {
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius-pill, 50px);
-            font-weight: 700;
-            font-size: 0.8rem;
-            border: 1px solid var(--border, rgba(255,255,255,0.1));
-            background: var(--bg-surface-variant, rgba(255,255,255,0.05));
-            color: var(--text-primary, #eee);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .active-order-bar .bar-btn:hover {
-            background: var(--bg-surface-bright, rgba(255,255,255,0.1));
-        }
-        .active-order-bar .bar-btn-pay {
-            background: linear-gradient(135deg, var(--primary-raw, #6366f1), var(--primary-dim, #4f46e5));
-            color: #fff;
-            border: none;
-            box-shadow: 0 2px 10px var(--primary-glow, rgba(99,102,241,0.3));
-        }
-        /* ── Toast Notifications ────────────────────────────────────── */
-        #toastContainer {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            pointer-events: none;
-        }
-
-        .toast {
-            background: var(--bg-surface-variant);
-            color: var(--text-primary);
-            padding: 1rem 1.5rem;
-            border-radius: var(--radius-lg);
-            border-left: 4px solid var(--primary-raw);
-            box-shadow: var(--shadow-ambient);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            animation: toastEnter var(--duration-normal) var(--ease-out) forwards;
-            pointer-events: auto;
-            backdrop-filter: blur(10px);
-            border-right: 1px solid var(--border);
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .toast.success { border-left-color: #4ade80; }
-        .toast.error { border-left-color: #ef4444; }
-        .toast.info { border-left-color: #3b82f6; }
-
-        .toast.hiding {
-            animation: toastExit var(--duration-normal) var(--ease-out) forwards;
-        }
-
-        @keyframes toastEnter {
-            from { opacity: 0; transform: translateY(100%) scale(0.9); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
+        /* ── Toasts: theme §6.9; the exit keyframe stays page-local because JS waits for animationend */
         @keyframes toastExit {
-            from { opacity: 1; transform: translateY(0) scale(1); }
-            to { opacity: 0; transform: translateY(100%) scale(0.9); }
+            to { opacity: 0; transform: translateX(16px); }
+        }
+
+        /* Reduced motion: nothing hidden, nothing stuck */
+        @media (prefers-reduced-motion: reduce) {
+            #doraemonAvatar, #doraemonAvatar::after, .dora-eye-white, .sound-bar { animation: none; }
+            #doraemonAvatar::after { opacity: 0; }   /* no fade → the kanji never appears (instead of sitting there forever) */
+            .status-step-icon, .cat-tab { transition: none; }
         }
     </style>
 </head>
@@ -1801,77 +1313,130 @@
         </div>
     </div>
 
-    <!-- ═══════════════════════════ FIXED HEADER ═══════════════════════════ -->
-    <header class="customer-header">
+    <!-- ═══════════════════════════ HEADER — LINTEL ═══════════════════════════ -->
+    <header class="customer-header lintel">
         <div class="header-left">
-            <span class="header-brand">🐱 Maneki Neko</span>
-            <span id="characterBadge">🤖 Doraemon</span>
+            <span class="header-brand brand-lockup">
+                <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#neko"/></svg>
+                <span class="brand-stack">
+                    
+                    <span class="brand-kanji">Maneki Neko</span><span class="brand-romaji">Smart Restaurant</span>
+                </span>
+            </span>
+            <span class="kamon-chip" title="Your AI waiter"><span id="characterBadge">Doraemon</span></span>
         </div>
         <div class="header-table">
-            <span id="tableDisplay">Table 1</span>
+            <span id="tableDisplay" class="bi">Table 1</span>
         </div>
-        <div style="display: flex; gap: 0.75rem; align-items: center;">
-            <button id="statusToggleBtn" style="display: none; background: var(--bg-surface-high); border: 1px solid var(--border); color: var(--text-primary); border-radius: var(--radius-pill); font-weight: 700; padding: 0.5rem 1rem; cursor: pointer; height: 44px;">🧾 Bill & Payment</button>
-            <button id="cartToggleBtn" class="header-action-btn">
-                <span style="font-size: 1.1rem; line-height: 1;">🛒</span> 
+        <div class="header-right">
+            <button id="statusToggleBtn" class="header-action-btn is-bill" style="display: none;" title="Bill &amp; Payment" aria-label="Bill and payment"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-bill"/></svg><span class="bill-label">Bill</span></button>
+            <button id="cartToggleBtn" class="header-action-btn" aria-label="Open cart" title="Your cart">
+                <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-okamochi"/></svg>
                 <span id="cartCount">0</span>
             </button>
-            <button id="profileBtn" class="header-action-btn">
-                <span style="font-size: 1.1rem; line-height: 1;">👤</span>
+            <button id="profileBtn" class="header-action-btn" aria-label="Profile and order history" title="Profile">
+                <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-user"/></svg>
             </button>
-            <button id="customerLogoutBtn" class="header-action-btn btn-logout" title="Leave Table / Logout">
-                <span style="font-size: 1.1rem; line-height: 1;">🚪</span>
+            <button id="customerLogoutBtn" class="header-action-btn btn-logout btn-danger btn-sm" title="Leave Table / Logout" aria-label="Leave table">
+                <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-noren"/></svg>
                 <span class="logout-label">Exit</span>
             </button>
         </div>
-</header>
+    </header>
 
-<!-- ─── LOGIN OVERLAY ─── -->
+<!-- ─── LOGIN OVERLAY — paper card in a lantern-lit room ─── -->
 <div id="loginOverlay" class="login-overlay">
-    <div class="login-glass-card">
+    <div class="room-layer" aria-hidden="true"></div>
+    <div class="enso-halo" aria-hidden="true"></div>
+    <div class="login-glass-card paper">
         <div class="login-brand">
-            <span class="cat-emoji">🏮</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="mn mn--washi" viewBox="0 0 120 120" role="img" aria-label="Maneki-neko, the beckoning lucky cat">
+                <g class="mn-shadow"><ellipse cx="60" cy="111" rx="34" ry="4.5" fill="rgba(0,0,0,.28)"/></g><g class="mn-body" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+                    <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke-width="9.5"/>
+                    <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+                    <path d="M33 108q-5 0-5-5C28 84 33 72 44 68q16-5 32 0c11 4 16 16 16 35q0 5-5 5z"/>
+                </g><g class="mn-head" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+                    <path d="M37 27 42 13l10 12z"/><path d="M83 27 78 13 68 25z"/>
+                    <circle cx="60" cy="46" r="27"/>
+                </g><g class="mn-patches" stroke="none">
+                    <path d="M66 22c6-4 12-2 15 7-2 6-5 10-9 11-5-2-8-7-6-18z" fill="#c8923e"/>
+                    <path d="M83 79c-7 4-13 12-13 19 4 4 11 4 16 2 2-7 1-14-3-21z" fill="#3a332e"/>
+                    <path d="M77 17l-6.5 7.5" fill="none" stroke="#c8923e" stroke-width="7" stroke-linecap="round"/>
+                </g>
+                <g class="mn-head-line" fill="none" stroke="#1c1816" stroke-width="1.5"><circle cx="60" cy="46" r="27"/><path d="M83 27 78 13 68 25z"/></g><g class="mn-ears" fill="#f3b9c8" stroke="none"><path d="M41 25 43.5 18l6 7z"/><path d="M79 25l-2.5-7-6 7z"/></g><g class="mn-face" fill="none" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="42" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/><circle cx="78" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/>
+                    <path d="M47 47q5-5 10 0M63 47q5-5 10 0" fill="none" stroke="#1c1816" stroke-width="2.2" stroke-linecap="round"/>
+                    <path d="M57.8 52.2h4.4L60 55.2z" fill="#d63a1f" stroke="#d63a1f" stroke-width="1" stroke-linejoin="round"/>
+                    <path d="M54 57q3 3.5 6 0q3 3.5 6 0" stroke-width="1.6"/>
+                    <path d="M38 50 23 47M38 54H21M38 58l-15 3M82 50l15-3M82 54h17M82 58l15 3" stroke-width="1"/>
+                </g><g class="mn-collar" fill="#d63a1f" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round">
+                    <path d="M43 69q17 8 34 0v5.5q-17 11-34 0z"/>
+                </g>
+                <g class="mn-bell" fill="#e3b55a" stroke="#a8832f" stroke-width="1.5">
+                    <circle cx="60" cy="82" r="5.5"/><path d="M57 83h6M60 83v2.4" fill="none" stroke-linecap="round" stroke="#a8832f"/>
+                </g><g class="mn-koban" fill="#e3b55a" stroke="#a8832f" stroke-width="1.2">
+                    <ellipse cx="44" cy="97" rx="13" ry="9"/><ellipse cx="44" cy="97" rx="9" ry="5" fill="none"/>
+                </g><g class="mn-paw-rest" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke-width="11"/>
+                    <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke="#f3ebdd" stroke-width="8"/>
+                    <ellipse cx="38" cy="89.5" rx="6.5" ry="4.5"/>
+                </g><g class="mn-paw" style="transform-origin:82px 66px;transform-box:view-box" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M83 72c12 0 17-12 13-34" fill="none" stroke-width="9.5"/>
+                    <path d="M83 72c12 0 17-12 13-34" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+                    <circle cx="95" cy="33" r="7.5"/>
+                    <g fill="#f3b9c8" stroke="none"><ellipse cx="91" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="28.6" rx="1.6" ry="1.9"/><ellipse cx="99" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="35" rx="3.4" ry="2.6"/></g>
+                </g>
+            </svg>
+            <p class="eyebrow">Welcome</p>
             <h2>Welcome to Maneki Neko</h2>
-            <p>Please identify yourself to start ordering!</p>
+            <hr class="rule-sumi" />
+            <p>Tell us your phone number to start ordering.</p>
         </div>
         <form id="loginForm" class="login-form">
             <div class="form-group">
-                <label for="loginPhone">Phone Number</label>
-                <input type="tel" id="loginPhone" placeholder="Enter your phone number" required autocomplete="tel" />
-            </div>
-            <div id="nameGroup" class="form-group hidden">
-                <label for="loginName">Full Name</label>
-                <input type="text" id="loginName" placeholder="What should we call you?" autocomplete="name" />
-            </div>
-            <div class="form-group">
-                <label>Dietary Preferences (Optional)</label>
-                <div class="prefs-grid">
-                    <label class="pref-chip"><input type="checkbox" name="pref" value="vegetarian"> 🥗 Veg</label>
-                    <label class="pref-chip"><input type="checkbox" name="pref" value="spicy"> 🌶️ Spicy</label>
-                    <label class="pref-chip"><input type="checkbox" name="pref" value="no-seafood"> 🦐 No Seafood</label>
-                    <label class="pref-chip"><input type="checkbox" name="pref" value="vegan"> 🌿 Vegan</label>
+                <label for="loginPhone">Phone number </label>
+                <div class="input-wrap">
+                    <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-user"/></svg>
+                    <input type="tel" id="loginPhone" placeholder="Enter your phone number" required autocomplete="tel" />
                 </div>
             </div>
-            <button type="submit" id="loginSubmitBtn" class="btn-primary">Continue</button>
-            <button type="button" id="guestBtn" class="btn-secondary" style="margin-top: 0.5rem;">Order as Guest</button>
+            <div id="nameGroup" class="form-group hidden">
+                <label for="loginName">Full name </label>
+                <div class="input-wrap">
+                    <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-fude"/></svg>
+                    <input type="text" id="loginName" placeholder="What should we call you?" autocomplete="name" />
+                </div>
+            </div>
+            <div class="form-group">
+                <span class="form-label">Dietary preferences </span>
+                <div class="prefs-grid">
+                    <label class="pref-chip"><input type="checkbox" name="pref" value="vegetarian"><span class="mark mark-veg" aria-hidden="true"></span>Veg</label>
+                    <label class="pref-chip"><input type="checkbox" name="pref" value="spicy"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-chili"/></svg>Spicy</label>
+                    <label class="pref-chip"><input type="checkbox" name="pref" value="no-seafood">No seafood</label>
+                    <label class="pref-chip"><input type="checkbox" name="pref" value="vegan">Vegan</label>
+                </div>
+            </div>
+            <button type="submit" id="loginSubmitBtn" class="btn-primary btn-seal btn-block">Continue</button>
+            <button type="button" id="guestBtn" class="btn-secondary btn-ghost btn-block">Order as guest </button>
         </form>
     </div>
 </div>
 
-<!-- ─── ORDER HISTORY MODAL ─── -->
+<!-- ─── ORDER HISTORY MODAL — goshuin book ─── -->
 <div id="historyModal" class="modal-overlay">
-    <div class="modal-content glass-card">
+    <div class="modal-content glass-card glass-card-static paper">
         <div class="modal-header">
-            <h3>My Order History</h3>
-            <button class="modal-close" id="closeHistory">✕</button>
+            <h3>My order history </h3>
+            <button class="modal-close" id="closeHistory" aria-label="Close"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-close"/></svg></button>
         </div>
+        <hr class="rule-sumi" />
         <div id="historyList" class="history-list">
             <!-- Populated via JS -->
             <p class="empty-hint">Loading your history...</p>
         </div>
-        <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
-            <button id="modalLogoutBtn" class="btn-secondary" style="border-color: rgba(239, 68, 68, 0.4); color: #ef4444; width: auto; padding: 0.6rem 1.25rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; font-weight: 700;">
-                <span>🚪</span> Leave Table / Logout
+        <div class="modal-footer">
+            <button id="modalLogoutBtn" class="btn-secondary btn-danger btn-sm">
+                <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-noren"/></svg> Leave table / Logout
             </button>
         </div>
     </div>
@@ -1879,23 +1444,63 @@
 
     <!-- ═══════════════════════════ WELCOME SCREEN ═══════════════════════════ -->
     <div id="welcomeScreen">
-        <div class="welcome-gradient"></div>
-        <div class="welcome-card">
-            <div class="welcome-cat">🐱</div>
+        <div class="welcome-gradient" aria-hidden="true"></div>
+        <div class="welcome-card paper">
+            <div class="welcome-cat">
+                <svg xmlns="http://www.w3.org/2000/svg" class="mn mn--washi" viewBox="0 0 120 120" role="img" aria-label="Maneki-neko, the beckoning lucky cat">
+                    <g class="mn-shadow"><ellipse cx="60" cy="111" rx="34" ry="4.5" fill="rgba(0,0,0,.28)"/></g><g class="mn-body" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+                        <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke-width="9.5"/>
+                        <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+                        <path d="M33 108q-5 0-5-5C28 84 33 72 44 68q16-5 32 0c11 4 16 16 16 35q0 5-5 5z"/>
+                    </g><g class="mn-head" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+                        <path d="M37 27 42 13l10 12z"/><path d="M83 27 78 13 68 25z"/>
+                        <circle cx="60" cy="46" r="27"/>
+                    </g><g class="mn-patches" stroke="none">
+                        <path d="M66 22c6-4 12-2 15 7-2 6-5 10-9 11-5-2-8-7-6-18z" fill="#c8923e"/>
+                        <path d="M83 79c-7 4-13 12-13 19 4 4 11 4 16 2 2-7 1-14-3-21z" fill="#3a332e"/>
+                        <path d="M77 17l-6.5 7.5" fill="none" stroke="#c8923e" stroke-width="7" stroke-linecap="round"/>
+                    </g>
+                    <g class="mn-head-line" fill="none" stroke="#1c1816" stroke-width="1.5"><circle cx="60" cy="46" r="27"/><path d="M83 27 78 13 68 25z"/></g><g class="mn-ears" fill="#f3b9c8" stroke="none"><path d="M41 25 43.5 18l6 7z"/><path d="M79 25l-2.5-7-6 7z"/></g><g class="mn-face" fill="none" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="42" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/><circle cx="78" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/>
+                        <path d="M47 47q5-5 10 0M63 47q5-5 10 0" fill="none" stroke="#1c1816" stroke-width="2.2" stroke-linecap="round"/>
+                        <path d="M57.8 52.2h4.4L60 55.2z" fill="#d63a1f" stroke="#d63a1f" stroke-width="1" stroke-linejoin="round"/>
+                        <path d="M54 57q3 3.5 6 0q3 3.5 6 0" stroke-width="1.6"/>
+                        <path d="M38 50 23 47M38 54H21M38 58l-15 3M82 50l15-3M82 54h17M82 58l15 3" stroke-width="1"/>
+                    </g><g class="mn-collar" fill="#d63a1f" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round">
+                        <path d="M43 69q17 8 34 0v5.5q-17 11-34 0z"/>
+                    </g>
+                    <g class="mn-bell" fill="#e3b55a" stroke="#a8832f" stroke-width="1.5">
+                        <circle cx="60" cy="82" r="5.5"/><path d="M57 83h6M60 83v2.4" fill="none" stroke-linecap="round" stroke="#a8832f"/>
+                    </g><g class="mn-koban" fill="#e3b55a" stroke="#a8832f" stroke-width="1.2">
+                        <ellipse cx="44" cy="97" rx="13" ry="9"/><ellipse cx="44" cy="97" rx="9" ry="5" fill="none"/>
+                    </g><g class="mn-paw-rest" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke-width="11"/>
+                        <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke="#f3ebdd" stroke-width="8"/>
+                        <ellipse cx="38" cy="89.5" rx="6.5" ry="4.5"/>
+                    </g><g class="mn-paw" style="transform-origin:82px 66px;transform-box:view-box" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M83 72c12 0 17-12 13-34" fill="none" stroke-width="9.5"/>
+                        <path d="M83 72c12 0 17-12 13-34" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+                        <circle cx="95" cy="33" r="7.5"/>
+                        <g fill="#f3b9c8" stroke="none"><ellipse cx="91" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="28.6" rx="1.6" ry="1.9"/><ellipse cx="99" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="35" rx="3.4" ry="2.6"/></g>
+                    </g>
+                </svg>
+            </div>
+            <p class="eyebrow">Welcome</p>
             <h1 class="welcome-title">Welcome to <br/><span class="welcome-title-accent">Maneki Neko</span></h1>
-            <p id="characterTagline">I have the perfect dish for you! 🔔</p>
-            <button id="startBtn">Start Ordering 🍽️</button>
+            <hr class="rule-sumi" />
+            <p id="characterTagline">I have the perfect dish for you!</p>
+            <button id="startBtn" class="btn-seal btn-block">Start ordering </button>
         </div>
     </div>
 
     <!-- ═══════════════════════════ MAIN APP ═══════════════════════════ -->
     <main id="mainApp" style="display:none; flex: 1; flex-direction: column; overflow: hidden; position: relative;">
 
-        <!-- Mode Tabs -->
+        <!-- Mode tabs — noren -->
         <div class="mode-tabs">
-            <div class="mode-tabs-inner">
-                <button class="mode-tab active" data-mode="ai">🤖 AI Assistant</button>
-                <button class="mode-tab" data-mode="manual">📋 Manual Order</button>
+            <div class="mode-tabs-inner noren">
+                <button class="mode-tab active" data-mode="ai"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-neko-head"/></svg>AI Waiter</button>
+                <button class="mode-tab" data-mode="manual"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-bowl"/></svg>Menu</button>
             </div>
         </div>
 
@@ -1903,30 +1508,34 @@
         <div id="mode-ai" style="flex: 1; overflow: hidden; position: relative;">
             <div class="ai-layout">
                 <!-- Left: Chat -->
-                <div class="chat-panel">
+                <div class="chat-panel lacquer">
                     <div class="chat-fade-top"></div>
                     <div id="chatMessages"></div>
                     <div class="chat-input-area">
                         <div class="chat-input-wrapper">
                             <input type="text" id="chatInput" placeholder="Ask me anything about the menu…" autocomplete="off" />
                             <div class="chat-actions">
-                                <button type="button" id="voiceBtn" aria-label="Voice input" title="Voice input (Click to speak)">🎙️</button>
-                                <button type="button" id="sendBtn" aria-label="Send" title="Send message">📤</button>
+                                <button type="button" id="voiceBtn" aria-label="Voice input" title="Voice input (Click to speak)"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-taiko"/></svg></button>
+                                <button type="button" id="sendBtn" class="btn-seal" aria-label="Send" title="Send message"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-crane"/></svg></button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right: AI Order Summary -->
-                <div class="order-summary-panel">
-                    <h3 class="order-summary-title">Your Order 🛒</h3>
+                <!-- Right: AI order slip (okaikei) -->
+                <div class="order-summary-panel paper">
+                    <p class="eyebrow">Your order</p>
+                    <h3 class="order-summary-title"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-bill"/></svg>Order slip</h3>
                     <div id="aiOrderItems">
                         <p class="empty-hint">No items yet. Chat with me to order!</p>
                     </div>
-                    <div id="aiOrderTotal">Total: ₹0.00</div>
+                    <div class="order-total-wrap">
+                        <span class="hanko hanko--sumi hanko--sm" aria-hidden="true">Σ</span>
+                        <div id="aiOrderTotal">Total: ₹0.00</div>
+                    </div>
                     <div class="order-actions">
-                        <button id="aiConfirmOrder">✅ Confirm &amp; Place</button>
-                        <button id="aiClearOrder">🗑️ Clear Order</button>
+                        <button id="aiConfirmOrder" class="btn-seal btn-block"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-check"/></svg>Place Order </button>
+                        <button id="aiClearOrder" class="btn-ghost btn-block"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-trash"/></svg>Clear</button>
                     </div>
                 </div>
             </div>
@@ -1934,113 +1543,123 @@
 
         <!-- ─────────── MANUAL MODE ─────────── -->
         <div id="mode-manual" style="flex: 1; overflow-y: auto; padding: 1rem; display: none;">
-            <div style="max-width: 80rem; margin: 0 auto;">
-                <div id="manualCategoryTabs" style="display: flex; overflow-x: auto; gap: 0.75rem; padding-bottom: 1rem; margin-bottom: 1.5rem; padding-top: 0.5rem;"></div>
-                <div id="manualMenuGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem;"></div>
+            <div style="max-width: 64rem; margin: 0 auto;">
+                <div id="manualCategoryTabs" class="cat-rail" style="display: flex; overflow-x: auto; gap: 0.75rem; padding-bottom: 1rem; margin-bottom: 1.5rem; padding-top: 0.5rem;"></div>
+                <div id="manualMenuGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem 1.75rem;"></div>
             </div>
         </div>
     </main>
 
-    <!-- ═══════════════════════════ ACTIVE ORDER BAR ═══════════════════════════ -->
-    <div id="activeOrderBar" class="active-order-bar">
+    <!-- ═══════════════════════════ ACTIVE ORDER BAR — hanging shop sign ═══════════════════════════ -->
+    <div id="activeOrderBar" class="active-order-bar lacquer">
         <div class="order-info">
             <div class="pulse-dot"></div>
-            <span>🧾 Active Order — <span id="activeOrderStatus">Pending</span></span>
+            <span><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-scroll"/></svg><span class="order-word">Active order —</span> <span id="activeOrderStatus">Pending</span></span>
         </div>
         <div class="bar-actions">
-            <button id="barStatusBtn" class="bar-btn" onclick="document.getElementById('orderStatusScreen').style.display='flex'; document.getElementById('mainApp').style.display='none';">📋 Status</button>
-            <button id="barPayBtn" class="bar-btn bar-btn-pay" onclick="document.getElementById('qrPaymentScreen').style.display='flex'; document.getElementById('mainApp').style.display='none';">💳 Pay</button>
+            <button id="barStatusBtn" class="bar-btn btn-paper btn-sm" onclick="document.getElementById('orderStatusScreen').style.display='flex'; document.getElementById('mainApp').style.display='none';"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-bill"/></svg>Status</button>
+            <button id="barPayBtn" class="bar-btn bar-btn-pay btn-seal btn-sm" onclick="document.getElementById('qrPaymentScreen').style.display='flex'; document.getElementById('mainApp').style.display='none';"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-koban"/></svg>Pay</button>
         </div>
     </div>
 
-    <!-- ═══════════════════════════ CART SIDEBAR ═══════════════════════════ -->
+    <!-- ═══════════════════════════ CART DRAWER — shoji ═══════════════════════════ -->
     <div id="cartBackdrop"></div>
-    
-    <aside id="cartSidebar">
-        <div class="cart-header">
-            <h3>Your Cart 🛒</h3>
-            <button id="cartCloseBtn" aria-label="Close cart">✕</button>
+
+    <aside id="cartSidebar" class="lacquer" aria-label="Your cart">
+        <div class="cart-header shoji-band">
+            <h3><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-okamochi"/></svg>Your cart </h3>
+            <button id="cartCloseBtn" aria-label="Close cart"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-close"/></svg></button>
         </div>
         <div id="cartItemsList">
             <p class="empty-hint">Your cart is empty.</p>
         </div>
         <div class="cart-footer">
-            <div id="cartTotal">Total: ₹0.00</div>
-            <button id="placeOrderBtn">🍽️ Place Order</button>
+            <div id="cartTotal" class="bi">Total: ₹0.00</div>
+            <button id="placeOrderBtn" class="btn-seal btn-block">Place Order </button>
         </div>
     </aside>
 
-    <!-- ═══════════════════════════ ORDER STATUS SCREEN ═══════════════════════════ -->
+    <!-- ═══════════════════════════ ORDER STATUS — stamp rally ═══════════════════════════ -->
     <div id="orderStatusScreen" style="display:none;">
-        <div class="order-status-card">
+        <div class="order-status-card paper">
+            <p class="eyebrow">Order status</p>
             <h2 class="order-status-title">Order Status</h2>
-            <p id="orderIdDisplay"></p>
+            <hr class="rule-sumi" />
+            <div class="order-id-strip"><p id="orderIdDisplay"></p></div>
 
             <div class="status-steps">
                 <div id="step-pending" class="status-step">
-                    <div class="status-step-icon">✅</div>
-                    <div class="status-step-label">Placed</div>
+                    <div class="status-step-icon"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-scroll"/></svg></div>
+                    <div class="status-step-label">Placed </div>
                 </div>
+                <i class="step-line" aria-hidden="true"></i>
                 <div id="step-preparing" class="status-step">
-                    <div class="status-step-icon">🍳</div>
-                    <div class="status-step-label">Preparing</div>
+                    <div class="status-step-icon"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-fire"/></svg></div>
+                    <div class="status-step-label">Preparing </div>
                 </div>
+                <i class="step-line" aria-hidden="true"></i>
                 <div id="step-ready" class="status-step">
-                    <div class="status-step-icon">🔔</div>
-                    <div class="status-step-label">Ready</div>
+                    <div class="status-step-icon"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-bell"/></svg></div>
+                    <div class="status-step-label">Ready </div>
                 </div>
+                <i class="step-line" aria-hidden="true"></i>
                 <div id="step-delivered" class="status-step">
-                    <div class="status-step-icon">🍽️</div>
-                    <div class="status-step-label">Delivered</div>
+                    <div class="status-step-icon"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-tray"/></svg></div>
+                    <div class="status-step-label">Delivered </div>
                 </div>
             </div>
-            
+
             <p class="status-message">We'll update you in real time. Hang tight!</p>
-            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button id="statusOrderMoreBtn" style="flex: 1; background: var(--bg-surface-variant); color: var(--text-primary); font-weight: 700; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border); cursor: pointer;">➕ Order More</button>
-                <button id="statusPayBillBtn" style="flex: 1; background: linear-gradient(135deg, var(--primary-raw), var(--primary-dim)); color: #fff; font-weight: 800; padding: 1rem; border-radius: var(--radius-md); border: none; cursor: pointer; box-shadow: 0 4px 16px var(--primary-glow);">💳 Pay Bill</button>
+            <div class="btn-row">
+                <button id="statusOrderMoreBtn" class="btn-sumi"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-plus"/></svg>Order More</button>
+                <button id="statusPayBillBtn" class="btn-seal"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-koban"/></svg>Pay Bill </button>
             </div>
         </div>
     </div>
 
-    <!-- ═══════════════════════════ QR PAYMENT SCREEN ═══════════════════════════ -->
+    <!-- ═══════════════════════════ QR PAYMENT — ema plaque ═══════════════════════════ -->
     <div id="qrPaymentScreen" style="display:none;">
-        <div class="payment-card">
-            <h2 class="payment-title">Payment 💳</h2>
+        <div class="payment-card paper ema">
+            <p class="eyebrow">Payment</p>
+            <h2 class="payment-title">Payment</h2>
+            <hr class="rule-sumi" />
             <div id="qrBox"></div>
-            <p id="qrTotal">Total: ₹0.00</p>
+            <p class="qr-caption">Scan at the counter · demo</p>
+            <p id="qrTotal" class="bi">Total: ₹0.00</p>
 
             <div class="payment-methods">
                 <label class="payment-method">
-                    <input type="radio" name="paymentMethod" value="upi" checked /> <span>UPI</span>
+                    <input type="radio" name="paymentMethod" value="upi" checked /><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-upi"/></svg><span>UPI</span>
                 </label>
                 <label class="payment-method">
-                    <input type="radio" name="paymentMethod" value="card" /> <span>Card</span>
+                    <input type="radio" name="paymentMethod" value="card" /><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-card"/></svg><span>Card</span>
                 </label>
                 <label class="payment-method">
-                    <input type="radio" name="paymentMethod" value="cash" /> <span>Cash</span>
+                    <input type="radio" name="paymentMethod" value="cash" /><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-koban"/></svg><span>Cash</span>
                 </label>
             </div>
 
-            <button id="paymentDoneBtn">✅ Payment Done</button>
-            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                <button id="paymentBackToStatusBtn" style="flex: 1; background: transparent; border: 2px solid var(--border); color: var(--text-secondary); font-weight: 800; padding: 1rem; border-radius: var(--radius-pill); cursor: pointer;">⬅ Back</button>
-                <button id="paymentOrderMoreBtn" style="flex: 2; background: transparent; border: 2px solid var(--primary-raw); color: var(--primary-raw); font-weight: 800; padding: 1rem; border-radius: var(--radius-pill); cursor: pointer;">➕ Order More</button>
+            <button id="paymentDoneBtn" class="btn-seal btn-block"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-check"/></svg>Payment Done </button>
+            <div class="btn-row" style="margin-top: 0.75rem;">
+                <button id="paymentBackToStatusBtn" class="btn-ghost"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-arrow-left"/></svg>Back</button>
+                <button id="paymentOrderMoreBtn" class="btn-sumi"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-plus"/></svg>Order More</button>
             </div>
         </div>
     </div>
 
-    <!-- ═══════════════════════════ FEEDBACK MODAL ═══════════════════════════ -->
+    <!-- ═══════════════════════════ FEEDBACK — omikuji booth ═══════════════════════════ -->
     <div id="feedbackModal" style="display:none;">
-        <div class="feedback-modal-card">
-            <h2 class="feedback-modal-title">How was your experience? 😊</h2>
+        <div class="feedback-modal-card paper">
+            <p class="eyebrow">Your fortune</p>
+            <h2 class="feedback-modal-title">How was your experience?</h2>
+            <hr class="rule-sumi" />
 
-            <div id="starRating">
-                <span class="star" data-value="1">⭐</span>
-                <span class="star" data-value="2">⭐</span>
-                <span class="star" data-value="3">⭐</span>
-                <span class="star" data-value="4">⭐</span>
-                <span class="star" data-value="5">⭐</span>
+            <div id="starRating" role="group" aria-label="Rate your experience">
+                <button type="button" class="star" data-value="1" aria-label="1 of 5"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-sakura"/></svg><svg class="ico fill" aria-hidden="true"><use href="../shared/icons.svg#i-sakura-fill"/></svg></button>
+                <button type="button" class="star" data-value="2" aria-label="2 of 5"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-sakura"/></svg><svg class="ico fill" aria-hidden="true"><use href="../shared/icons.svg#i-sakura-fill"/></svg></button>
+                <button type="button" class="star" data-value="3" aria-label="3 of 5"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-sakura"/></svg><svg class="ico fill" aria-hidden="true"><use href="../shared/icons.svg#i-sakura-fill"/></svg></button>
+                <button type="button" class="star" data-value="4" aria-label="4 of 5"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-sakura"/></svg><svg class="ico fill" aria-hidden="true"><use href="../shared/icons.svg#i-sakura-fill"/></svg></button>
+                <button type="button" class="star" data-value="5" aria-label="5 of 5"><svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-sakura"/></svg><svg class="ico fill" aria-hidden="true"><use href="../shared/icons.svg#i-sakura-fill"/></svg></button>
             </div>
 
             <textarea
@@ -2049,24 +1668,25 @@
                 placeholder="Tell us what you loved (or didn't)…"
             ></textarea>
 
-            <button id="submitFeedbackBtn">Submit Feedback</button>
+            <button id="submitFeedbackBtn" class="btn-seal btn-block">Submit Feedback </button>
 
             <div id="thankYouMsg" style="display:none;">
-                <div style="font-size: 3.5rem; margin-bottom: 1.5rem; cursor: default;">🎉</div>
-                <h3 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.75rem;">Thank you for dining with us!</h3>
-                <p style="color: var(--text-secondary); font-weight: 500;">See you next time! 🐱</p>
-                <div style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem; width: 100%;">
-                    <button onclick="handleCustomerLogout()" class="btn-primary" style="width: auto; padding: 0.75rem 1.75rem; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
-                        <span>🚪</span> Leave Table / Finish
+                <div class="sakura-drift" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+                <span class="hanko hanko--lg stamp-in" aria-label="Great luck">THANKS</span>
+                <h3>Thank you for dining with us!</h3>
+                <p class="thanks-sub"> — see you next time.</p>
+                <div class="thanks-actions">
+                    <button onclick="handleCustomerLogout()" class="btn-primary btn-seal">
+                        <svg class="ico" aria-hidden="true"><use href="../shared/icons.svg#i-noren"/></svg> Leave table 
                     </button>
-                    <p style="font-size: 0.75rem; color: var(--text-dimmed);">You may close this window or leave table.</p>
+                    <p class="meta">You may close this window or leave the table.</p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- ═══════════════════════════ TOAST NOTIFICATIONS ═══════════════════════════ -->
-    <div id="toastContainer"></div>
+    <div id="toastContainer" aria-live="polite"></div>
 
     <!-- ═══════════════════════════ SCRIPTS ═══════════════════════════ -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

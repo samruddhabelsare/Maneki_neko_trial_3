@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="mn" viewBox="0 0 120 120" role="img" aria-label="Maneki-neko, the beckoning lucky cat">
+<!--
+  Maneki Neko brand mascot (Kami to Sumi). Style-free on purpose: page CSS animates .mn-paw
+    .mn .mn-paw{animation:beckon 2.4s ease-in-out infinite}   (or wave 1.8s)
+    @media (prefers-reduced-motion:reduce){.mn-paw{animation:none;transform:rotate(0)}}
+  Groups: .mn-shadow .mn-body .mn-head .mn-patches .mn-ears .mn-face .mn-collar .mn-bell .mn-koban .mn-paw-rest .mn-paw
+  The raised paw (viewer's right = cat's left, beckons customers) rotates about 82px 66px.
+
+  STAFF VARIANT (beckons fortune, login.html only) — mirror everything except the koban text:
+    <svg class="mn" viewBox="0 0 120 120">
+      <g class="mn-shadow">…</g>
+      <g class="mn-mirror" transform="matrix(-1 0 0 1 120 0)">
+        …every group below except .mn-koban-text (including .mn-koban so the resting paw still holds the coin)…
+      </g>
+         ← text stays un-mirrored; x = 120 - 44
+    </svg>
+  The .mn-paw transform-origin stays 82px 66px; the mirror matrix carries it to the viewer's left.
+-->
+<g class="mn-shadow"><ellipse cx="60" cy="111" rx="34" ry="4.5" fill="rgba(0,0,0,.28)"/></g><g class="mn-body" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke-width="9.5"/>
+    <path d="M31 103c-8 0-12-5-10-11" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+    <path d="M33 108q-5 0-5-5C28 84 33 72 44 68q16-5 32 0c11 4 16 16 16 35q0 5-5 5z"/>
+  </g><g class="mn-head" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M37 27 42 13l10 12z"/><path d="M83 27 78 13 68 25z"/>
+    <circle cx="60" cy="46" r="27"/>
+  </g><g class="mn-patches" stroke="none">
+    <path d="M66 22c6-4 12-2 15 7-2 6-5 10-9 11-5-2-8-7-6-18z" fill="#c8923e"/>
+    <path d="M83 79c-7 4-13 12-13 19 4 4 11 4 16 2 2-7 1-14-3-21z" fill="#3a332e"/>
+    <path d="M77 17l-6.5 7.5" fill="none" stroke="#c8923e" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <g class="mn-head-line" fill="none" stroke="#1c1816" stroke-width="1.5"><circle cx="60" cy="46" r="27"/><path d="M83 27 78 13 68 25z"/></g><g class="mn-ears" fill="#f3b9c8" stroke="none"><path d="M41 25 43.5 18l6 7z"/><path d="M79 25l-2.5-7-6 7z"/></g><g class="mn-face" fill="none" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="42" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/><circle cx="78" cy="55" r="3.4" fill="#f3b9c8" stroke="none" opacity=".75"/>
+    <path d="M47 47q5-5 10 0M63 47q5-5 10 0" fill="none" stroke="#1c1816" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M57.8 52.2h4.4L60 55.2z" fill="#d63a1f" stroke="#d63a1f" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M54 57q3 3.5 6 0q3 3.5 6 0" stroke-width="1.6"/>
+    <path d="M38 50 23 47M38 54H21M38 58l-15 3M82 50l15-3M82 54h17M82 58l15 3" stroke-width="1"/>
+  </g><g class="mn-collar" fill="#d63a1f" stroke="#1c1816" stroke-width="1.5" stroke-linejoin="round">
+    <path d="M43 69q17 8 34 0v5.5q-17 11-34 0z"/>
+  </g>
+  <g class="mn-bell" fill="#e3b55a" stroke="#a8832f" stroke-width="1.5">
+    <circle cx="60" cy="82" r="5.5"/><path d="M57 83h6M60 83v2.4" fill="none" stroke-linecap="round" stroke="#a8832f"/>
+  </g><g class="mn-koban" fill="#e3b55a" stroke="#a8832f" stroke-width="1.2">
+    <ellipse cx="44" cy="97" rx="13" ry="9"/><ellipse cx="44" cy="97" rx="9" ry="5" fill="none"/>
+  </g><g class="mn-paw-rest" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke-width="11"/>
+    <path d="M36 76c-5 4-5 10-1 14" fill="none" stroke="#f3ebdd" stroke-width="8"/>
+    <ellipse cx="38" cy="89.5" rx="6.5" ry="4.5"/>
+  </g><g class="mn-paw" style="transform-origin:82px 66px;transform-box:view-box" fill="#f3ebdd" stroke="#1c1816" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M83 72c12 0 17-12 13-34" fill="none" stroke-width="9.5"/>
+    <path d="M83 72c12 0 17-12 13-34" fill="none" stroke="#f3ebdd" stroke-width="6.5"/>
+    <circle cx="95" cy="33" r="7.5"/>
+    <g fill="#f3b9c8" stroke="none"><ellipse cx="91" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="28.6" rx="1.6" ry="1.9"/><ellipse cx="99" cy="30.5" rx="1.6" ry="1.9"/><ellipse cx="95" cy="35" rx="3.4" ry="2.6"/></g>
+  </g>
+</svg>
